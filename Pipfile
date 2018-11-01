@@ -4,9 +4,20 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+mysql-connector = "*"
 pytest = "*"
+sqlalchemy = "*"
+environs = "*"
+"flake8" = "*"
+black = "*"
+"iso8601" = "*"
+pyyaml = "*"
+pymarc = "*"
 
 [dev-packages]
 
 [requires]
 python_version = "3.6"
+
+[pipenv]
+allow_prereleases = true
