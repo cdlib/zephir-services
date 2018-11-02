@@ -1,0 +1,7 @@
+development:
+  database:
+  username:
+  password:
+  host:
+  port:
+  drivername: mysql+mysqlconnector
