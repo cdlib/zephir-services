@@ -53,14 +53,14 @@ def main():
     with open("export.json", "a") as export_file:
 
         engine = create_engine(
-            "sqlite:///cache/quick-complete.db",
+            "sqlite:///cache/complete-gz.db",
             echo=False,
         )
         with engine.connect() as con:
             create_table_stmt = "select cache_data from cache"
             result = con.execute(create_table_stmt)
             for idx, row in enumerate(result):
-                export_file.write(row[0]+"\n")
+                export_file.write(zlib.decompress(row[0]).decode('utf8')+"\n")
 
         print("start:{}".format(start_time))
         print(datetime.datetime.time(datetime.datetime.now()))
