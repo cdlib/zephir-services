@@ -93,6 +93,13 @@ def main():
                 if db_date > max_date:
                     max_date = db_date
                 records.append(record)
+                
+        cache_id = curr_cid
+        cache_data = json.dumps(VufindFormatter.create_record(curr_cid, records).as_dict(),separators=(',',':'))
+        cache_key = (zlib.crc32("{}{}".format(len(records), max_date).encode('utf8')))
+        cache_date = max_date
+        entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
+        entries.append(entry)
         bulk_session.bulk_save_objects(entries)
         bulk_session.commit()
         bulk_session.close()
