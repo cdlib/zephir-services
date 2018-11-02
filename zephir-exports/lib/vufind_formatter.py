@@ -13,6 +13,8 @@ class VufindFormatter:
 
         for record in records:
             for marc_record in pymarc.JSONReader(record):
+                marc_record['974'].add_subfield("b", marc_record['HOL']['s'])
+                marc_record['974'].add_subfield("c", marc_record['HOL']['c'])
                 if base_record is None:
                     base_record = marc_record
                     base_record["001"].data = cid
