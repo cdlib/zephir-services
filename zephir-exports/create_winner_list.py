@@ -17,4 +17,5 @@ with open("outcome1.tsv", "a") as outcome_file:
             for marc_record in pymarc.JSONReader(zlib.decompress(row[0]).decode('utf8')):
                 cid = marc_record['CID']["a"]
                 htid = marc_record['HOL']["p"]
-                outcome_file.write(cid+"\t"+htid+"\n")
+                records = str(len(marc_record.get_fields("974")))
+                outcome_file.write(cid+"\t"+htid+"\t"+records+"\n")
