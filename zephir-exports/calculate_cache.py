@@ -43,7 +43,7 @@ def main():
     htmm_engine = create_engine(HTMM_DB_CONNECT_STR)
     # live_statement = "select cid, db_updated_at, zr.id as htid, var_usfeddoc, var_score, metadata_json from zephir_records as zr inner join zephir_filedata as zf on zr.id = zf.id and attr_ingest_date is not null and cid = \"{}\" order by var_usfeddoc, var_score"
     #feddoc_statement = "select cid, db_updated_at, zr.id as htid, var_usfeddoc, var_score, metadata_json from zephir_records as zr inner join zephir_filedata as zf on zr.id = zf.id and attr_ingest_date is not null order by cid, var_usfeddoc, var_score limit 30"
-    orig_stmt = "select cid, db_updated_at, zr.id as htid, var_score, concat(cid,'_',zr.autoid) as vufind_sort, metadata_json from zephir_records as zr inner join zephir_filedata as zf on zr.id = zf.id where attr_ingest_date is not null order by cid, var_score, vufind_sort"
+    orig_stmt = "select cid, db_updated_at, zr.id as htid, var_score, concat(cid,'_',zr.autoid) as vufind_sort, metadata_json from zephir_records as zr inner join zephir_filedata as zf on zr.id = zf.id where attr_ingest_date is not null order by cid, var_score DESC, vufind_sort ASC"
     start_time = datetime.datetime.time(datetime.datetime.now())
     live_index = {}
     max_date = None
