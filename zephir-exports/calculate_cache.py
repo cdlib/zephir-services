@@ -70,12 +70,15 @@ def main():
         records = None
         entries = []
         max_date = None
+        reverse_order = False
         for idx, row in enumerate(cursor):
             cid, db_date, htid, var_score, vufind_sort, record = row
             if cid != curr_cid or curr_cid is None:
                 # write last cluster
                 if curr_cid:
                     cache_id = curr_cid
+                    if reverse_order:
+                        records.reverse()
                     cache_data = json.dumps(VufindFormatter.create_record(curr_cid, records).as_dict(),separators=(',',':'))
                     cache_key = (zlib.crc32("{}{}".format(len(records), max_date).encode('utf8')))
                     cache_date = max_date
@@ -89,11 +92,12 @@ def main():
                 curr_cid = cid
                 records = [record]
                 max_date = db_date
+                reverse_order = var_score is None
             else:
                 if db_date > max_date:
                     max_date = db_date
                 records.append(record)
-                
+
         cache_id = curr_cid
         cache_data = json.dumps(VufindFormatter.create_record(curr_cid, records).as_dict(),separators=(',',':'))
         cache_key = (zlib.crc32("{}{}".format(len(records), max_date).encode('utf8')))
