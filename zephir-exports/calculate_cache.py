@@ -64,13 +64,13 @@ def main(argv=None):
         "from zephir_records as zr "
         "inner join zephir_filedata as zf on zr.id = zf.id "
         "where attr_ingest_date is not null "
-        "order by cid, var_score DESC, vufind_sort ASC limit 50000",
+        "order by cid, var_score DESC, vufind_sort ASC",
         "usfeddoc": "select cid, db_updated_at, metadata_json, "
         "var_usfeddoc, var_score, concat(cid,'_',zr.autoid) as vufind_sort  "
         "from zephir_records as zr "
         "inner join zephir_filedata as zf on zr.id = zf.id "
         "where attr_ingest_date is not null "
-        "order by cid, var_usfeddoc, var_score DESC, vufind_sort ASC limit 50000",
+        "order by cid, var_usfeddoc DESC, var_score DESC, vufind_sort ASC",
     }
     start_time = datetime.datetime.time(datetime.datetime.now())
     live_index = {}
