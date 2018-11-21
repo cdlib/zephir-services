@@ -82,7 +82,7 @@ def main(argv=None):
 
     cache = ExportCache(
         os.path.abspath("cache"),
-        "{}-cache-{}".format(selection, datetime.datetime.today().strftime("%Y-%m-%d")),
+        "cache-{}-{}".format(selection, datetime.datetime.today().strftime("%Y-%m-%d")),
     )
 
     try:

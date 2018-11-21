@@ -47,14 +47,14 @@ def main(argv=None):
     start_time = datetime.datetime.time(datetime.datetime.now())
 
     with open(
-        "{}-export-{}.json".format(
+        "export-{}-{}.json".format(
             selection, datetime.datetime.today().strftime("%Y-%m-%d")
         ),
         "a",
     ) as export_file:
 
         engine = create_engine(
-            "sqlite:///cache/{}-cache-{}.db".format(
+            "sqlite:///cache/cache-{}-{}.db".format(
                 selection, datetime.datetime.today().strftime("%Y-%m-%d")
             ),
             echo=False,
