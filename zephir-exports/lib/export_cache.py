@@ -27,13 +27,17 @@ class ExportCache:
 
         if not self.cache_schema_exists_on_load:
             with self.engine.connect() as con:
-                create_table_stmt = "create table 'cache' (" \
-                "'cache_id' TEXT,'cache_key' TEXT,'cache_data' TEXT," \
-                "'cache_date' TEXT,'data_key' TEXT, 'data_date' TEXT, " \
-                "PRIMARY KEY('cache_id'));"
+                create_table_stmt = (
+                    "create table 'cache' ("
+                    "'cache_id' TEXT,'cache_key' TEXT,'cache_data' TEXT,"
+                    "'cache_date' TEXT,'data_key' TEXT, 'data_date' TEXT, "
+                    "PRIMARY KEY('cache_id'));"
+                )
                 con.execute(create_table_stmt)
-                create_index_stmt = "create index 'cache_id_key_index' ON " \
-                "'cache' ('cache_id'	ASC,'cache_key');"
+                create_index_stmt = (
+                    "create index 'cache_id_key_index' ON "
+                    "'cache' ('cache_id'	ASC,'cache_key');"
+                )
                 con.execute(create_index_stmt)
 
         metadata = MetaData()
@@ -97,8 +101,8 @@ class ExportCache:
             session.add(new_cache)
 
     def entry(self, cache_id, cache_key, cache_data, cache_date):
-        d_key = zlib.crc32(cache_data.encode('utf8'))
-        compressed_cache_data = zlib.compress(cache_data.encode('utf8'))
+        d_key = zlib.crc32(cache_data.encode("utf8"))
+        compressed_cache_data = zlib.compress(cache_data.encode("utf8"))
         new_cache = self.Cache(
             cache_id=cache_id,
             cache_key=cache_key,
@@ -106,7 +110,7 @@ class ExportCache:
             # cache_data = cache_data,
             cache_date=cache_date,
             data_key=d_key,
-            data_date=str(datetime.datetime.utcnow())
+            data_date=str(datetime.datetime.utcnow()),
         )
         return new_cache
 
@@ -118,9 +122,9 @@ class ExportCache:
             # only update the data fields if the data has updated
             # note: the metadata changes indicated by a cache_key changes
             # will not always cause the data to change.
-            data_key = str(zlib.crc32(cache_data.encode('utf8')))
+            data_key = str(zlib.crc32(cache_data.encode("utf8")))
             if cache.data_key != data_key:
-                compressed_cache_data = zlib.compress(cache_data.encode('utf8'))
+                compressed_cache_data = zlib.compress(cache_data.encode("utf8"))
                 cache.cache_data = compressed_cache_data
                 # cache.cache_data = cache_data
                 cache.data_key = data_key
@@ -130,13 +134,14 @@ class ExportCache:
         with self.session_context() as session:
             cache = session.query(self.Cache).get(cache_id)
             if cache:
-                return {"cache_id":cache.cache_id,
-                "cache_key":cache.cache_key,
-                "cache_data":cache.cache_data,
-                "cache_date":cache.cache_date,
-                "data_key":cache.data_key,
-                "data_date":cache.data_date,}
-
+                return {
+                    "cache_id": cache.cache_id,
+                    "cache_key": cache.cache_key,
+                    "cache_data": cache.cache_data,
+                    "cache_date": cache.cache_date,
+                    "data_key": cache.data_key,
+                    "data_date": cache.data_date,
+                }
 
     def size(self):
         with self.session_context() as session:

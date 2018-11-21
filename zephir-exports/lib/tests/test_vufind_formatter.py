@@ -17,4 +17,4 @@ def test_vufind_successfully_merged(td_tmpdir):
     vufind_record = VufindFormatter.create_record("000000001", records)
     assert len(vufind_record.get_fields("974")) == 5
     assert len(vufind_record.get_fields("035")) == 7
-    assert vufind_record.get_fields("974")[0]['u'] == "mdp.39015018415946"
+    assert vufind_record.get_fields("974")[0]["u"] == "mdp.39015018415946"

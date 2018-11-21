@@ -48,11 +48,12 @@ def test_update_to_cache_when_all_new(td_tmpdir):
         "cache_date": "NEWDATE",
     }
     cache.update(**second_entry)
-    assert cache.get("012345")['cache_key'] == "NEWKEY"
-    assert cache.get("012345")['cache_date'] == "NEWDATE"
-    assert cache.get("012345")['data_date'] != first_result["data_date"]
-    assert cache.get("012345")['data_key'] != first_result["data_key"]
-    assert cache.get("012345")['cache_data'] != first_result["cache_data"]
+    assert cache.get("012345")["cache_key"] == "NEWKEY"
+    assert cache.get("012345")["cache_date"] == "NEWDATE"
+    assert cache.get("012345")["data_date"] != first_result["data_date"]
+    assert cache.get("012345")["data_key"] != first_result["data_key"]
+    assert cache.get("012345")["cache_data"] != first_result["cache_data"]
+
 
 def test_update_to_cache_key_only_without_data_update(td_tmpdir):
     cache = ExportCache(td_tmpdir, "empty-cache")
@@ -71,11 +72,12 @@ def test_update_to_cache_key_only_without_data_update(td_tmpdir):
         "cache_date": "NEWDATE",
     }
     cache.update(**second_entry)
-    assert cache.get("012345")['cache_key'] == "NEWKEY"
-    assert cache.get("012345")['cache_date'] == "NEWDATE"
-    assert cache.get("012345")['data_date'] == first_result["data_date"]
-    assert cache.get("012345")['data_key'] == first_result["data_key"]
-    assert cache.get("012345")['cache_data'] == first_result["cache_data"]
+    assert cache.get("012345")["cache_key"] == "NEWKEY"
+    assert cache.get("012345")["cache_date"] == "NEWDATE"
+    assert cache.get("012345")["data_date"] == first_result["data_date"]
+    assert cache.get("012345")["data_key"] == first_result["data_key"]
+    assert cache.get("012345")["cache_data"] == first_result["cache_data"]
+
 
 def test_remove_set(td_tmpdir):
     cache = ExportCache(td_tmpdir, "empty-cache")

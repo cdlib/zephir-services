@@ -2,6 +2,7 @@ import json
 
 import pymarc
 
+
 class VufindFormatter:
     @staticmethod
     def create_record(cid, records):
@@ -13,21 +14,21 @@ class VufindFormatter:
 
         for record in records:
             for marc_record in pymarc.JSONReader(record):
-                marc_record['974'].subfields.insert(0, marc_record['HOL']['c'])
-                marc_record['974'].subfields.insert(0, "c")
-                marc_record['974'].subfields.insert(0, marc_record['HOL']['s'])
-                marc_record['974'].subfields.insert(0, "b")
+                marc_record["974"].subfields.insert(0, marc_record["HOL"]["c"])
+                marc_record["974"].subfields.insert(0, "c")
+                marc_record["974"].subfields.insert(0, marc_record["HOL"]["s"])
+                marc_record["974"].subfields.insert(0, "b")
                 if base_record is None:
                     base_record = marc_record
                     base_record["001"].data = cid
                     for field in marc_record.get_fields("035"):
-                        if field.value().startswith('sdr-'):
+                        if field.value().startswith("sdr-"):
                             incl_sdrs.add(field.value())
                             base_sdr = field
                 else:
                     holdings.append(marc_record["974"])
                     for field in marc_record.get_fields("035"):
-                        if field.value().startswith('sdr-'):
+                        if field.value().startswith("sdr-"):
                             sdrs.append(field)
 
         if base_record is None or base_sdr is None:
