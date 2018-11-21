@@ -47,7 +47,7 @@ def main(argv=None):
     start_time = datetime.datetime.time(datetime.datetime.now())
 
     with open(
-        "export-{}-{}.json".format(
+        "export/export-{}-{}.json".format(
             selection, datetime.datetime.today().strftime("%Y-%m-%d")
         ),
         "a",
