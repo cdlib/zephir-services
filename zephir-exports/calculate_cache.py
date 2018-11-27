@@ -81,7 +81,7 @@ def main(argv=None):
     current_cid = None
 
     cache = ExportCache(
-        os.path.abspath("cache"),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "cache")),
         "cache-{}-{}".format(selection, datetime.datetime.today().strftime("%Y-%m-%d")),
     )
 
