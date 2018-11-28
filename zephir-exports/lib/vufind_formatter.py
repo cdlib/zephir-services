@@ -18,6 +18,8 @@ class VufindFormatter:
                 marc_record["974"].subfields.insert(0, "c")
                 marc_record["974"].subfields.insert(0, marc_record["HOL"]["s"])
                 marc_record["974"].subfields.insert(0, "b")
+                if cid != marc_record["CID"]["a"]:
+                    print("{} mismatched with {}".format(cid, marc_record["CID"]["a"]))
                 if base_record is None:
                     base_record = marc_record
                     base_record["001"].data = cid

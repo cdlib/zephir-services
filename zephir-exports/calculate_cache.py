@@ -98,7 +98,7 @@ def main(argv=None):
         cursor.execute(sql_select[selection])
 
         curr_cid = None
-        records = None
+        records = []
         entries = []
         max_date = None
         for idx, row in enumerate(cursor):
@@ -115,11 +115,10 @@ def main(argv=None):
                         "{}{}".format(len(records), max_date).encode("utf8")
                     )
                     cache_date = max_date
+                    print(cache_id)
                     entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
                     entries.append(entry)
-                    if idx % 5000 == 0:
-                        bulk_session.bulk_save_objects(entries)
-                        entries = []
+
                 # prepare next cluster
                 curr_cid = cid
                 records = [record]
@@ -129,6 +128,11 @@ def main(argv=None):
                     max_date = db_date
                 records.append(record)
 
+            # periodic save to chunk work
+            if idx % 5000 == 0:
+                bulk_session.bulk_save_objects(entries)
+                entries = []
+
         cache_id = curr_cid
         cache_data = json.dumps(
             VufindFormatter.create_record(curr_cid, records).as_dict(),
@@ -137,6 +141,7 @@ def main(argv=None):
         cache_key = zlib.crc32("{}{}".format(len(records), max_date).encode("utf8"))
         cache_date = max_date
         entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
+        print(cache_id)
         entries.append(entry)
         bulk_session.bulk_save_objects(entries)
         bulk_session.commit()
