@@ -17,8 +17,6 @@ from lib.export_cache import ExportCache
 from lib.utils import zephir_config
 from lib.vufind_formatter import VufindFormatter
 
-print(datetime.datetime.time(datetime.datetime.now()))
-
 # APPLICATION SETUP
 # load environment
 env = Env()
@@ -72,7 +70,7 @@ def main(argv=None):
         "where attr_ingest_date is not null "
         "order by cid, var_usfeddoc DESC, var_score DESC, vufind_sort ASC",
     }
-    start_time = datetime.datetime.time(datetime.datetime.now())
+    start_time = datetime.datetime.now()
     live_index = {}
     max_date = None
     record_count = 0
@@ -115,7 +113,6 @@ def main(argv=None):
                         "{}{}".format(len(records), max_date).encode("utf8")
                     )
                     cache_date = max_date
-                    print(cache_id)
                     entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
                     entries.append(entry)
 
@@ -141,13 +138,11 @@ def main(argv=None):
         cache_key = zlib.crc32("{}{}".format(len(records), max_date).encode("utf8"))
         cache_date = max_date
         entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
-        print(cache_id)
         entries.append(entry)
         bulk_session.bulk_save_objects(entries)
         bulk_session.commit()
         bulk_session.close()
-        print("start cache {}:{}".format(selection, start_time))
-        print(datetime.datetime.time(datetime.datetime.now()))
+        print("Finished: {} (Elapsed: {})".format(selection, str(datetime.datetime.now()-start_time)))
     finally:
         cursor.close()
         conn.close()

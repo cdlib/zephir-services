@@ -17,8 +17,6 @@ from lib.export_cache import ExportCache
 from lib.utils import zephir_config
 from lib.vufind_formatter import VufindFormatter
 
-print(datetime.datetime.time(datetime.datetime.now()))
-
 # APPLICATION SETUP
 # load environment
 env = Env()
@@ -44,7 +42,7 @@ def main(argv=None):
     args = parser.parse_args()
     selection = args.selection
 
-    start_time = datetime.datetime.time(datetime.datetime.now())
+    start_time = datetime.datetime.now()
 
     with open(
         os.path.join(os.path.dirname(__file__), "export/new-{}-vufind_export-{}.json".format(
@@ -59,14 +57,14 @@ def main(argv=None):
             ),
             echo=False,
         )
+
         with engine.connect() as con:
             create_table_stmt = "select cache_data from cache"
             result = con.execute(create_table_stmt)
             for idx, row in enumerate(result):
                 export_file.write(zlib.decompress(row[0]).decode("utf8") + "\n")
 
-        print("start output {}:{}".format(selection, start_time))
-        print(datetime.datetime.time(datetime.datetime.now()))
+        print("Finished: {} (Elapsed: {})".format(selection, str(datetime.datetime.now()-start_time)))
 
 
 if __name__ == "__main__":
