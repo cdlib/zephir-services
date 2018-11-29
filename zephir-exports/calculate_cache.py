@@ -38,7 +38,7 @@ def main(argv=None):
         "-s",
         "--selection",
         action="store",
-        default="og",
+        default="ref",
         help="Selection algorithm used for export",
     )
     args = parser.parse_args()
@@ -59,7 +59,7 @@ def main(argv=None):
     htmm_engine = create_engine(HTMM_DB_CONNECT_STR)
 
     sql_select = {
-        "og": "select cid, db_updated_at, metadata_json, "
+        "ref": "select cid, db_updated_at, metadata_json, "
         "var_usfeddoc, var_score, concat(cid,'_',zr.autoid) as vufind_sort  "
         "from zephir_records as zr "
         "inner join zephir_filedata as zf on zr.id = zf.id "

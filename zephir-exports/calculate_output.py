@@ -38,7 +38,7 @@ def main(argv=None):
         "-s",
         "--selection",
         action="store",
-        default="og",
+        default="ref",
         help="Selection algorithm used for export",
     )
     args = parser.parse_args()
@@ -47,7 +47,7 @@ def main(argv=None):
     start_time = datetime.datetime.time(datetime.datetime.now())
 
     with open(
-        os.path.join(os.path.dirname(__file__), "export/export-{}-{}.json".format(
+        os.path.join(os.path.dirname(__file__), "export/new-{}-vufind_export-{}.json".format(
             selection, datetime.datetime.today().strftime("%Y-%m-%d"))
         ),
         "a",
