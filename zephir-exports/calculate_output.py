@@ -52,7 +52,7 @@ def main(argv=None):
     ) as export_file:
 
         engine = create_engine(
-            "sqlite:////{}/cache-{}-{}.db".format(
+            "sqlite:///{}/cache-{}-{}.db".format(
                 os.path.join(os.path.dirname(__file__), "cache"),selection, datetime.datetime.today().strftime("%Y-%m-%d")
             ),
             echo=False,
