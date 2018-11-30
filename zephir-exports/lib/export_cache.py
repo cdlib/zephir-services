@@ -67,33 +67,26 @@ class ExportCache:
         finally:
             session.close()
 
-    def _load_index(self):
-        cache_index = {}
-        with self.engine.connect() as con:
-            result = con.execute("select cache_id, cache_key from cache")
-            for row in result:
-                cache_index[row.cache_id] = row.cache_key
-        return cache_index
-
-    def _chunk_set(self, prechunk_set, limit):
-        mod = math.ceil(len(prechunk_set) / limit)
-        chunks = [set() for i in range(mod)]
-        for idx, item in enumerate(prechunk_set):
-            chunks[idx % mod].add(item)
-        return chunks
-
-    def remove_set(self, ids):
-        id_sets = self._chunk_set(ids, 1000)
-        with self.engine.connect() as con:
-            for id_set in id_sets:
-                con.execute(
-                    "delete from cache where cache_id in ({})".format(
-                        ", ".join('"{}"'.format(id) for id in id_set)
-                    )
-                )
-
     def session(self):
         return self.Session()
+
+    def size(self):
+        with self.session_context() as session:
+            size = session.query(self.Cache).count()
+        return size
+
+    def get(self, cache_id):
+        with self.session_context() as session:
+            cache = session.query(self.Cache).get(cache_id)
+            if cache:
+                return {
+                    "cache_id": cache.cache_id,
+                    "cache_key": cache.cache_key,
+                    "cache_data": cache.cache_data,
+                    "cache_date": cache.cache_date,
+                    "data_key": cache.data_key,
+                    "data_date": cache.data_date,
+                }
 
     def add(self, cache_id, cache_key, cache_data, cache_date):
         new_cache = self.entry(cache_id, cache_key, cache_data, cache_date)
@@ -107,7 +100,6 @@ class ExportCache:
             cache_id=cache_id,
             cache_key=cache_key,
             cache_data=compressed_cache_data,
-            # cache_data = cache_data,
             cache_date=cache_date,
             data_key=d_key,
             data_date=str(datetime.datetime.utcnow()),
@@ -130,29 +122,35 @@ class ExportCache:
                 cache.data_key = data_key
                 cache.data_date = str(datetime.datetime.utcnow())
 
-    def get(self, cache_id):
-        with self.session_context() as session:
-            cache = session.query(self.Cache).get(cache_id)
-            if cache:
-                return {
-                    "cache_id": cache.cache_id,
-                    "cache_key": cache.cache_key,
-                    "cache_data": cache.cache_data,
-                    "cache_date": cache.cache_date,
-                    "data_key": cache.data_key,
-                    "data_date": cache.data_date,
-                }
-
-    def size(self):
-        with self.session_context() as session:
-            size = session.query(self.Cache).count()
-        return size
-
     def compare(self, compare_index):
         cache_index = self._load_index()
         comparison = CacheComparison(cache_index, compare_index)
         return comparison
 
+    def remove_set(self, ids):
+        id_sets = self._chunk_set(ids, 1000)
+        with self.engine.connect() as con:
+            for id_set in id_sets:
+                con.execute(
+                    "delete from cache where cache_id in ({})".format(
+                        ", ".join('"{}"'.format(id) for id in id_set)
+                    )
+                )
+
+    def _load_index(self):
+        cache_index = {}
+        with self.engine.connect() as con:
+            result = con.execute("select cache_id, cache_key from cache")
+            for row in result:
+                cache_index[row.cache_id] = row.cache_key
+        return cache_index
+
+    def _chunk_set(self, prechunk_set, limit):
+        mod = math.ceil(len(prechunk_set) / limit)
+        chunks = [set() for i in range(mod)]
+        for idx, item in enumerate(prechunk_set):
+            chunks[idx % mod].add(item)
+        return chunks
 
 class CacheComparison:
     def __init__(self, cache_index, compare_index):
