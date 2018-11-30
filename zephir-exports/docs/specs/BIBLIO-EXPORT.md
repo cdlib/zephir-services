@@ -5,7 +5,7 @@
 # Bibliographic Export
 
 ## Description
-The bibliographic export is an export of all HT ingested items, condensed into bibliographic title-level records.
+The bibliographic export is an export of all HT ingested items, condensed into manifestation-level records.
 
 ### Who's it for?
 * HT Rights and Access - to assess rights and access from bibliographic and holdings data.

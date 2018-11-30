@@ -16,11 +16,11 @@ To accommodate the needs of the access policy and catalog processes we need to c
 
 To create bibliographic records for export, Zephir selects one item record each bibliographic monograph or serial and adds all the associated items as holdings.
 
-1) **Group all the records by bibliographic title**. Using the CID as a proxy for bibliographic relation, gather all the items that represent a bibliographic monograph or serial. Note: The CID is generated and assigned to individual records before export.
+1) **Group all the records by manifestation**. Using the CID as a proxy for bibliographic relation, gather all the items that represent a bibliographic monograph or serial. Note: The CID is generated and assigned to individual records before export.
 
 2) **Select a MARC record to represent bibliographic data**. Using a selection algorithm, select one among all MARC records associated with the CID to serve as the bibliographic "base record".
 
-3) **Include holdings information for all items**. Matching by the CID, include holdings for all digital items associated with the bibliographic title.
+3) **Include holdings information for all items**. Matching by the CID, include holdings for all digital items associated with the manifestation.
 
 ## Selection Algorithms
 
