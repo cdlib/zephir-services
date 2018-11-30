@@ -47,7 +47,7 @@ Sort items by metadata completeness score, and choose the the highest scoring re
 This implementation was built to prioritize records that indicate possible U.S. Federal Document status over the metadata completeness score. It was built using a new architecture which would allow future refinements of priority.
 
 **General Rule**
-Sort items by U.S. Federal Document status, then by metadata completeness score. The record with the highest sorting and choose the the highest scoring record as the base record.
+Sort items by U.S. Federal Document status, then by metadata completeness score. The record with the highest sorting is chosen as the base record.
 
 **Corner Cases**
 1. If multiple records are tied in U.S. Federal Document status and metadata complete score (score or null score), select by database order (emulation of initial implementation order).
