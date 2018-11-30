@@ -20,7 +20,7 @@ The bibliographic export is an export of all HT ingested items, condensed into b
 * Produce an export of ingested items in HathiTrust Digital Repository
   * Daily incremental export for all title-level bibliographic data and holdings potentially modified by Zephir.
   * Monthly complete export for all title-level bibliographic data and holdings.
-* Export should include only one bibliographic record per bibliographic title
+* Export should include only one bibliographic record per manifestation.
 * Export needs to be formatted to be compatible with downstream processes.
 * Export needs to follow/retain specifications for HT MARC field naming and placement of operational fields.
 * Export needs to create bibliographic records based on an agreed [methodology](BIBLIO-METHODOLOGY.md).
