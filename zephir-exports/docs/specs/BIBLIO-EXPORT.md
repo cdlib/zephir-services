@@ -23,7 +23,7 @@ The bibliographic export is an export of all HT ingested items, condensed into b
 * Export should include only one bibliographic record per bibliographic title
 * Export needs to be formatted to be compatible with downstream processes.
 * Export needs to follow/retain specifications for HT MARC field naming and placement of operational fields.
-* Export needs to create bibliographic records based on agreed [[methodology]].
+* Export needs to create bibliographic records based on an agreed [methodology](BIBLIO-METHODOLOGY.md).
 
 ### Technical Requirements
 * Exports only include subset of Zephir ingested into the HathiTrust repository.
