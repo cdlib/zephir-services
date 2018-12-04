@@ -16,6 +16,8 @@ The bibliographic export is an export of all HT ingested items, condensed into m
 
 ## Requirements and Specifications
 
+* Improving your spec
+
 ### Functional Requirements
 * Produce an export of ingested items in HathiTrust Digital Repository
   * Daily incremental export for all title-level bibliographic data and holdings potentially modified by Zephir.
