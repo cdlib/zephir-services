@@ -39,9 +39,10 @@ def main(argv=None):
 
     htmm_db = config["database"][config["env"]]
 
-    today_date = date.today().strftime("%Y-%m-%d")
-    tomorrow_date = (date.today() + timedelta(1)).strftime("%Y-%m-%d")
-    cid_stmt = "select distinct cid from zephir_records where last_updated_at between {} and {}".format(today_date, tomorrow_date)
+    today_date = datetime.date.today().strftime("%Y-%m-%d")
+    tomorrow_date = (datetime.date.today() + datetime.timedelta(1)).strftime("%Y-%m-%d")
+    cid_stmt = "select distinct cid from zephir_records where last_updated_at between '{}' and '{}' order by cid".format(today_date, tomorrow_date)
+    print(cid_stmt) 
     start_time = datetime.datetime.now()
 
     try:
