@@ -39,7 +39,9 @@ def main(argv=None):
 
     htmm_db = config["database"][config["env"]]
 
-    cid_stmt = "select distinct cid from zephir_vufinds where last_updated_at between '2018-12-03' and '2018-12-04'"
+    today_date = date.today().strftime("%Y-%m-%d")
+    tomorrow_date = (date.today() + timedelta(1)).strftime("%Y-%m-%d")
+    cid_stmt = "select distinct cid from zephir_records where last_updated_at between {} and {}".format(today_date, tomorrow_date)
     start_time = datetime.datetime.now()
 
     try:
@@ -54,17 +56,17 @@ def main(argv=None):
         cursor.execute(cid_stmt)
 
         engine = create_engine(
-            "sqlite:///{}/cache-{}-2018-11-29.db".format(
+            "sqlite:///{}/cache-{}-{}.db".format(
                 os.path.join(os.path.dirname(__file__), "cache"),
                 selection,
-                datetime.datetime.today().strftime("%Y-%m-%d"),
+                today_date,
             ),
             echo=False,
         )
         export_filepath = os.path.join(
             os.path.dirname(__file__),
             "export/new-{}-vufind_incremental-{}.json".format(
-                selection, datetime.datetime.today().strftime("%Y-%m-%d")
+                selection, today_date
             ),
         )
 
