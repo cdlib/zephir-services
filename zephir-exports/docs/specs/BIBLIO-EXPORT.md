@@ -26,7 +26,7 @@ The bibliographic export is an export of all HT ingested items, condensed into m
 * Export needs to create bibliographic records based on an agreed [methodology](BIBLIO-METHODOLOGY.md).
 
 ### Technical Requirements
-* Exports only include subset of Zephir ingested into the HathiTrust repository.
+* Exports only include records of items ingested into the HathiTrust repository.
 * Incremental export includes records with same-day database update date.
 * Full export includes all records.
 * Export for full UTC day.
