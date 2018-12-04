@@ -17,6 +17,7 @@ The bibliographic export is an export of all HT ingested items, condensed into m
 ## Requirements and Specifications
 
 * Improving your spec
+* Is this better.
 
 ### Functional Requirements
 * Produce an export of ingested items in HathiTrust Digital Repository
