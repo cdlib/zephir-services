@@ -41,8 +41,10 @@ def main(argv=None):
 
     today_date = datetime.date.today().strftime("%Y-%m-%d")
     tomorrow_date = (datetime.date.today() + datetime.timedelta(1)).strftime("%Y-%m-%d")
-    cid_stmt = "select distinct cid from zephir_records where last_updated_at between '{}' and '{}' order by cid".format(today_date, tomorrow_date)
-    print(cid_stmt) 
+    cid_stmt = "select distinct cid from zephir_records where last_updated_at between '{}' and '{}' order by cid".format(
+        today_date, tomorrow_date
+    )
+    print(cid_stmt)
     start_time = datetime.datetime.now()
 
     try:
@@ -58,17 +60,13 @@ def main(argv=None):
 
         engine = create_engine(
             "sqlite:///{}/cache-{}-{}.db".format(
-                os.path.join(os.path.dirname(__file__), "cache"),
-                selection,
-                today_date,
+                os.path.join(os.path.dirname(__file__), "cache"), selection, today_date
             ),
             echo=False,
         )
         export_filepath = os.path.join(
             os.path.dirname(__file__),
-            "export/new-{}-vufind_incremental-{}.json".format(
-                selection, today_date
-            ),
+            "export/new-{}-vufind_incremental-{}.json".format(selection, today_date),
         )
 
         with open((export_filepath), "a") as export_file, engine.connect() as con:

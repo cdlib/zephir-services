@@ -142,7 +142,11 @@ def main(argv=None):
         bulk_session.bulk_save_objects(entries)
         bulk_session.commit()
         bulk_session.close()
-        print("Finished: {} (Elapsed: {})".format(selection, str(datetime.datetime.now()-start_time)))
+        print(
+            "Finished: {} (Elapsed: {})".format(
+                selection, str(datetime.datetime.now() - start_time)
+            )
+        )
     finally:
         cursor.close()
         conn.close()

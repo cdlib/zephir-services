@@ -45,15 +45,20 @@ def main(argv=None):
     start_time = datetime.datetime.now()
 
     with open(
-        os.path.join(os.path.dirname(__file__), "export/new-{}-vufind_export-{}.json".format(
-            selection, datetime.datetime.today().strftime("%Y-%m-%d"))
+        os.path.join(
+            os.path.dirname(__file__),
+            "export/new-{}-vufind_export-{}.json".format(
+                selection, datetime.datetime.today().strftime("%Y-%m-%d")
+            ),
         ),
         "a",
     ) as export_file:
 
         engine = create_engine(
             "sqlite:///{}/cache-{}-{}.db".format(
-                os.path.join(os.path.dirname(__file__), "cache"),selection, datetime.datetime.today().strftime("%Y-%m-%d")
+                os.path.join(os.path.dirname(__file__), "cache"),
+                selection,
+                datetime.datetime.today().strftime("%Y-%m-%d"),
             ),
             echo=False,
         )
@@ -64,7 +69,11 @@ def main(argv=None):
             for idx, row in enumerate(result):
                 export_file.write(zlib.decompress(row[0]).decode("utf8") + "\n")
 
-        print("Finished: {} (Elapsed: {})".format(selection, str(datetime.datetime.now()-start_time)))
+        print(
+            "Finished: {} (Elapsed: {})".format(
+                selection, str(datetime.datetime.now() - start_time)
+            )
+        )
 
 
 if __name__ == "__main__":

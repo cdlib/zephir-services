@@ -44,8 +44,12 @@ class VufindFormatter:
             for marc_record in pymarc.JSONReader(record):
 
                 # transfer source and collection code from bib-level field to 974 item-level field
-                VufindFormatter._insert_subfield("c", marc_record["HOL"]["c"], marc_record["974"].subfields)
-                VufindFormatter._insert_subfield("b", marc_record["HOL"]["s"], marc_record["974"].subfields)
+                VufindFormatter._insert_subfield(
+                    "c", marc_record["HOL"]["c"], marc_record["974"].subfields
+                )
+                VufindFormatter._insert_subfield(
+                    "b", marc_record["HOL"]["s"], marc_record["974"].subfields
+                )
 
                 # todo(cscollett): clean up after reconciling period is done
                 if cid != marc_record["CID"]["a"]:
