@@ -36,11 +36,12 @@ def main(argv=None):
         "-s",
         "--selection",
         action="store",
-        default="ref",
         help="Selection algorithm used for export",
     )
     args = parser.parse_args()
     selection = args.selection
+    if selection is None:
+        raise "Must pass a selection algorithm to use. See --help"
 
     htmm_db = config["database"][config["env"]]
 
@@ -57,13 +58,13 @@ def main(argv=None):
     htmm_engine = create_engine(HTMM_DB_CONNECT_STR)
 
     sql_select = {
-        "ref": "select cid, db_updated_at, metadata_json, "
+        "v2": "select cid, db_updated_at, metadata_json, "
         "var_usfeddoc, var_score, concat(cid,'_',zr.autoid) as vufind_sort  "
         "from zephir_records as zr "
         "inner join zephir_filedata as zf on zr.id = zf.id "
         "where attr_ingest_date is not null "
         "order by cid, var_score DESC, vufind_sort ASC",
-        "usfeddoc": "select cid, db_updated_at, metadata_json, "
+        "v3": "select cid, db_updated_at, metadata_json, "
         "var_usfeddoc, var_score, concat(cid,'_',zr.autoid) as vufind_sort  "
         "from zephir_records as zr "
         "inner join zephir_filedata as zf on zr.id = zf.id "

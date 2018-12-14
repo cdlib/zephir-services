@@ -24,7 +24,7 @@ To create bibliographic records for export, Zephir selects one item record for e
 
 ## Selection Algorithms
 
-### Initial-Launch Selection (Zephir Launch-TBA)
+### Initial-Launch Selection (Zephir Launch-TBA) [V1]
 This is the initial algorithm implemented using a custom table and processing-based sorting.
 
 **General Rule**
@@ -34,7 +34,7 @@ Sort items by metadata completeness score, and choose the the highest scoring re
 1. If multiple records are tied, select by database order.
 2. If all records have null score, use the last one processed.
 
-### Replacement Selection (For reference)
+### Replacement Selection (For reference) [V2]
 This is a reference implementation of the algorithm at launch rewritten to use the database for priority sorting. Due to limitations of SQL, it does not emulate corner cases the same. This reference implementation can be used to identify differences due to implementation versus the new sorting conditions added for selection.
 
 **General Rule**
@@ -43,7 +43,7 @@ Sort items by metadata completeness score, and choose the the highest scoring re
 **Corner Cases**
 1. If multiple records are tied in metadata complete score (score or null score), select by database order (emulation of initial implementation order).
 
-### FedDocs+Score Priority Selection(Target Q4 2018)
+### FedDocs+Score Priority Selection(Target Q4 2018) [V3]
 This implementation was built to prioritize records that indicate possible U.S. Federal Document status over the metadata completeness score. It was built using a new architecture which would allow future refinements of priority.
 
 **General Rule**

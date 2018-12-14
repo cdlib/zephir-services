@@ -36,23 +36,29 @@ def main(argv=None):
         "-s",
         "--selection",
         action="store",
-        default="ref",
         help="Selection algorithm used for export",
+    )
+    parser.add_argument(
+        "-p",
+        "--prefix",
+        action="store_true",
+        help="Use a prefix for export",
     )
     args = parser.parse_args()
     selection = args.selection
+    if selection is None:
+        raise "Must pass a selection algorithm to use. See --help"
+    export_filename = "ht_bib_export_full_{}.json".format(
+                datetime.datetime.today().strftime("%Y-%m-%d")
+            )
+    if args.prefix:
+        export_filename = "{}-{}".format(selection, export_filename)
+
 
     start_time = datetime.datetime.now()
 
     with open(
-        os.path.join(
-            os.path.dirname(__file__),
-            "export/new-{}-vufind_export-{}.json".format(
-                selection, datetime.datetime.today().strftime("%Y-%m-%d")
-            ),
-        ),
-        "a",
-    ) as export_file:
+        os.path.join(os.path.dirname(__file__), "export/{}".format(export_filename), ), "a",) as export_file:
 
         engine = create_engine(
             "sqlite:///{}/cache-{}-{}.db".format(
