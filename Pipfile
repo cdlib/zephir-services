@@ -13,6 +13,8 @@ black = "*"
 "iso8601" = "*"
 pyyaml = "*"
 pymarc = "*"
+pytest-cov = "*"
+codecov = "*"
 
 [dev-packages]
 
