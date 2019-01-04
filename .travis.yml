@@ -6,3 +6,5 @@ install:
   - 'pipenv install'
 script:
   - 'pipenv run pytest'
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
