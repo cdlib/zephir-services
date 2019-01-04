@@ -1,6 +1,3 @@
-| Author | Major Update |
-| --- | --- |
-| Charlie Collett | 2018/011/26 |
 
 # Bibliographic Export
 
