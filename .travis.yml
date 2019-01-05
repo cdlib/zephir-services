@@ -7,5 +7,6 @@ install:
   - 'pipenv install'
 script:
   - 'pipenv run pytest'
+  - 'pipenv run coverage run zephir-exports/lib/*.py'
 after_success:
     - bash <(curl -s https://codecov.io/bash)
