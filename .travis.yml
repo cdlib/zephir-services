@@ -9,5 +9,5 @@ script:
   - 'pipenv run coverage run --source=. -m pytest zephir-exports/lib'
   - 'pipenv run coverage report --omit=tests/*.py --fail-under=70'
   - 'COVERAGE_FILE=.coverage_zed-verify'
-  - 'pipenv run coverage run --source=. -m pytest zephir-verify'
+  - 'pipenv run coverage run --source=. -m pytest zed-verify'
   - 'pipenv run coverage report --omit=tests/*.py --fail-under=70'
