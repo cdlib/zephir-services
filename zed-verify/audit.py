@@ -85,8 +85,9 @@ def main(argv=None):
     zed_db = config.get("zed_db",{}).get(config["env"],{})
     if config["env"] == "test":
         zed_db["host"] = "//{}".format(
-            os.path.join(env("PYTEST_TMPDIR"), zed_db.get("host", None))
+            os.path.join(env("PYTEST_TMPDIR"), zed_db.get("host", "events.db"))
         )
+        zed_db["drivername"] = zed_db.get("drivername", "sqlite")
     ZED_DB_CONNECT_STR = str(
         URL(
             zed_db.get("drivername", None),
