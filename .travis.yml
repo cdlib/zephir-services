@@ -5,6 +5,9 @@ install:
   - 'pip install pipenv'
   - 'pipenv install'
 script:
-  - 'cd zephir-exports'
-  - 'pipenv run coverage run --source=zephir-exports/lib -m pytest'
-  - 'pipenv run coverage report --omit=*tests/*.py --fail-under=70'
+  - 'COVERAGE_FILE=.coverage_zephir-exports-lib'
+  - 'pipenv run coverage run --source=. -m pytest zephir-exports/lib'
+  - 'pipenv run coverage report --omit=tests/*.py --fail-under=70'
+  - 'COVERAGE_FILE=.coverage_zed-verify'
+  - 'pipenv run coverage run --source=. -m pytest zephir-verify'
+  - 'pipenv run coverage report --omit=tests/*.py --fail-under=70'
