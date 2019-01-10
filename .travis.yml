@@ -4,6 +4,7 @@ python:
 install:
   - 'pip install pipenv'
   - 'pipenv install'
+  - 'pipenv install codecov'
 script:
   - 'COVERAGE_FILE=.coverage_zephir-exports-lib'
   - 'pipenv run coverage run --source=. -m pytest zephir-exports/lib'
@@ -11,3 +12,6 @@ script:
   - 'COVERAGE_FILE=.coverage_zed-verify'
   - 'pipenv run coverage run --source=. -m pytest zed-verify'
   - 'pipenv run coverage report --omit=*/tests/*.py --fail-under=70'
+  - 'coverage combine'
+after_success:
+  - 'bash <(curl -s https://codecov.io/bash)'
