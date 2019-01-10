@@ -15,6 +15,7 @@ pyyaml = "*"
 pymarc = "*"
 pytest-cov = "*"
 codecov = "*"
+jsonschema = "*"
 
 [dev-packages]
 

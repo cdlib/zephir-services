@@ -1,0 +1,64 @@
+{
+	"type": "object",
+	"properties": {
+		"event": {
+			"type": "string"
+		},
+		"process": {
+			"type": "string"
+		},
+		"topic": {
+			"type": "string"
+		},
+		"type": {
+			"type": "string"
+		},
+		"subject": {
+			"type": "string"
+		},
+		"object": {
+			"type": "string"
+		},
+		"status": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"type": "string"
+				},
+				"zed_code": {
+					"type": "string"
+				},
+				"msg_code": {
+					"type": "string"
+				},
+				"msg": {
+					"type": "string"
+				},
+				"details": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"type",
+				"zed_code",
+				"msg_code"
+			]
+		},
+		"report": {
+			"type": "object"
+		},
+		"timestamp": {
+			"type": "string"
+		}
+	},
+	"required": [
+		"event",
+		"process",
+		"topic",
+		"type",
+		"subject",
+		"object",
+		"status",
+		"timestamp"
+	]
+}

@@ -1,0 +1,11 @@
+test:
+  host: events.db
+  drivername: sqlite
+
+development:
+  host:
+  port:
+  username:
+  password:
+  database:
+  drivername:
