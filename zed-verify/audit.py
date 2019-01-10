@@ -82,7 +82,7 @@ def main(argv=None):
 
     # DATABASE SETUP
     # Create database client, connection manager.
-    zed_db = config["zed_db"][config["env"]]
+    zed_db = config.get("zed_db",{}).get(config["env"],{})
     if config["env"] == "test":
         zed_db["host"] = "//{}".format(
             os.path.join(env("PYTEST_TMPDIR"), zed_db.get("host", None))
