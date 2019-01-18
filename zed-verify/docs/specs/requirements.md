@@ -1,7 +1,3 @@
-Author | Major Update
---- | --- | ---
-Charlie Collett | 2018/08/20
-
 # ZED Validate Logs
 
 ## Description
