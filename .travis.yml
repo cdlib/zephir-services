@@ -10,7 +10,6 @@ script:
   - 'COVERAGE_FILE=.coverage_zephir-exports pipenv run coverage report --omit=*/tests/*.py --fail-under=70'
   - 'COVERAGE_FILE=.coverage_zed-verify pipenv run coverage run --source=. -m pytest zed-verify'
   - 'COVERAGE_FILE=.coverage_zed-verify pipenv run coverage report --omit=*/tests/*.py --fail-under=70'
-  - 'ls -all'
   - 'pipenv run coverage combine .coverage*'
 after_success:
   - 'bash <(curl -s https://codecov.io/bash)'
