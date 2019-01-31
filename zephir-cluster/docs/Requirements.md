@@ -11,18 +11,24 @@ Zephir clustering is a third-generation codebase to group HathiTrust digital ite
 * Users - to find items by bibliographic title.
 
 ### Why build it?
-* Create a more dynamic method for assigning and reassigning CIDs: .
-    * Create a less-labor intensive path for reclustering records.
-    * Enable for experimental or alternate clustering to run in parallel
+### Why build it?
+* Eliminate the labor-intensive path for reclustering records.
+* Enable for experimental or alternate clustering to run in parallel
 * Perform better de-duplication of bibliographic clusters.
-* Assign regular and shadow records using the same process.
-* Create a more consistent, reliable approach for matching for matching on local and OCLC identifiers.
+* Assign all records (regular and shadow records) using the same process.
+* Create a more consistent, and reproducible approach for matching for matching on local and OCLC identifiers.
 
 ## Clustering Design and Architecture
 
 ### Proposal
 
-The proposal is to move the CID assignments algorithm to after a records is loaded into the database. As a separate process, records that have been updated can be re/assigned to clusters. As a later refinement, records that related to these records can also be reevaluated to see what clusters they belong.  This can be done in parallel to the current algorithm so we can evaluate any changes that take place. This architecture will allow us to propose and test alternate clustering algorithms.
+The proposal is two part.
+
+1) To move the CID assignments algorithm to after a records are processed and loaded into the pairtree and database. As part of this architecture, the CID would be stored outside of the metadata record, independently in the database. As a separate process that is independently stored, records that have been updated can be re/assigned to clusters. Also, by holding off clustering till entire submission files are processed, the CID algorithm will have access to all related records at the same time which will prevent fragmentation.
+
+2) As a later refinement, the algorithm will move from matching one record to a cluster, to reevaluating all related records and reclustering those related records as need. This will enable self-healing when bad metadata clustered records together and has now been remediated. It also ensures clustering is independent from the timing of when certain records are loaded, and reproducible.
+
+This can be done in parallel to the current algorithm so we can evaluate any changes that take place. This architecture will also allow us to propose and test alternate clustering algorithms.
 
 ### Assumptions
 The working assumptions when clustering records we are:
