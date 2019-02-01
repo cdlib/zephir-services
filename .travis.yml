@@ -4,7 +4,7 @@ python:
 services:
   - mysql
 before_install:
-  - mysql  < zephir-verify/tests/test_audit/events.sql
+  - mysql  < zed-verify/tests/test_audit/events.sql
 install:
   - 'pip install pipenv'
   - 'pipenv install'
