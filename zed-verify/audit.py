@@ -102,6 +102,10 @@ def main(argv=None):
             zed_db.get("database", None),
         )
     )
+    # Add special socket if needed
+    if zed_db.get("drivername", None) == "mysql+mysqlconnector" and env('MYSQL_UNIX_PORT',default=None):
+        ZED_DB_CONNECT_STR = ZED_DB_CONNECT_STR + "?unix_socket=" + env('MYSQL_UNIX_PORT')
+
     engine = create_engine(ZED_DB_CONNECT_STR)
 
     # TODO(cscollett): print connection string w/out password to diagnostic.
