@@ -8,18 +8,13 @@ from audit import main
 
 
 @pytest.fixture
-def prep_data(tmpdir, monkeypatch):
-    # set env so audit script can find unit test temp directory
-    monkeypatch.setenv("PYTEST_TMPDIR", str(tmpdir))
-    # copy data to test-contained tmp dir
-    info = {"dir": tmpdir}
-    for entry in os.scandir(os.path.join(os.path.dirname(__file__), "test_audit")):
-        if entry.is_file():
-            shutil.copy(entry, os.path.join(info["dir"], entry.name))
-    return info
+def env_setup(td_tmpdir, monkeypatch):
+    monkeypatch.setenv("PYTEST_TMPDIR", str(td_tmpdir))
+    monkeypatch.setenv("ZED_CONFIG", os.path.join(str(td_tmpdir),'config'))
+    os.system("mysql --host=localhost --user=root  < {}/events.sql".format(td_tmpdir))
 
 
-def test_audit_errors_with_no_files(td_tmpdir, capsys):
+def test_audit_errors_with_no_files(env_setup, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = [""]
         main()
@@ -28,7 +23,7 @@ def test_audit_errors_with_no_files(td_tmpdir, capsys):
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 1]
 
 
-def test_audit_passes_received_events(td_tmpdir, capsys):
+def test_audit_passes_received_events(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "found_events.log")]
         main()
@@ -38,7 +33,7 @@ def test_audit_passes_received_events(td_tmpdir, capsys):
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
 
-def test_audit_respects_dry_run(td_tmpdir, capsys):
+def test_audit_respects_dry_run(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "found_events.log"), "--dry-run"]
         main()
@@ -51,7 +46,7 @@ def test_audit_respects_dry_run(td_tmpdir, capsys):
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
 
-def test_audit_will_not_overwrite(td_tmpdir, capsys):
+def test_audit_will_not_overwrite(env_setup, td_tmpdir, capsys):
     shutil.copy(
         os.path.join(td_tmpdir, "found_events.log"),
         os.path.join(td_tmpdir, "found_events.log.audited"),
@@ -64,7 +59,7 @@ def test_audit_will_not_overwrite(td_tmpdir, capsys):
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
 
-def test_audit_fails_missing_events(td_tmpdir, capsys):
+def test_audit_fails_missing_events(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "missing_events.log")]
         main()
@@ -84,7 +79,7 @@ def test_audit_fails_missing_events(td_tmpdir, capsys):
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
 
-def test_audit_handles_success_and_failure(td_tmpdir, capsys):
+def test_audit_handles_success_and_failure(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = [
             "",
@@ -102,7 +97,7 @@ def test_audit_handles_success_and_failure(td_tmpdir, capsys):
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
 
-def test_audit_handles_invalid_json(td_tmpdir, capsys):
+def test_audit_handles_invalid_json(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "events_with_invalid_json.log")]
         main()

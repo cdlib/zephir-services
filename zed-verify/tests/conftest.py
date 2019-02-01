@@ -25,10 +25,10 @@ def td_tmpdir(request, tmpdir, monkeypatch):
     td_path = os.path.join(os.path.dirname(__file__), td_dirname)
     tmp_td_path = os.path.join(tmpdir, td_dirname)
     shutil.copytree(td_path, tmp_td_path)
-    monkeypatch.setenv("PYTEST_TMPDIR", str(tmp_td_path))
-    if os.path.exists(os.path.join(str(tmp_td_path),'config')):
-        monkeypatch.setenv("ZED_CONFIG", os.path.join(str(tmp_td_path),'config'))
-        os.system("mysql --host=localhost --user=root  < {}/events.sql".format(tmp_td_path))
+    # monkeypatch.setenv("PYTEST_TMPDIR", str(tmp_td_path))
+    # if os.path.exists(os.path.join(str(tmp_td_path),'config')):
+    #     monkeypatch.setenv("ZED_CONFIG", os.path.join(str(tmp_td_path),'config'))
+    #     os.system("mysql --host=localhost --user=root  < {}/events.sql".format(tmp_td_path))
     return tmp_td_path
 
 
