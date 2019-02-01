@@ -1,4 +1,4 @@
 .env
 !tests/.env
 .pytest_cache
-*.yml
+config/*.yml

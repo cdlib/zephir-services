@@ -1,6 +1,10 @@
 language: python
 python:
   - '3.6'
+services:
+  - mysql
+before_install:
+  - mysql --host=localhost --user=root  < zephir-exports/lib/tests/test_audit/events.sql
 install:
   - 'pip install pipenv'
   - 'pipenv install'

@@ -24,10 +24,14 @@ import yaml
 from helpers.console_messenger import ConsoleMessenger
 
 
-def load_config(environment, path):
+def load_config(env, path):
     config = {}
-    config["env"] = environment
-    for entry in os.scandir(os.path.join(os.path.dirname(__file__), path)):
+    config["env"] = env
+    if os.path.isabs(path):
+        config_path = path
+    else:
+        config_path = os.path.join(os.path.dirname(__file__), path)
+    for entry in os.scandir(config_path):
         if entry.is_file() and entry.name.endswith(".yml"):
             section = os.path.splitext(entry.name)[0]
             with open(entry, "r") as ymlfile:
@@ -43,7 +47,8 @@ def main(argv=None):
     env.read_env()
 
     # load configuration files
-    config = load_config(env("ZED_ENV", socket.gethostname()).lower(), "config")
+    config = load_config(env("ZED_ENV", socket.gethostname()).lower(), env("ZED_CONFIG"))
+    config = load_config(env("ZED_ENV", socket.gethostname()).lower(), env("ZED_CONFIG"))
 
     # load arguments
     parser = argparse.ArgumentParser()
@@ -83,11 +88,10 @@ def main(argv=None):
     # DATABASE SETUP
     # Create database client, connection manager.
     zed_db = config.get("zed_db",{}).get(config["env"],{})
-    if config["env"] == "test":
+    if config["env"] == "test" and config["zed_db"]["test"]["drivername"] == "sqlite":
         zed_db["host"] = "//{}".format(
-            os.path.join(env("PYTEST_TMPDIR"), zed_db.get("host", "events.db"))
+            os.path.join(env("PYTEST_TMPDIR"), zed_db.get("host", None))
         )
-        zed_db["drivername"] = zed_db.get("drivername", "sqlite")
     ZED_DB_CONNECT_STR = str(
         URL(
             zed_db.get("drivername", None),
