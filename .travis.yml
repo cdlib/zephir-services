@@ -4,7 +4,7 @@ python:
 services:
   - mysql
 before_install:
-  - mysql  < zed-verify/tests/test_audit/events.sql
+  - mysql -e 'CREATE DATABASE htmm;'
 install:
   - 'pip install pipenv'
   - 'pipenv install'
