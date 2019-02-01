@@ -19,7 +19,7 @@ def prep_data(tmpdir, monkeypatch):
     return info
 
 
-def test_audit_errors_with_no_files(capsys):
+def test_audit_errors_with_no_files(td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = [""]
         main()
