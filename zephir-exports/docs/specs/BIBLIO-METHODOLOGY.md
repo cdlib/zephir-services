@@ -40,7 +40,7 @@ Sort items by metadata completeness score, and choose the the highest scoring re
 **Corner Cases**
 1. If multiple records are tied in metadata complete score (score or null score), select by database order (emulation of initial implementation order).
 
-### FedDocs+Score Priority Selection(Target Q4 2018) [V3]
+### FedDocs+Score Priority Selection(Feb 1st 2019) [V3]
 This implementation was built to prioritize records that indicate possible U.S. Federal Document status over the metadata completeness score. It was built using a new architecture which would allow future refinements of priority.
 
 **General Rule**
