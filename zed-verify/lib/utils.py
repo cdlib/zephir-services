@@ -14,14 +14,14 @@ def db_connect_url(config):
     database = os.environ.get('ZED_DB_DATABASE') or config.get("database")
     socket = os.environ.get('ZED_DB_SOCKET') or config.get("socket")
 
-    url = sqlalchemy.engine.url.URL(
+    url = str(sqlalchemy.engine.url.URL(
         drivername,
         username,
         password,
         host,
         port,
         database,
-    )
+    ))
 
     if drivername == "mysql+mysqlconnector" and socket is not None:
         url = url + "?unix_socket=" + socket
