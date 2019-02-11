@@ -14,7 +14,8 @@ import sys
 
 import jsonschema
 
-from helpers.console_messenger import ConsoleMessenger
+from lib.console_messenger import ConsoleMessenger
+import lib
 
 
 def main(argv=None):
@@ -53,7 +54,7 @@ def main(argv=None):
     console = ConsoleMessenger(args.quiet, args.verbose)
 
     schema_file = os.path.join(os.path.dirname(__file__), 'config/zed_schema.json')
-    print(schema_file)
+
     with open(schema_file, 'r') as f:
         schema_data = f.read()
         schema = json.loads(schema_data)

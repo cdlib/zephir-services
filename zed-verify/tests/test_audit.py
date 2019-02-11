@@ -9,8 +9,8 @@ from audit import main
 
 @pytest.fixture
 def env_setup(td_tmpdir, monkeypatch):
-    monkeypatch.setenv("PYTEST_TMPDIR", str(td_tmpdir))
-    monkeypatch.setenv("ZED_CONFIG", os.path.join(str(td_tmpdir),'config'))
+    monkeypatch.setenv("ZED_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir),'config'))
+    os.system("mysql --host=localhost --user=root  -e 'set @@global.show_compatibility_56=ON;'")
     os.system("mysql --host=localhost --user=root  < {}/events.sql".format(td_tmpdir))
 
 

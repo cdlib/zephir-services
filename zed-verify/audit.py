@@ -21,24 +21,8 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 import yaml
 
-from helpers.console_messenger import ConsoleMessenger
-
-
-def load_config(env, path):
-    config = {}
-    config["env"] = env
-    if os.path.isabs(path):
-        config_path = path
-    else:
-        config_path = os.path.join(os.path.dirname(__file__), path)
-    for entry in os.scandir(config_path):
-        if entry.is_file() and entry.name.endswith(".yml"):
-            section = os.path.splitext(entry.name)[0]
-            with open(entry, "r") as ymlfile:
-                config[section] = {}
-                config[section].update(yaml.load(ymlfile))
-    return config
-
+from lib.console_messenger import ConsoleMessenger
+import lib.utils as utils
 
 def main(argv=None):
     # APPLICATION SETUP
@@ -46,9 +30,17 @@ def main(argv=None):
     env = Env()
     env.read_env()
 
-    # load configuration files
-    config = load_config(env("ZED_ENV", socket.gethostname()).lower(), env("ZED_CONFIG"))
-    config = load_config(env("ZED_ENV", socket.gethostname()).lower(), env("ZED_CONFIG"))
+    ROOT_PATH = os.environ.get("ZED_ROOT_PATH") or os.path.dirname(__file__)
+    ENV =  os.environ.get("ZED_ENV")
+    CONFIG_PATH = os.environ.get("ZED_CONFIG_PATH") or os.path.join(ROOT_PATH, "config")
+    OVERRIDE_CONFIG_PATH = os.environ.get("ZED_OVERRIDE_CONFIG_PATH")
+
+    # load all configuration files in directory
+    config = utils.load_config(CONFIG_PATH)
+
+    # used in testing, config files in test data will override local config files
+    if OVERRIDE_CONFIG_PATH is not None:
+        config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
 
     # load arguments
     parser = argparse.ArgumentParser()
@@ -87,26 +79,13 @@ def main(argv=None):
 
     # DATABASE SETUP
     # Create database client, connection manager.
-    zed_db = config.get("zed_db",{}).get(config["env"],{})
-    if config["env"] == "test" and config["zed_db"]["test"]["drivername"] == "sqlite":
-        zed_db["host"] = "//{}".format(
-            os.path.join(env("PYTEST_TMPDIR"), zed_db.get("host", None))
-        )
-    ZED_DB_CONNECT_STR = str(
-        URL(
-            zed_db.get("drivername", None),
-            zed_db.get("username", None),
-            zed_db.get("password", None),
-            zed_db.get("host", None),
-            zed_db.get("port", None),
-            zed_db.get("database", None),
-        )
-    )
-    # Add special socket if needed
-    if zed_db.get("drivername", None) == "mysql+mysqlconnector" and env('MYSQL_UNIX_PORT',default=None):
-        ZED_DB_CONNECT_STR = ZED_DB_CONNECT_STR + "?unix_socket=" + env('MYSQL_UNIX_PORT')
+    db = config.get("zed_db",{}).get(ENV)
 
-    engine = create_engine(ZED_DB_CONNECT_STR)
+    DB_CONNECT_STR = str(
+        utils.db_connect_url(db)
+    )
+
+    engine = create_engine(DB_CONNECT_STR)
 
     # TODO(cscollett): print connection string w/out password to diagnostic.
 
