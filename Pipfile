@@ -16,6 +16,7 @@ pymarc = "*"
 pytest-cov = "*"
 codecov = "*"
 jsonschema = "*"
+selenium = "*"
 
 [dev-packages]
 
