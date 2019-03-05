@@ -11,11 +11,7 @@ def env_setup(td_tmpdir, monkeypatch):
     monkeypatch.setenv(
         "ZED_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
     )
-    os.system(
-        "mysql --host=localhost --user=root  < {}/cid_related_tables.sql".format(
-            td_tmpdir
-        )
-    )
+    os.system("mysql --host=localhost --user=root  < {}/cid_related_tables.sql".format(td_tmpdir))
 
 
 def test_find_cluster_with_no_files(env_setup, capsys):
