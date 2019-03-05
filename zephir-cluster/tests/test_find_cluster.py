@@ -12,9 +12,6 @@ def env_setup(td_tmpdir, monkeypatch):
         "ZED_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
     )
     os.system(
-        "mysql --host=localhost --user=root  -e 'set @@global.show_compatibility_56=ON;'"
-    )
-    os.system(
         "mysql --host=localhost --user=root  < {}/cid_related_tables.sql".format(
             td_tmpdir
         )
