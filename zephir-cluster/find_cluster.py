@@ -9,9 +9,8 @@ import sys
 
 from environs import Env
 from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import sessionmaker
-import yaml
+# from sqlalchemy.ext.automap import automap_base
+# from sqlalchemy.orm import sessionmaker
 
 from lib.utils import ConsoleMessenger
 import lib.utils as utils
@@ -70,15 +69,17 @@ def main(argv=None):
 
     engine = create_engine(DB_CONNECT_STR)
 
-    # Create classes through reflection
-    Base = automap_base()
-    Base.prepare(engine, reflect=True)
-    Identifiers = Base.classes.zephir_identifiers
+    print(engine)
 
-    # Create a session to the database.
-    Session = sessionmaker()
-    Session.configure(bind=engine)
-    session = Session()
+    # # Create classes through reflection
+    # Base = automap_base()
+    # Base.prepare(engine, reflect=True)
+    # Identifiers = Base.classes.zephir_identifiers
+    #
+    # # Create a session to the database.
+    # Session = sessionmaker()
+    # Session.configure(bind=engine)
+    # session = Session()
 
     # Iterate over the json log files to process
     for file in args.filepath:

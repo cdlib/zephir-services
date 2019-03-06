@@ -4,7 +4,6 @@
 import os
 import sys
 
-import environs
 import sqlalchemy.engine.url
 import yaml
 

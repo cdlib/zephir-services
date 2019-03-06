@@ -11,7 +11,7 @@ install:
   - 'pipenv install codecov'
 script:
   - 'pipenv run black --check zephir-cluster/'
-  - 'pipenv run Flake8 zephir-cluster --ignore E501 W503'
+  - 'pipenv run flake8 zephir-cluster --ignore E501 W503'
   - 'COVERAGE_FILE=.coverage_zephir-exports pipenv run coverage run --source=. -m pytest zephir-exports/lib'
   - 'COVERAGE_FILE=.coverage_zephir-exports pipenv run coverage report --omit=*/tests/*.py --fail-under=70'
   - 'COVERAGE_FILE=.coverage_zed-verify pipenv run coverage run --source=. -m pytest zed-verify'
