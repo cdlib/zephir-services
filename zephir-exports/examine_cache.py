@@ -7,7 +7,6 @@ import socket
 from environs import Env
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
-import yaml
 
 from lib.export_cache import ExportCache
 from lib.utils import zephir_config

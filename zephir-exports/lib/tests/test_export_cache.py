@@ -1,21 +1,15 @@
-import os
-import shutil
-import sys
-
-import pytest
-
 from export_cache import ExportCache
 from export_cache import CacheComparison
 
 
 def test_loaded_false_when_cache_table_does_not_exists(td_tmpdir):
     does_no_exist = ExportCache(td_tmpdir, "does-not-exist")
-    assert does_no_exist.cache_schema_exists_on_load == False
+    assert does_no_exist.cache_schema_exists_on_load is False
 
 
 def test_loaded_true_when_cache_table_does_exists(td_tmpdir):
     exists = ExportCache(td_tmpdir, "empty-cache")
-    assert exists.cache_schema_exists_on_load == True
+    assert exists.cache_schema_exists_on_load is True
 
 
 def test_add_to_cache(td_tmpdir):

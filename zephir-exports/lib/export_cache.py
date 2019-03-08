@@ -2,13 +2,11 @@ from contextlib import contextmanager
 import datetime
 import math
 import os
-import socket
 import zlib
 
 
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
-from sqlalchemy import Table
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.ext.automap import automap_base
@@ -61,7 +59,7 @@ class ExportCache:
         try:
             yield session
             session.commit()
-        except:
+        except Exception:
             session.rollback()
             raise
         finally:
@@ -165,7 +163,7 @@ class CacheComparison:
             self.unexamined.add(cache_id)
         for cache_id, cache_key in self.compare_index.items():
             result = self.cache_index.get(cache_id, None)
-            if result == None:
+            if result is None:
                 self.uncached.add(cache_id)
             elif result != cache_key:
                 self.stale.add(cache_id)

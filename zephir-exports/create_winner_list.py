@@ -1,5 +1,3 @@
-import json
-
 import pymarc
 from sqlalchemy import create_engine
 import zlib

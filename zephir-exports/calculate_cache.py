@@ -9,9 +9,6 @@ import argparse
 from environs import Env
 import json
 import mysql.connector
-from sqlalchemy import create_engine
-from sqlalchemy.engine.url import URL
-import yaml
 
 from lib.export_cache import ExportCache
 from lib.utils import zephir_config
@@ -33,10 +30,7 @@ def main(argv=None):
     # Command line argument configuration
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-s",
-        "--selection",
-        action="store",
-        help="Selection algorithm used for export",
+        "-s", "--selection", action="store", help="Selection algorithm used for export"
     )
     args = parser.parse_args()
     selection = args.selection
@@ -45,17 +39,17 @@ def main(argv=None):
 
     htmm_db = config["database"][config["env"]]
 
-    HTMM_DB_CONNECT_STR = str(
-        URL(
-            htmm_db.get("drivername", None),
-            htmm_db.get("username", None),
-            htmm_db.get("password", None),
-            htmm_db.get("host", None),
-            htmm_db.get("port", None),
-            htmm_db.get("database", None),
-        )
-    )
-    htmm_engine = create_engine(HTMM_DB_CONNECT_STR)
+    # HTMM_DB_CONNECT_STR = str(
+    #     URL(
+    #         htmm_db.get("drivername", None),
+    #         htmm_db.get("username", None),
+    #         htmm_db.get("password", None),
+    #         htmm_db.get("host", None),
+    #         htmm_db.get("port", None),
+    #         htmm_db.get("database", None),
+    #     )
+    # )
+    # htmm_engine = create_engine(HTMM_DB_CONNECT_STR)
 
     sql_select = {
         "v2": "select cid, db_updated_at, metadata_json, "
@@ -72,12 +66,12 @@ def main(argv=None):
         "order by cid, var_usfeddoc DESC, var_score DESC, vufind_sort ASC",
     }
     start_time = datetime.datetime.now()
-    live_index = {}
+    # live_index = {}
     max_date = None
-    record_count = 0
+    # record_count = 0
     records = []
-    htid = None
-    current_cid = None
+    # htid = None
+    # current_cid = None
 
     cache = ExportCache(
         os.path.abspath(os.path.join(os.path.dirname(__file__), "cache")),

@@ -1,5 +1,3 @@
-import json
-
 with open("outcome1.tsv") as f:
     with open("outcome2.tsv") as g:
         for idx, f_line in enumerate(f):

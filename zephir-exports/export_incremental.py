@@ -28,24 +28,18 @@ def main(argv=None):
     # Command line argument configuration
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-s",
-        "--selection",
-        action="store",
-        help="Selection algorithm used for export",
+        "-s", "--selection", action="store", help="Selection algorithm used for export"
     )
     parser.add_argument(
-        "-p",
-        "--prefix",
-        action="store_true",
-        help="Use a prefix for export",
+        "-p", "--prefix", action="store_true", help="Use a prefix for export"
     )
     args = parser.parse_args()
     selection = args.selection
     if selection is None:
         raise "Must pass a selection algorithm to use. See --help"
     export_filename = "ht_bib_export_incr_{}.json".format(
-                datetime.datetime.today().strftime("%Y-%m-%d")
-            )
+        datetime.datetime.today().strftime("%Y-%m-%d")
+    )
     if args.prefix:
         export_filename = "{}-{}".format(selection, export_filename)
 
@@ -77,8 +71,7 @@ def main(argv=None):
             echo=False,
         )
         export_filepath = os.path.join(
-            os.path.dirname(__file__),
-            "export/{}".format(export_filename),
+            os.path.dirname(__file__), "export/{}".format(export_filename)
         )
 
         with open((export_filepath), "a") as export_file, engine.connect() as con:
