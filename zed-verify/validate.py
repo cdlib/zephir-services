@@ -1,69 +1,70 @@
-#!/usr/bin/env python
-"""validate.py: Validate ZED log file to ensure all the data is JSON and
-conforms to schemas
-
-author: Charlie Collett"
-copyright: Copyright 2018 The Regents of the University of California. All
-rights reserved."""
-
-import argparse
 from collections import defaultdict
 import json
 import os
 import sys
 
+import click
+import environs
 import jsonschema
 
-from lib.console_messenger import ConsoleMessenger
-import lib
+from lib.utils import ConsoleMessenger
 
 
-def main(argv=None):
-    # Command line argument configuration
-    parser = argparse.ArgumentParser()
-    parser.add_argument("filepath", nargs="*", help="Filepath to files for processing")
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Emit messages dianostic messages about everything.",
-    )
-    parser.add_argument(
-        "-q",
-        "--quiet",
-        action="store_true",
-        help="Don't emit non-error messages to stderr. Errors are still emitted silence those with 2>/dev/null.",
-    )
-    parser.add_argument(
-        "-d", "--dry-run", action="store_true", help="Run process without side-effects"
-    )
-    parser.add_argument(
-        "-s",
-        "--suffix",
-        action="store",
-        default="validated",
-        help="for renaming valid files",
-    )
-    args = parser.parse_args()
-
-    if len(args.filepath) == 0:
-        print("No files given to process.", file=sys.stderr)
-        sys.exit(1)
+@click.command()
+@click.argument("filepath", nargs=-1, type=click.Path(exists=True))
+@click.option(
+    "-q",
+    "--quiet",
+    is_flag=True,
+    default=False,
+    help="Filepath to files for processing",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=True,
+    help="Emit messages dianostic messages about everything.",
+)
+@click.option(
+    "-d",
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Don't emit non-error messages to stderr. Errors are still emitted \
+    silence those with 2>/dev/null.",
+)
+@click.option(
+    "-s", "--suffix", "suffix", default="validated", help="for renaming valid files"
+)
+def validate(filepath, quiet, verbose, dry_run, suffix):
+    """validate.py: Validate ZED log file to ensure all the data is JSON and
+    conforms to schemas"""
 
     # Print handler to manage when and how messages should print
-    console = ConsoleMessenger(args.quiet, args.verbose)
+    console = ConsoleMessenger(quiet, verbose)
 
-    schema_file = os.path.join(os.path.dirname(__file__), 'config/zed_schema.json')
+    # REQUIREMENTS
+    if len(filepath) == 0:
+        console.error("No files given to process.")
+        sys.exit(1)
 
-    with open(schema_file, 'r') as f:
+    # APPLICATION SETUP
+    # load environment
+    env = environs.Env()
+    env.read_env()
+
+    schema_file = os.path.join(os.path.dirname(__file__), "config/zed_schema.json")
+
+    with open(schema_file, "r") as f:
         schema_data = f.read()
         schema = json.loads(schema_data)
 
-    if args.dry_run:
+    if dry_run:
         console.diagnostic("DRY RUN")
 
     # Iterate over the json log files to process
-    for file in args.filepath:
+    for file in filepath:
 
         if not os.path.isfile(file):
             console.error("File path '{0}' does not exist.".format(file))
@@ -71,7 +72,7 @@ def main(argv=None):
 
         # Get the file name, path, and create destination file name, path
         f_path, f_name = os.path.split(file)
-        renamed_file = os.path.join("{0}.{1}".format(file, args.suffix))
+        renamed_file = os.path.join("{0}.{1}".format(file, suffix))
 
         if os.path.isfile(renamed_file):
             console.error("Validated file '{0}' already exists.".format(renamed_file))
@@ -114,14 +115,15 @@ def main(argv=None):
             if file_valid is False:
                 console.error("File {0}: invalid.".format(file))
             else:
-                if not args.dry_run:
+                if not dry_run:
                     os.rename(file, renamed_file)
                 console.report(
                     "File {0}: valid. {1} event(s) validated.".format(file, ln_cnt)
                 )
     console.report("Done!")
+    print(filepath)
     sys.exit(0)
 
 
 if __name__ == "__main__":
-    main()
+    validate()

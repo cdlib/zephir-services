@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from validate import main
+from validate import validate
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ def prep_data(tmpdir, monkeypatch):
 def test_validate_errors_with_no_files(capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = [""]
-        main()
+        validate()
     out, err = capsys.readouterr()
     assert "No files given to process" in err
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 1]
@@ -29,7 +29,7 @@ def test_validate_errors_with_no_files(capsys):
 def test_validate_passes_valid_json(prep_data, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(prep_data["dir"], "valid.log")]
-        main()
+        validate()
     out, err = capsys.readouterr()
     assert "valid.log: valid" in err
     assert os.path.isfile(os.path.join(prep_data["dir"], "valid.log.validated"))
@@ -39,7 +39,7 @@ def test_validate_passes_valid_json(prep_data, capsys):
 def test_validate_respects_dry_run(prep_data, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(prep_data["dir"], "valid.log"), "--dry-run"]
-        main()
+        validate()
     out, err = capsys.readouterr()
     assert "valid.log: valid" in err
     assert not os.path.isfile(os.path.join(prep_data["dir"], "valid.log.validated"))
@@ -54,7 +54,7 @@ def test_validate_will_not_overwrite(prep_data, capsys):
     )
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(prep_data["dir"], "valid.log")]
-        main()
+        validate()
     out, err = capsys.readouterr()
     assert "valid.log: valid" not in err
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
@@ -63,7 +63,7 @@ def test_validate_will_not_overwrite(prep_data, capsys):
 def test_validate_fails_invalid_json(prep_data, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(prep_data["dir"], "invalid_json.log")]
-        main()
+        validate()
     out, err = capsys.readouterr()
     assert "invalid_json.log: invalid" in err
     assert not os.path.isfile(os.path.join(prep_data["dir"], "invalid.log.validated"))
@@ -73,18 +73,20 @@ def test_validate_fails_invalid_json(prep_data, capsys):
 def test_validate_fails_invalid_zed_schema_json(prep_data, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(prep_data["dir"], "invalid_zed_json.log")]
-        main()
+        validate()
     out, err = capsys.readouterr()
     assert "Validation error" in err
     assert "invalid_zed_json.log: invalid" in err
-    assert not os.path.isfile(os.path.join(prep_data["dir"], "invalid_zed_json.log.validated"))
+    assert not os.path.isfile(
+        os.path.join(prep_data["dir"], "invalid_zed_json.log.validated")
+    )
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
 
 def test_validate_fails_duplicate_id(prep_data, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(prep_data["dir"], "duplicate.log"), "--verbose"]
-        main()
+        validate()
     out, err = capsys.readouterr()
     assert "Duplicate" in err
     assert "duplicate.log: invalid" in err
@@ -100,7 +102,7 @@ def test_validate_handles_success_and_failure(prep_data, capsys):
             os.path.join(prep_data["dir"], "duplicate.log"),
             os.path.join(prep_data["dir"], "invalid_json.log"),
         ]
-        main()
+        validate()
     out, err = capsys.readouterr()
     assert ": invalid" in err
     assert ": valid" in err

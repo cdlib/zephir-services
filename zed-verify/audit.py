@@ -1,37 +1,62 @@
-#!/usr/bin/env python
-"""Audit.py: Audit ZED log file to ensure all the data is represented in
-the database
-
-author: Charlie Collett"
-copyright: Copyright 2018 The Regents of the University of California. All
-rights reserved."""
-
-import argparse
 import datetime
 import iso8601
 import json
 import os
-import socket
 import sys
 
-from environs import Env
-from sqlalchemy import create_engine
-from sqlalchemy.engine.url import URL
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import sessionmaker
-import yaml
+import click
+import environs
+import sqlalchemy as sqla
 
-from lib.console_messenger import ConsoleMessenger
+from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
-def main(argv=None):
+
+@click.command()
+@click.argument("filepath", nargs=-1, type=click.Path(exists=True))
+@click.option(
+    "-q",
+    "--quiet",
+    is_flag=True,
+    default=False,
+    help="Filepath to files for processing",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=True,
+    help="Emit messages dianostic messages about everything.",
+)
+@click.option(
+    "-d",
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Don't emit non-error messages to stderr. Errors are still emitted \
+    silence those with 2>/dev/null.",
+)
+@click.option(
+    "-s", "--suffix", "suffix", default="audited", help="for renaming valid files"
+)
+def audit(filepath, quiet, verbose, dry_run, suffix):
+    """Audit.py: Audit ZED log file to ensure all the data is represented in
+    the database"""
+    # Print handler to manage when and how messages should print
+    console = ConsoleMessenger(quiet, verbose)
+
+    # REQUIREMENTS
+    if len(filepath) == 0:
+        console.error("No files given to process.")
+        sys.exit(1)
+
     # APPLICATION SETUP
     # load environment
-    env = Env()
+    env = environs.Env()
     env.read_env()
 
     ROOT_PATH = os.environ.get("ZED_ROOT_PATH") or os.path.dirname(__file__)
-    ENV =  os.environ.get("ZED_ENV")
+    ENV = os.environ.get("ZED_ENV")
     CONFIG_PATH = os.environ.get("ZED_CONFIG_PATH") or os.path.join(ROOT_PATH, "config")
     OVERRIDE_CONFIG_PATH = os.environ.get("ZED_OVERRIDE_CONFIG_PATH")
 
@@ -42,68 +67,32 @@ def main(argv=None):
     if OVERRIDE_CONFIG_PATH is not None:
         config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
 
-    # load arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("filepath", nargs="*", help="Filepath to files for processing")
-    parser.add_argument(
-        "-d", "--dry-run", action="store_true", help="Run process as rehearsal only"
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Emit messages dianostic messages about everything.",
-    )
-    parser.add_argument(
-        "-q",
-        "--quiet",
-        action="store_true",
-        help="Don't emit non-error messages to stderr. Errors are still emitted silence those with 2>/dev/null.",
-    )
-    parser.add_argument(
-        "-s",
-        "--suffix",
-        action="store",
-        default="audited",
-        help="for renaming passing files",
-    )
-    args = parser.parse_args()
-
     # Print handler to manage when/where messages should print
-    console = ConsoleMessenger(args.quiet, args.verbose)
-
-    # REQUIREMENTS
-    if len(args.filepath) == 0:
-        console.error("No files given to process.")
-        sys.exit(1)
+    console = ConsoleMessenger(quiet, verbose)
 
     # DATABASE SETUP
     # Create database client, connection manager.
-    db = config.get("zed_db",{}).get(ENV)
+    db = config.get("zed_db", {}).get(ENV)
 
-    DB_CONNECT_STR = str(
-        utils.db_connect_url(db)
-    )
+    DB_CONNECT_STR = str(utils.db_connect_url(db))
 
-    engine = create_engine(DB_CONNECT_STR)
-
-    # TODO(cscollett): print connection string w/out password to diagnostic.
+    engine = sqla.create_engine(DB_CONNECT_STR)
 
     # Create classes through reflection
-    Base = automap_base()
+    Base = sqla.ext.automap.automap_base()
     Base.prepare(engine, reflect=True)
     Event = Base.classes.events
 
     # Create a session to the database.
-    Session = sessionmaker()
+    Session = sqla.orm.sessionmaker()
     Session.configure(bind=engine)
     session = Session()
 
-    if args.dry_run:
+    if dry_run:
         console.diagnostic("DRY RUN")
 
     # Iterate over the json log files to process
-    for file in args.filepath:
+    for file in filepath:
 
         if not os.path.isfile(file):
             console.error("File path '{0}' does not exist. Exiting...".format(file))
@@ -111,7 +100,7 @@ def main(argv=None):
 
         # # Get the file name, path, and create destination file name, path
         f_path, f_name = os.path.split(file)
-        renamed_file = os.path.join("{0}.{1}".format(file, args.suffix))
+        renamed_file = os.path.join("{0}.{1}".format(file, suffix))
 
         if os.path.isfile(renamed_file):
             console.error("Audit file '{0}' already exists.".format(renamed_file))
@@ -159,7 +148,7 @@ def main(argv=None):
                     db_events.add(event.event_key)
             except Exception as e:
                 session.rollback()
-                raise
+                raise e
             finally:
                 session.close()
 
@@ -174,7 +163,7 @@ def main(argv=None):
         if file_pass is False:
             console.error("File {0}: fail.".format(file))
         else:
-            if not args.dry_run:
+            if not dry_run:
                 os.rename(file, renamed_file)
             console.report(
                 "File {0}: pass. {1} event(s) audited.\
@@ -188,4 +177,4 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    main()
+    audit()

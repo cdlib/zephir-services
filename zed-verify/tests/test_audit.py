@@ -4,20 +4,21 @@ import sys
 
 import pytest
 
-from audit import main
+from audit import audit
 
 
 @pytest.fixture
 def env_setup(td_tmpdir, monkeypatch):
-    monkeypatch.setenv("ZED_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir),'config'))
-    os.system("mysql --host=localhost --user=root  -e 'set @@global.show_compatibility_56=ON;'")
+    monkeypatch.setenv(
+        "ZED_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
+    )
     os.system("mysql --host=localhost --user=root  < {}/events.sql".format(td_tmpdir))
 
 
 def test_audit_errors_with_no_files(env_setup, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = [""]
-        main()
+        audit()
     out, err = capsys.readouterr()
     assert "No files given to process." in err
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 1]
@@ -26,7 +27,7 @@ def test_audit_errors_with_no_files(env_setup, capsys):
 def test_audit_passes_received_events(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "found_events.log")]
-        main()
+        audit()
     out, err = capsys.readouterr()
     assert "found_events.log: pass" in err
     assert os.path.isfile(os.path.join(td_tmpdir, "found_events.log.audited"))
@@ -36,12 +37,10 @@ def test_audit_passes_received_events(env_setup, td_tmpdir, capsys):
 def test_audit_respects_dry_run(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "found_events.log"), "--dry-run"]
-        main()
+        audit()
     out, err = capsys.readouterr()
     assert "found_events.log: pass" in err
-    assert not os.path.isfile(
-        os.path.join(td_tmpdir, "found_events.log.validated")
-    )
+    assert not os.path.isfile(os.path.join(td_tmpdir, "found_events.log.validated"))
     assert os.path.isfile(os.path.join(td_tmpdir, "found_events.log"))
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
@@ -53,7 +52,7 @@ def test_audit_will_not_overwrite(env_setup, td_tmpdir, capsys):
     )
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "found_events.log")]
-        main()
+        audit()
     out, err = capsys.readouterr()
     assert "found_events.log: pass" not in err
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
@@ -62,7 +61,7 @@ def test_audit_will_not_overwrite(env_setup, td_tmpdir, capsys):
 def test_audit_fails_missing_events(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "missing_events.log")]
-        main()
+        audit()
     out, err = capsys.readouterr()
     # Good data in the test_audit database
     assert "a1baa562" not in err
@@ -73,9 +72,7 @@ def test_audit_fails_missing_events(env_setup, td_tmpdir, capsys):
     assert "does-not-exist-1" in err
     assert "does-not-exist-2" in err
     assert "missing_events.log: fail" in err
-    assert not os.path.isfile(
-        os.path.join(td_tmpdir, "missing_events.log.audited")
-    )
+    assert not os.path.isfile(os.path.join(td_tmpdir, "missing_events.log.audited"))
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
 
@@ -86,21 +83,19 @@ def test_audit_handles_success_and_failure(env_setup, td_tmpdir, capsys):
             os.path.join(td_tmpdir, "found_events.log"),
             os.path.join(td_tmpdir, "missing_events.log"),
         ]
-        main()
+        audit()
     out, err = capsys.readouterr()
     assert "pass" in err
     assert "fail" in err
     assert os.path.isfile(os.path.join(td_tmpdir, "found_events.log.audited"))
-    assert not os.path.isfile(
-        os.path.join(td_tmpdir, "missing_events.log.audited")
-    )
+    assert not os.path.isfile(os.path.join(td_tmpdir, "missing_events.log.audited"))
     assert pytest_e.type, pytest_e.value.code == [SystemExit, 0]
 
 
 def test_audit_handles_invalid_json(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "events_with_invalid_json.log")]
-        main()
+        audit()
     out, err = capsys.readouterr()
     assert "fail" in err
     assert not os.path.isfile(
