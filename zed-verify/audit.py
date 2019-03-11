@@ -7,6 +7,7 @@ import sys
 import click
 import environs
 import sqlalchemy as sqla
+import sqlalchemy.ext.automap as sqla_automap
 
 from lib.utils import ConsoleMessenger
 import lib.utils as utils
@@ -79,7 +80,7 @@ def audit(filepath, quiet, verbose, dry_run, suffix):
     engine = sqla.create_engine(DB_CONNECT_STR)
 
     # Create classes through reflection
-    Base = sqla.ext.automap.automap_base()
+    Base = sqla_automap.automap_base()
     Base.prepare(engine, reflect=True)
     Event = Base.classes.events
 
