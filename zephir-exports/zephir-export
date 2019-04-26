@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+import click
+
+from create_cache import create_cache
+
+
+@click.group()
+def entry_point():
+    """A collection of utilities for exporting Zephir records."""
+    pass
+
+
+entry_point.add_command(create_cache, name='cache')
+entry_point.add_command(create_bib_export, name='bib')
+
+if __name__ == "__main__":
+    entry_point()
