@@ -72,9 +72,7 @@ def create_bib_export(quiet, verbose, selection, prefix):
 
         engine = create_engine(
             "sqlite:///{}/cache-{}-{}.db".format(
-                CACHE_PATH,
-                selection,
-                datetime.datetime.today().strftime("%Y-%m-%d"),
+                CACHE_PATH, selection, datetime.datetime.today().strftime("%Y-%m-%d")
             ),
             echo=False,
         )

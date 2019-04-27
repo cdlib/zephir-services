@@ -10,8 +10,8 @@ def entry_point():
     pass
 
 
-entry_point.add_command(create_cache, name='cache')
-entry_point.add_command(create_bib_export, name='bib')
+entry_point.add_command(create_cache, name="cache")
+entry_point.add_command(create_bib_export, name="bib")
 
 if __name__ == "__main__":
     entry_point()
