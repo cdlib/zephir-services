@@ -15,18 +15,18 @@ try:
             MYSQL_DATA
         ),
         shell=True,
-        env=dict(os.environ),
     )
-    # set compatability for python sqlalchemy package
-    compatability_output = subprocess.check_output(
-        "mysql -e 'set @@global.show_compatibility_56=ON", shell=True
-    )
+
     # export the socket (will be used by mysql to connect) and pid file (will be used for shutdown)
     print(
         "export MYSQL_UNIX_PORT={0}/mysql.socket; export MYSQL_PID_FILE={0}/mysql.pid;\n".format(
             MYSQL_DATA
         )
     )
+    os.environ["MYSQL_UNIX_PORT"] = "{0}/mysql.socket".format(
+        MYSQL_DATA
+    )
+
     print("echo 'Mysql test server started'")
 except subprocess.CalledProcessError as grepexc:
     print("echo '", grepexc.returncode, grepexc.output, "'")
