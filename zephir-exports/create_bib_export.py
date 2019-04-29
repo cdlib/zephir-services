@@ -94,4 +94,4 @@ def create_bib_export(quiet, verbose, selection, export_path, prefix):
 
 
 if __name__ == "__main__":
-    main()
+    create_bib_export()
