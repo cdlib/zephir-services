@@ -46,7 +46,14 @@ def test_create_bib_export_successfully(td_tmpdir, env_setup, capsys):
         )
         # test create successful
         with pytest.raises(SystemExit) as pytest_e:
-            sys.argv = sys.argv = ["", "--selection", selection, "--prefix", "--export-path", td_tmpdir]
+            sys.argv = sys.argv = [
+                "",
+                "--selection",
+                selection,
+                "--prefix",
+                "--export-path",
+                td_tmpdir,
+            ]
             create_bib_export()
             out, err = capsys.readouterr()
             assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]

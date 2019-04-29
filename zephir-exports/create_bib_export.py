@@ -52,7 +52,11 @@ def create_bib_export(quiet, verbose, selection, export_path, prefix):
     )
     OVERRIDE_CONFIG_PATH = os.environ.get("ZEPHIR_OVERRIDE_CONFIG_PATH")
     CACHE_PATH = os.environ.get("ZEPHIR_CACHE_PATH") or os.path.join(ROOT_PATH, "cache")
-    EXPORT_PATH = export_path or os.environ.get("ZEPHIR_EXPORT_PATH") or os.path.join(ROOT_PATH, "export")
+    EXPORT_PATH = (
+        export_path
+        or os.environ.get("ZEPHIR_EXPORT_PATH")
+        or os.path.join(ROOT_PATH, "export")
+    )
 
     # load all configuration files in directory
     config = utils.load_config(CONFIG_PATH)
@@ -67,10 +71,7 @@ def create_bib_export(quiet, verbose, selection, export_path, prefix):
 
     start_time = datetime.datetime.now()
 
-    with open(
-        os.path.join(EXPORT_PATH, export_filename),
-        "a",
-    ) as export_file:
+    with open(os.path.join(EXPORT_PATH, export_filename), "a") as export_file:
 
         engine = create_engine(
             "sqlite:///{}/cache-{}-{}.db".format(
