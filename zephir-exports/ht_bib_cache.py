@@ -16,26 +16,7 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-@click.command()
-@click.option(
-    "-q", "--quiet", is_flag=True, default=False, help="Only emit error messages"
-)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Emit messages dianostic messages about everything",
-)
-@click.option("--selection", nargs=1, required="true")
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Remove and rewrite over existing cache",
-)
-def create_cache(quiet, verbose, selection, force):
+def generate_cache(selection, quiet=False, verbose=True, force=False):
 
     # APPLICATION SETUP
     # load environment
@@ -78,9 +59,10 @@ def create_cache(quiet, verbose, selection, force):
     }
     start_time = datetime.datetime.now()
 
+    tmp_cache_name = "tmp-cache-{}-{}".format(selection, datetime.datetime.today().strftime('%Y-%m-%d_%H%M%S.%f'))
     cache = ExportCache(
         CACHE_PATH,
-        "cache-{}-{}".format(selection, datetime.datetime.today().strftime("%Y-%m-%d")),
+        tmp_cache_name,
         force,
     )
 
@@ -156,6 +138,8 @@ def create_cache(quiet, verbose, selection, force):
         bulk_session.bulk_save_objects(entries)
         bulk_session.commit()
         bulk_session.close()
+        cache_file = os.path.join(CACHE_PATH, "cache-{}-{}.db".format(selection, datetime.datetime.today().strftime('%Y-%m-%d')))
+        os.rename(os.path.join(CACHE_PATH,"{}.db".format(tmp_cache_name)),cache_file)
         console.report(
             "Finished: {} (Elapsed: {})".format(
                 selection, str(datetime.datetime.now() - start_time)
@@ -164,6 +148,8 @@ def create_cache(quiet, verbose, selection, force):
     finally:
         cursor.close()
         conn.close()
+
+    return cache_file
 
 
 if __name__ == "__main__":

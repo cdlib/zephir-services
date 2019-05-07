@@ -17,6 +17,7 @@ pytest-cov = "*"
 codecov = "*"
 jsonschema = "*"
 selenium = "*"
+freezegun = "*"
 
 [dev-packages]
 

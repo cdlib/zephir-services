@@ -1,0 +1,10 @@
+# test:
+#   host: events.db
+#   drivername: sqlite
+
+test:
+  host: localhost
+  username: root
+  password:
+  database: htmm
+  drivername: mysql+mysqlconnector

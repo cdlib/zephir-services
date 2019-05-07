@@ -13,10 +13,12 @@ from sqlalchemy.ext.automap import automap_base
 
 
 class ExportCache:
-    def __init__(self, cache_dir, name, force=False):
+    def __init__(self, cache_dir=None, name=None, force=False, path=None):
         self.name = name
 
-        path = os.path.join(cache_dir, "{}.db".format(name))
+        if path is None:
+            path = os.path.join(cache_dir, "{}.db".format(name))
+
         if force and os.path.isfile(path):
             os.remove(path)
 

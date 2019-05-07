@@ -2,6 +2,7 @@
 import click
 
 from create_cache import create_cache
+from create_bib_export import create_bib_export
 
 
 @click.group()
@@ -9,9 +10,8 @@ def entry_point():
     """A collection of utilities for exporting Zephir records."""
     pass
 
-
-entry_point.add_command(create_cache, name="cache")
-entry_point.add_command(create_bib_export, name="bib")
+entry_point.add_command(ht_bib_cli, name="ht-bib")
+entry_point.add_command(compare_cache_cli, name="compare-cache")
 
 if __name__ == "__main__":
     entry_point()
