@@ -4,6 +4,7 @@ from ht_bib_cache import generate_cache
 from ht_bib_export_full import generate_export_full
 from ht_bib_export_incr import generate_export_incr
 
+
 @click.command()
 @click.option(
     "-q", "--quiet", is_flag=True, default=False, help="Only emit error messages"
@@ -30,9 +31,22 @@ def ht_bib_cli(quiet, verbose, selection, export_type, cache_only, use_cache, fo
     cache = use_cache or generate_cache(selection, quiet, verbose, force)
     output = None
     if export_type == "full":
-        output = generate_export_full(selection=selection, use_cache=cache, quiet=quiet, verbose=verbose, force=force)
+        output = generate_export_full(
+            selection=selection,
+            use_cache=cache,
+            quiet=quiet,
+            verbose=verbose,
+            force=force,
+        )
     elif export_type == "full":
-        output = generate_export_incre(selection=selection, use_cache=cache, quiet=quiet, verbose=verbose, force=force)
+        output = generate_export_incre(
+            selection=selection,
+            use_cache=cache,
+            quiet=quiet,
+            verbose=verbose,
+            force=force,
+        )
+
 
 if __name__ == "__main__":
     ht_biblio_cli()

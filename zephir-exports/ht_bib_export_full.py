@@ -15,7 +15,9 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def generate_export_full(selection=None, use_cache=None, quiet=False, verbose=True, force=False):
+def generate_export_full(
+    selection=None, use_cache=None, quiet=False, verbose=True, force=False
+):
     prefix = True
     # APPLICATION SETUP
     # load environment
@@ -32,9 +34,8 @@ def generate_export_full(selection=None, use_cache=None, quiet=False, verbose=Tr
     )
     OVERRIDE_CONFIG_PATH = os.environ.get("ZEPHIR_OVERRIDE_CONFIG_PATH")
     CACHE_PATH = os.environ.get("ZEPHIR_CACHE_PATH") or os.path.join(ROOT_PATH, "cache")
-    EXPORT_PATH = (
-        os.environ.get("ZEPHIR_EXPORT_PATH")
-        or os.path.join(ROOT_PATH, "export")
+    EXPORT_PATH = os.environ.get("ZEPHIR_EXPORT_PATH") or os.path.join(
+        ROOT_PATH, "export"
     )
 
     # load all configuration files in directory
@@ -43,7 +44,6 @@ def generate_export_full(selection=None, use_cache=None, quiet=False, verbose=Tr
     # used in testing, config files in test data will override local config files
     if OVERRIDE_CONFIG_PATH is not None and os.path.isdir(OVERRIDE_CONFIG_PATH):
         config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
-
 
     if selection is None:
         raise "Must pass a selection algorithm to use. See --help"
@@ -65,10 +65,7 @@ def generate_export_full(selection=None, use_cache=None, quiet=False, verbose=Tr
 
     with open(os.path.join(EXPORT_PATH, export_filename), "a") as export_file:
 
-        engine = create_engine(
-            cache,
-            echo=False,
-        )
+        engine = create_engine(cache, echo=False)
 
         with engine.connect() as con:
             create_table_stmt = "select cache_data from cache"

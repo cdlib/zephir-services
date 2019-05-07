@@ -21,7 +21,11 @@ def test_files_required(td_tmpdir, capsys):
 
 def test_compare_identical_files(td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
-        sys.argv = sys.argv = ["", os.path.join(td_tmpdir,"cache_ref.db"), os.path.join(td_tmpdir,"cache_ref_duplicate.db")]
+        sys.argv = sys.argv = [
+            "",
+            os.path.join(td_tmpdir, "cache_ref.db"),
+            os.path.join(td_tmpdir, "cache_ref_duplicate.db"),
+        ]
         compare_cache_cli()
     out, err = capsys.readouterr()
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]

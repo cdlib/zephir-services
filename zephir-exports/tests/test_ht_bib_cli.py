@@ -18,9 +18,7 @@ def env_setup(td_tmpdir, monkeypatch):
     monkeypatch.setenv(
         "ZEPHIR_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
     )
-    monkeypatch.setenv(
-        "ZEPHIR_EXPORT_PATH", td_tmpdir
-    )
+    monkeypatch.setenv("ZEPHIR_EXPORT_PATH", td_tmpdir)
     monkeypatch.setenv("ZEPHIR_CACHE_PATH", td_tmpdir)
 
     if "MYSQL_UNIX_PORT" in os.environ:
@@ -42,7 +40,14 @@ def test_create_cache_successfully(td_tmpdir, env_setup, capsys):
     for selection in ["v2", "v3"]:
         # test create successful
         with pytest.raises(SystemExit) as pytest_e:
-            sys.argv = sys.argv = ["", "--selection", selection, "--export-type", "full", "--force"]
+            sys.argv = sys.argv = [
+                "",
+                "--selection",
+                selection,
+                "--export-type",
+                "full",
+                "--force",
+            ]
             ht_bib_cli()
             out, err = capsys.readouterr()
             print(err)
@@ -57,5 +62,10 @@ def test_create_cache_successfully(td_tmpdir, env_setup, capsys):
         ref_cache = ExportCache(td_tmpdir, "cache-{}-ref".format(selection))
         assert new_cache.size() == ref_cache.size()
         assert new_cache.content_hash() == ref_cache.content_hash()
-        export_filename = "{}-ht_bib_export_full_{}.json".format(selection,datetime.datetime.today().strftime("%Y-%m-%d"))
-        assert filecmp.cmp(os.path.join(td_tmpdir,export_filename), os.path.join(td_tmpdir,"{}-ht_bib_export_full_ref.json".format(selection)))
+        export_filename = "{}-ht_bib_export_full_{}.json".format(
+            selection, datetime.datetime.today().strftime("%Y-%m-%d")
+        )
+        assert filecmp.cmp(
+            os.path.join(td_tmpdir, export_filename),
+            os.path.join(td_tmpdir, "{}-ht_bib_export_full_ref.json".format(selection)),
+        )

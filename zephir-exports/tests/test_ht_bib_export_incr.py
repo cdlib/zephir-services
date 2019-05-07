@@ -18,10 +18,9 @@ def env_setup(td_tmpdir, monkeypatch):
     monkeypatch.setenv(
         "ZEPHIR_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
     )
-    monkeypatch.setenv(
-        "ZEPHIR_EXPORT_PATH", td_tmpdir
-    )
+    monkeypatch.setenv("ZEPHIR_EXPORT_PATH", td_tmpdir)
     monkeypatch.setenv("ZEPHIR_CACHE_PATH", td_tmpdir)
+
 
 @freeze_time("2019-02-18")
 def test_create_bib_export_incr(td_tmpdir, env_setup, capsys):
@@ -36,5 +35,10 @@ def test_create_bib_export_incr(td_tmpdir, env_setup, capsys):
             ),
         )
         generate_export_incr(selection=selection, force=True)
-        export_filename = "{}-ht_bib_export_incr_{}.json".format(selection,datetime.datetime.today().strftime("%Y-%m-%d"))
-        assert filecmp.cmp(os.path.join(td_tmpdir,export_filename), os.path.join(td_tmpdir,"{}-ht_bib_export_incr_ref.json".format(selection)))
+        export_filename = "{}-ht_bib_export_incr_{}.json".format(
+            selection, datetime.datetime.today().strftime("%Y-%m-%d")
+        )
+        assert filecmp.cmp(
+            os.path.join(td_tmpdir, export_filename),
+            os.path.join(td_tmpdir, "{}-ht_bib_export_incr_ref.json".format(selection)),
+        )

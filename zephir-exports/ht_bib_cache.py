@@ -59,12 +59,10 @@ def generate_cache(selection, quiet=False, verbose=True, force=False):
     }
     start_time = datetime.datetime.now()
 
-    tmp_cache_name = "tmp-cache-{}-{}".format(selection, datetime.datetime.today().strftime('%Y-%m-%d_%H%M%S.%f'))
-    cache = ExportCache(
-        CACHE_PATH,
-        tmp_cache_name,
-        force,
+    tmp_cache_name = "tmp-cache-{}-{}".format(
+        selection, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
     )
+    cache = ExportCache(CACHE_PATH, tmp_cache_name, force)
 
     console.report(
         "Started: {} (Elapsed: {})".format(
@@ -138,8 +136,13 @@ def generate_cache(selection, quiet=False, verbose=True, force=False):
         bulk_session.bulk_save_objects(entries)
         bulk_session.commit()
         bulk_session.close()
-        cache_file = os.path.join(CACHE_PATH, "cache-{}-{}.db".format(selection, datetime.datetime.today().strftime('%Y-%m-%d')))
-        os.rename(os.path.join(CACHE_PATH,"{}.db".format(tmp_cache_name)),cache_file)
+        cache_file = os.path.join(
+            CACHE_PATH,
+            "cache-{}-{}.db".format(
+                selection, datetime.datetime.today().strftime("%Y-%m-%d")
+            ),
+        )
+        os.rename(os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file)
         console.report(
             "Finished: {} (Elapsed: {})".format(
                 selection, str(datetime.datetime.now() - start_time)

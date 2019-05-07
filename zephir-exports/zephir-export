@@ -1,7 +1,5 @@
-#!/usr/bin/env python
 import click
 
-from create_cache import create_cache
 from create_bib_export import create_bib_export
 
 
@@ -9,6 +7,7 @@ from create_bib_export import create_bib_export
 def entry_point():
     """A collection of utilities for exporting Zephir records."""
     pass
+
 
 entry_point.add_command(ht_bib_cli, name="ht-bib")
 entry_point.add_command(compare_cache_cli, name="compare-cache")

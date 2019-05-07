@@ -15,7 +15,10 @@ from vufind_formatter import VufindFormatter
 from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
-def generate_export_incr(selection=None, use_cache=None, quiet=False, verbose=True, force=False):
+
+def generate_export_incr(
+    selection=None, use_cache=None, quiet=False, verbose=True, force=False
+):
     prefix = True
     # APPLICATION SETUP
     # load environment
@@ -32,9 +35,8 @@ def generate_export_incr(selection=None, use_cache=None, quiet=False, verbose=Tr
     )
     OVERRIDE_CONFIG_PATH = os.environ.get("ZEPHIR_OVERRIDE_CONFIG_PATH")
     CACHE_PATH = os.environ.get("ZEPHIR_CACHE_PATH") or os.path.join(ROOT_PATH, "cache")
-    EXPORT_PATH = (
-        os.environ.get("ZEPHIR_EXPORT_PATH")
-        or os.path.join(ROOT_PATH, "export")
+    EXPORT_PATH = os.environ.get("ZEPHIR_EXPORT_PATH") or os.path.join(
+        ROOT_PATH, "export"
     )
 
     # load all configuration files in directory
@@ -56,7 +58,9 @@ def generate_export_incr(selection=None, use_cache=None, quiet=False, verbose=Tr
     htmm_db = config.get("database", {}).get(ENV)
 
     today_date = datetime.date.today().strftime("%Y-%m-%d")
-    tomorrow_date = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    tomorrow_date = (datetime.date.today() + datetime.timedelta(days=1)).strftime(
+        "%Y-%m-%d"
+    )
     cid_stmt = "select distinct cid from zephir_records where attr_ingest_date is not null and last_updated_at between '{}' and '{}' order by cid".format(
         today_date, tomorrow_date
     )
@@ -75,13 +79,11 @@ def generate_export_incr(selection=None, use_cache=None, quiet=False, verbose=Tr
         cursor.execute(cid_stmt)
 
         engine = create_engine(
-            "sqlite:///{}/cache-{}-{}.db".format(
-                CACHE_PATH, selection, today_date
-            ),
+            "sqlite:///{}/cache-{}-{}.db".format(CACHE_PATH, selection, today_date),
             echo=False,
         )
 
-        export_filepath = os.path.join(EXPORT_PATH,export_filename)
+        export_filepath = os.path.join(EXPORT_PATH, export_filename)
         print(export_filepath)
         print("done...")
 
