@@ -5,9 +5,10 @@ import shutil
 import sys
 import zlib
 
+from freezegun import freeze_time
 import pytest
 
-from ht_bib_export_full import generate_export_full
+from export_types.ht_bib_incr import ht_bib_incr
 from export_cache import ExportCache
 
 
@@ -21,23 +22,23 @@ def env_setup(td_tmpdir, monkeypatch):
     monkeypatch.setenv("ZEPHIR_CACHE_PATH", td_tmpdir)
 
 
-def test_create_bib_export_full(td_tmpdir, env_setup, capsys):
-    for selection in ["v2", "v3"]:
+@freeze_time("2019-02-18")
+def test_create_bib_export_incr(td_tmpdir, env_setup, capsys):
+    for version in ["v2", "v3"]:
         os.rename(
-            os.path.join(td_tmpdir, "cache-{}-ref.db".format(selection)),
+            os.path.join(td_tmpdir, "cache-{}-ref.db".format(version)),
             os.path.join(
                 td_tmpdir,
                 "cache-{}-{}.db".format(
-                    selection, datetime.datetime.today().strftime("%Y-%m-%d")
+                    version, datetime.datetime.today().strftime("%Y-%m-%d")
                 ),
             ),
         )
-        generate_export_full(selection=selection, force=True)
-
-        export_filename = "{}-ht_bib_export_full_{}.json".format(
-            selection, datetime.datetime.today().strftime("%Y-%m-%d")
+        ht_bib_incr(version=version, force=True)
+        export_filename = "{}-ht_bib_export_incr_{}.json".format(
+            version, datetime.datetime.today().strftime("%Y-%m-%d")
         )
         assert filecmp.cmp(
             os.path.join(td_tmpdir, export_filename),
-            os.path.join(td_tmpdir, "{}-ht_bib_export_full_ref.json".format(selection)),
+            os.path.join(td_tmpdir, "{}-ht_bib_export_incr_ref.json".format(version)),
         )

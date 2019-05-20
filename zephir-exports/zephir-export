@@ -1,16 +1,29 @@
 import click
 
-from create_bib_export import create_bib_export
+from compare_cache_cli import compare_cache_cli
+from generate_cli import generate_cli
+from lib.new_utils import ConsoleMessenger
 
 
 @click.group()
-def entry_point():
+@click.option(
+    "-q", "--quiet", is_flag=True, default=False, help="Only emit error messages"
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Emit messages dianostic messages about everything",
+)
+@click.pass_context
+def entry_point(ctx, quiet, verbose):
     """A collection of utilities for exporting Zephir records."""
-    pass
+    console = ConsoleMessenger(quiet, verbose)
 
 
-entry_point.add_command(ht_bib_cli, name="ht-bib")
-entry_point.add_command(compare_cache_cli, name="compare-cache")
+entry_point.add_command(generate_cli)
+entry_point.add_command(compare_cache_cli)
 
 if __name__ == "__main__":
     entry_point()
