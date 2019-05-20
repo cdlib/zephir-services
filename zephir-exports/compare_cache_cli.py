@@ -32,6 +32,8 @@ def compare_cache_cli(ctx, files, quiet, verbose):
         for line in f2_set - f1_set:
             console.out("+(cid:{},key:{})".format(line[0], line[1]))
         SystemExit(0)
+    else:
+        console.diagnostic("No differences found between cache files")
 
 
 def set_abs_filepath(file):
