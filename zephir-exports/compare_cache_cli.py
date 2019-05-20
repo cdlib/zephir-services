@@ -33,7 +33,7 @@ def compare_cache_cli(ctx, files, quiet, verbose):
             console.out("+(cid:{},key:{})".format(line[0], line[1]))
         SystemExit(0)
     else:
-        console.diagnostic("No differences found between cache files")
+        console.info("No differences found between cache files")
 
 
 def set_abs_filepath(file):
