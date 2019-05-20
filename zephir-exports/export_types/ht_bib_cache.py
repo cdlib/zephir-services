@@ -16,7 +16,7 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def generate_cache(selection, quiet=False, verbose=True, force=False):
+def ht_bib_cache(console=None, version=None, quiet=False, verbose=True, force=False):
 
     # APPLICATION SETUP
     # load environment
@@ -24,9 +24,12 @@ def generate_cache(selection, quiet=False, verbose=True, force=False):
     env.read_env()
 
     # Print handler to manage when and how messages should print
-    console = ConsoleMessenger(quiet, verbose)
+    if not console:
+        console = ConsoleMessenger(quiet, verbose)
 
-    ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.dirname(__file__)
+    ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.join(
+        os.path.dirname(__file__), ".."
+    )
     ENV = os.environ.get("ZEPHIR_ENV")
     CONFIG_PATH = os.environ.get("ZEPHIR_CONFIG_PATH") or os.path.join(
         ROOT_PATH, "config"
@@ -60,13 +63,13 @@ def generate_cache(selection, quiet=False, verbose=True, force=False):
     start_time = datetime.datetime.now()
 
     tmp_cache_name = "tmp-cache-{}-{}".format(
-        selection, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
+        version, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
     )
     cache = ExportCache(CACHE_PATH, tmp_cache_name, force)
 
-    console.report(
+    console.debug(
         "Started: {} (Elapsed: {})".format(
-            selection, str(datetime.datetime.now() - start_time)
+            version, str(datetime.datetime.now() - start_time)
         )
     )
     try:
@@ -87,7 +90,7 @@ def generate_cache(selection, quiet=False, verbose=True, force=False):
         conn = mysql.connector.connect(**conn_args)
 
         cursor = conn.cursor()
-        cursor.execute(sql_select[selection])
+        cursor.execute(sql_select[version])
 
         curr_cid = None
         records = []
@@ -139,13 +142,13 @@ def generate_cache(selection, quiet=False, verbose=True, force=False):
         cache_file = os.path.join(
             CACHE_PATH,
             "cache-{}-{}.db".format(
-                selection, datetime.datetime.today().strftime("%Y-%m-%d")
+                version, datetime.datetime.today().strftime("%Y-%m-%d")
             ),
         )
         os.rename(os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file)
-        console.report(
+        console.debug(
             "Finished: {} (Elapsed: {})".format(
-                selection, str(datetime.datetime.now() - start_time)
+                version, str(datetime.datetime.now() - start_time)
             )
         )
     finally:

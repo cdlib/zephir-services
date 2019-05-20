@@ -4,6 +4,7 @@
 import os
 import sys
 
+import click
 import sqlalchemy.engine.url
 import yaml
 
@@ -77,18 +78,19 @@ class ConsoleMessenger:
         verbose: A flag to print diagnostic messages
         """
 
-    def __init__(self, quiet=False, verbose=False):
+    def __init__(self, quiet=False, verbose=False, very_verbose=False):
         self.quiet = quiet
-        self.verbose = verbose
+        self.verbose = verbose or very_verbose
+        self.very_verbose = very_verbose
 
     # verbose diagnostic messages only
-    def diagnostic(self, message):
+    def info(self, message):
         if self.verbose:
             print(message, file=sys.stderr)
 
-    # concise operational reporting
-    def report(self, message):
-        if not self.quiet:
+    # very verbose debug messages only
+    def debug(self, message):
+        if self.very_verbose:
             print(message, file=sys.stderr)
 
     # concise error handling messages

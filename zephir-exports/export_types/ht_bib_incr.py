@@ -16,8 +16,8 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def generate_export_incr(
-    selection=None, use_cache=None, quiet=False, verbose=True, force=False
+def ht_bib_incr(
+    console=None, version=None, use_cache=None, quiet=False, verbose=True, force=False
 ):
     prefix = True
     # APPLICATION SETUP
@@ -26,9 +26,12 @@ def generate_export_incr(
     env.read_env()
 
     # Print handler to manage when and how messages should print
-    console = ConsoleMessenger(quiet, verbose)
+    if not console:
+        console = ConsoleMessenger(quiet, verbose)
 
-    ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.dirname(__file__)
+    ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.join(
+        os.path.dirname(__file__), ".."
+    )
     ENV = os.environ.get("ZEPHIR_ENV")
     CONFIG_PATH = os.environ.get("ZEPHIR_CONFIG_PATH") or os.path.join(
         ROOT_PATH, "config"
@@ -46,14 +49,14 @@ def generate_export_incr(
     if OVERRIDE_CONFIG_PATH is not None and os.path.isdir(OVERRIDE_CONFIG_PATH):
         config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
 
-    if selection is None:
-        raise "Must pass a selection algorithm to use. See --help"
+    if version is None:
+        raise "Must pass a version algorithm to use. See --help"
 
     export_filename = "ht_bib_export_incr_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")
     )
     if prefix:
-        export_filename = "{}-{}".format(selection, export_filename)
+        export_filename = "{}-{}".format(version, export_filename)
 
     htmm_db = config.get("database", {}).get(ENV)
 
@@ -64,7 +67,7 @@ def generate_export_incr(
     cid_stmt = "select distinct cid from zephir_records where attr_ingest_date is not null and last_updated_at between '{}' and '{}' order by cid".format(
         today_date, tomorrow_date
     )
-    print(cid_stmt)
+    console.debug(cid_stmt)
     start_time = datetime.datetime.now()
 
     try:
@@ -79,13 +82,12 @@ def generate_export_incr(
         cursor.execute(cid_stmt)
 
         engine = create_engine(
-            "sqlite:///{}/cache-{}-{}.db".format(CACHE_PATH, selection, today_date),
+            "sqlite:///{}/cache-{}-{}.db".format(CACHE_PATH, version, today_date),
             echo=False,
         )
 
         export_filepath = os.path.join(EXPORT_PATH, export_filename)
-        print(export_filepath)
-        print("done...")
+        console.debug(export_filepath)
 
         with open((export_filepath), "a") as export_file, engine.connect() as con:
             for idx, cid_row in enumerate(cursor):
@@ -97,9 +99,9 @@ def generate_export_incr(
                     export_file.write(
                         zlib.decompress(cache_row[0]).decode("utf8") + "\n"
                     )
-        print(
+        console.debug(
             "Finished: {} (Elapsed: {})".format(
-                selection, str(datetime.datetime.now() - start_time)
+                version, str(datetime.datetime.now() - start_time)
             )
         )
     finally:

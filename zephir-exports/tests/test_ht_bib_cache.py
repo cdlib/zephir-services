@@ -6,7 +6,7 @@ import zlib
 
 import pytest
 
-from ht_bib_cache import generate_cache
+from export_types.ht_bib_cache import ht_bib_cache
 from export_cache import ExportCache
 
 
@@ -22,16 +22,18 @@ def env_setup(td_tmpdir, monkeypatch):
 
 
 def test_create_cache_successfully(td_tmpdir, env_setup, capsys):
-    for selection in ["v2", "v3"]:
+    for version in ["v2", "v3"]:
 
-        generate_cache(selection=selection, force=True)
+        ht_bib_cache(version=version, force=True)
 
         new_cache = ExportCache(
             td_tmpdir,
             "cache-{}-{}".format(
-                selection, datetime.datetime.today().strftime("%Y-%m-%d")
+                version, datetime.datetime.today().strftime("%Y-%m-%d")
             ),
         )
-        ref_cache = ExportCache(td_tmpdir, "cache-{}-ref".format(selection))
+        ref_cache = ExportCache(td_tmpdir, "cache-{}-ref".format(version))
         assert new_cache.size() == ref_cache.size()
-        assert new_cache.content_hash() == ref_cache.content_hash()
+        assert hash(new_cache.frozen_content_set()) == hash(
+            ref_cache.frozen_content_set()
+        )

@@ -155,9 +155,9 @@ class ExportCache:
             chunks[idx % mod].add(item)
         return chunks
 
-    def content_hash(self):
-        dict_hash = hash(frozenset(self._load_index().items()))
-        return dict_hash
+    def frozen_content_set(self):
+        c_set = frozenset(self._load_index().items())
+        return c_set
 
 
 class CacheComparison:

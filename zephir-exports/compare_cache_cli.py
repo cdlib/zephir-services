@@ -1,6 +1,9 @@
+import os
+
 import click
 
 from export_cache import ExportCache
+from lib.new_utils import ConsoleMessenger
 
 
 @click.command()
@@ -15,18 +18,27 @@ from export_cache import ExportCache
     default=False,
     help="Emit messages dianostic messages about everything",
 )
-def compare_cache_cli(files, quiet, verbose):
-    f1_cache = ExportCache(path=files[0])
-    f2_cache = ExportCache(path=files[1])
-    if (
-        f1_cache.size() == f2_cache.size()
-        and f1_cache.content_hash() == f2_cache.content_hash()
-    ):
-        print("Success: The cache calculatations are identical")
+@click.pass_context
+def compare_cache_cli(ctx, files, quiet, verbose):
+    console = ConsoleMessenger(quiet, verbose)
+    """Compare two cache files for cache content differences. Ignores datetime of cache creation"""
+    f1_cache = ExportCache(path=set_abs_filepath(files[0]))
+    f1_set = f1_cache.frozen_content_set()
+    f2_cache = ExportCache(path=set_abs_filepath(files[1]))
+    f2_set = f2_cache.frozen_content_set()
+    if hash(f1_set) != hash(f2_set):
+        for line in f1_set - f2_set:
+            console.out("-(cid:{},key:{})".format(line[0], line[1]))
+        for line in f2_set - f1_set:
+            console.out("+(cid:{},key:{})".format(line[0], line[1]))
         SystemExit(0)
+
+
+def set_abs_filepath(file):
+    if os.path.isabs(file):
+        return file
     else:
-        print("Failure: The cache calculatations are not identical")
-        SystemExit(2)
+        return os.path.join(os.getcwd(), file)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,6 @@ import os
 import socket
 import zlib
 
-import click
 from environs import Env
 from sqlalchemy import create_engine
 
@@ -15,9 +14,7 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def generate_export_full(
-    selection=None, use_cache=None, quiet=False, verbose=True, force=False
-):
+def ht_bib_full(console=None, version=None, quiet=False, verbose=True, force=False):
     prefix = True
     # APPLICATION SETUP
     # load environment
@@ -25,9 +22,12 @@ def generate_export_full(
     env.read_env()
 
     # Print handler to manage when and how messages should print
-    console = ConsoleMessenger(quiet, verbose)
+    if not console:
+        console = ConsoleMessenger(quiet, verbose)
 
-    ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.dirname(__file__)
+    ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.join(
+        os.path.dirname(__file__), ".."
+    )
     ENV = os.environ.get("ZEPHIR_ENV")
     CONFIG_PATH = os.environ.get("ZEPHIR_CONFIG_PATH") or os.path.join(
         ROOT_PATH, "config"
@@ -45,23 +45,25 @@ def generate_export_full(
     if OVERRIDE_CONFIG_PATH is not None and os.path.isdir(OVERRIDE_CONFIG_PATH):
         config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
 
-    if selection is None:
-        raise "Must pass a selection algorithm to use. See --help"
+    if version is None:
+        raise "Must pass a version algorithm to use. See --help"
 
     export_filename = "ht_bib_export_full_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")
     )
     if prefix:
-        export_filename = "{}-{}".format(selection, export_filename)
+        export_filename = "{}-{}".format(version, export_filename)
 
-    if use_cache:
-        cache = "sqlite:///{}".format(use_cache)
-    else:
-        cache = "sqlite:///{}/cache-{}-{}.db".format(
-            CACHE_PATH, selection, datetime.datetime.today().strftime("%Y-%m-%d")
-        )
+    # if use_cache:
+    #     cache = "sqlite:///{}".format(use_cache)
+    # else:
+    cache = "sqlite:///{}/cache-{}-{}.db".format(
+        CACHE_PATH, version, datetime.datetime.today().strftime("%Y-%m-%d")
+    )
 
     start_time = datetime.datetime.now()
+
+    console.debug(cache)
 
     with open(os.path.join(EXPORT_PATH, export_filename), "a") as export_file:
 
@@ -73,9 +75,9 @@ def generate_export_full(
             for idx, row in enumerate(result):
                 export_file.write(zlib.decompress(row[0]).decode("utf8") + "\n")
 
-        print(
+        console.debug(
             "Finished: {} (Elapsed: {})".format(
-                selection, str(datetime.datetime.now() - start_time)
+                version, str(datetime.datetime.now() - start_time)
             )
         )
 
