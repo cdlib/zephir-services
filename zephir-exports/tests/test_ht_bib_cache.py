@@ -8,6 +8,7 @@ import pytest
 
 from export_types.ht_bib_cache import ht_bib_cache
 from export_cache import ExportCache
+from lib.new_utils import ConsoleMessenger
 
 
 @pytest.fixture
@@ -37,3 +38,23 @@ def test_create_cache_successfully(td_tmpdir, env_setup, capsys):
         assert hash(new_cache.frozen_content_set()) == hash(
             ref_cache.frozen_content_set()
         )
+
+def test_create_cache_without_force(td_tmpdir, env_setup, capsys):
+    for merge_version in ["v3", "v3"]:
+
+        console = ConsoleMessenger(very_verbose=True)
+        ht_bib_cache(console=console,merge_version=merge_version, force=False)
+
+    out, err = capsys.readouterr()
+    assert "Creating new cache file" in err
+    assert "Skipping; cache file exists. Force to overwrite." in err
+
+def test_create_cache_with_force(td_tmpdir, env_setup, capsys):
+    for merge_version in ["v3", "v3"]:
+
+        console = ConsoleMessenger(very_verbose=True)
+        ht_bib_cache(console=console,merge_version=merge_version, force=True)
+
+    out, err = capsys.readouterr()
+    assert "Forced; removing existing cache" in err
+    assert "Creating new cache file" in err
