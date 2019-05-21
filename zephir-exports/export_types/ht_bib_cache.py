@@ -16,7 +16,9 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def ht_bib_cache(console=None, merge_version=None, quiet=False, verbose=True, force=False):
+def ht_bib_cache(
+    console=None, merge_version=None, quiet=False, verbose=True, force=False
+):
 
     # APPLICATION SETUP
     # load environment
@@ -73,7 +75,7 @@ def ht_bib_cache(console=None, merge_version=None, quiet=False, verbose=True, fo
     if force and os.path.isfile(cache_file):
         console.debug("Forced; removing existing cache.")
         os.remove(cache_file)
-        
+
     if os.path.isfile(cache_file):
         console.debug("Skipping; cache file exists. Force to overwrite.")
     else:
@@ -155,7 +157,9 @@ def ht_bib_cache(console=None, merge_version=None, quiet=False, verbose=True, fo
             bulk_session.bulk_save_objects(entries)
             bulk_session.commit()
             bulk_session.close()
-            os.rename(os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file)
+            os.rename(
+                os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file
+            )
         finally:
             cursor.close()
             conn.close()

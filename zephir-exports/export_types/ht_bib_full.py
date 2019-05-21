@@ -14,7 +14,9 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def ht_bib_full(console=None, merge_version=None, quiet=False, verbose=True, force=False):
+def ht_bib_full(
+    console=None, merge_version=None, quiet=False, verbose=True, force=False
+):
 
     # APPLICATION SETUP
     # load environment
@@ -48,7 +50,6 @@ def ht_bib_full(console=None, merge_version=None, quiet=False, verbose=True, for
     export_filename = "ht_bib_export_full_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")
     )
-
 
     cache = "sqlite:///{}/cache-{}-{}.db".format(
         CACHE_PATH, merge_version, datetime.datetime.today().strftime("%Y-%m-%d")

@@ -40,7 +40,9 @@ def test_create_bib_export_incr(td_tmpdir, env_setup, capsys):
         )
         assert filecmp.cmp(
             os.path.join(td_tmpdir, export_filename),
-            os.path.join(td_tmpdir, "{}-ht_bib_export_incr_ref.json".format(merge_version)),
+            os.path.join(
+                td_tmpdir, "{}-ht_bib_export_incr_ref.json".format(merge_version)
+            ),
         )
         # clean up to avoid name conflict next merge-version
         os.remove(os.path.join(td_tmpdir, export_filename))

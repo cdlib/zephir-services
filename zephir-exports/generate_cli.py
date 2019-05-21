@@ -31,15 +31,27 @@ def generate_cli(ctx, export_type, quiet, verbose, merge_version, force):
     """Generate Zephir export cache and files"""
     console = ConsoleMessenger(quiet, verbose)
     cache = ht_bib_cache(
-        console=console, merge_version=merge_version, quiet=quiet, verbose=verbose, force=force
+        console=console,
+        merge_version=merge_version,
+        quiet=quiet,
+        verbose=verbose,
+        force=force,
     )
     if export_type == "ht-bib-full":
         ht_bib_full(
-            console=console, merge_version=merge_version, quiet=quiet, verbose=verbose, force=force
+            console=console,
+            merge_version=merge_version,
+            quiet=quiet,
+            verbose=verbose,
+            force=force,
         )
     elif export_type == "ht-bib-incr":
         ht_bib_incr(
-            console=console, merge_version=merge_version, quiet=quiet, verbose=verbose, force=force
+            console=console,
+            merge_version=merge_version,
+            quiet=quiet,
+            verbose=verbose,
+            force=force,
         )
 
 

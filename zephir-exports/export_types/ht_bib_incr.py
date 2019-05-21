@@ -17,7 +17,12 @@ import lib.new_utils as utils
 
 
 def ht_bib_incr(
-    console=None, merge_version=None, use_cache=None, quiet=False, verbose=True, force=False
+    console=None,
+    merge_version=None,
+    use_cache=None,
+    quiet=False,
+    verbose=True,
+    force=False,
 ):
     # APPLICATION SETUP
     # load environment

@@ -45,7 +45,13 @@ def test_exports_successfully(td_tmpdir, env_setup, capsys):
         name = test_set[2]
         # test create successful
         with pytest.raises(SystemExit) as pytest_e:
-            sys.argv = sys.argv = ["", export_type, "--merge-version", merge_version, "--force"]
+            sys.argv = sys.argv = [
+                "",
+                export_type,
+                "--merge-version",
+                merge_version,
+                "--force",
+            ]
             generate_cli()
             assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
         # compare cache created to reference cache
