@@ -22,17 +22,17 @@ def env_setup(td_tmpdir, monkeypatch):
 
 
 def test_create_cache_successfully(td_tmpdir, env_setup, capsys):
-    for version in ["v2", "v3"]:
+    for merge_version in ["v2", "v3"]:
 
-        ht_bib_cache(version=version, force=True)
+        ht_bib_cache(merge_version=merge_version, force=True)
 
         new_cache = ExportCache(
             td_tmpdir,
             "cache-{}-{}".format(
-                version, datetime.datetime.today().strftime("%Y-%m-%d")
+                merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
             ),
         )
-        ref_cache = ExportCache(td_tmpdir, "cache-{}-ref".format(version))
+        ref_cache = ExportCache(td_tmpdir, "cache-{}-ref".format(merge_version))
         assert new_cache.size() == ref_cache.size()
         assert hash(new_cache.frozen_content_set()) == hash(
             ref_cache.frozen_content_set()

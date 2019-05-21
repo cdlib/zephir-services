@@ -16,7 +16,7 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def ht_bib_cache(console=None, version=None, quiet=False, verbose=True, force=False):
+def ht_bib_cache(console=None, merge_version=None, quiet=False, verbose=True, force=False):
 
     # APPLICATION SETUP
     # load environment
@@ -63,13 +63,13 @@ def ht_bib_cache(console=None, version=None, quiet=False, verbose=True, force=Fa
     start_time = datetime.datetime.now()
 
     tmp_cache_name = "tmp-cache-{}-{}".format(
-        version, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
+        merge_version, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
     )
     cache = ExportCache(CACHE_PATH, tmp_cache_name, force)
 
     console.debug(
         "Started: {} (Elapsed: {})".format(
-            version, str(datetime.datetime.now() - start_time)
+            merge_version, str(datetime.datetime.now() - start_time)
         )
     )
     try:
@@ -90,7 +90,7 @@ def ht_bib_cache(console=None, version=None, quiet=False, verbose=True, force=Fa
         conn = mysql.connector.connect(**conn_args)
 
         cursor = conn.cursor()
-        cursor.execute(sql_select[version])
+        cursor.execute(sql_select[merge_version])
 
         curr_cid = None
         records = []
@@ -142,13 +142,13 @@ def ht_bib_cache(console=None, version=None, quiet=False, verbose=True, force=Fa
         cache_file = os.path.join(
             CACHE_PATH,
             "cache-{}-{}.db".format(
-                version, datetime.datetime.today().strftime("%Y-%m-%d")
+                merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
             ),
         )
         os.rename(os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file)
         console.debug(
             "Finished: {} (Elapsed: {})".format(
-                version, str(datetime.datetime.now() - start_time)
+                merge_version, str(datetime.datetime.now() - start_time)
             )
         )
     finally:
