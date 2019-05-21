@@ -18,12 +18,12 @@ from lib.new_utils import ConsoleMessenger
 )
 @click.pass_context
 def entry_point(ctx, quiet, verbose):
-    """A collection of utilities for exporting Zephir records."""
+    """A collection of tools for exporting Zephir records."""
     console = ConsoleMessenger(quiet, verbose)
 
 
-entry_point.add_command(generate_cli)
-entry_point.add_command(compare_cache_cli)
+entry_point.add_command(generate_cli, name="generate")
+entry_point.add_command(compare_cache_cli, name="compare-cache")
 
 if __name__ == "__main__":
     entry_point()
