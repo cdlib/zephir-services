@@ -16,9 +16,10 @@ from lib.new_utils import ConsoleMessenger
     "--verbose",
     is_flag=True,
     default=False,
-    help="Emit messages dianostic messages about everything",
+    help="Emit messages dianostic messages",
 )
-@click.option("--merge-version", nargs=1)
+@click.option("--merge-version", nargs=1,
+    help="Specify the merge algoithm version for biblographic creation")
 @click.option(
     "-f",
     "--force",
@@ -28,7 +29,7 @@ from lib.new_utils import ConsoleMessenger
 )
 @click.pass_context
 def generate_cli(ctx, export_type, quiet, verbose, merge_version, force):
-    """Generate Zephir export cache and files"""
+    """Generate Zephir exports files for HathiTrust."""
     console = ConsoleMessenger(quiet, verbose)
     cache = ht_bib_cache(
         console=console,

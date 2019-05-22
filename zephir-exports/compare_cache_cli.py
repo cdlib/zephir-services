@@ -16,12 +16,12 @@ from lib.new_utils import ConsoleMessenger
     "--verbose",
     is_flag=True,
     default=False,
-    help="Emit messages dianostic messages about everything",
+    help="Emit messages dianostic messages",
 )
 @click.pass_context
 def compare_cache_cli(ctx, files, quiet, verbose):
+    """Compare export caches for content differences. Ignores datetime of cache creation"""
     console = ConsoleMessenger(quiet, verbose)
-    """Compare two cache files for cache content differences. Ignores datetime of cache creation"""
     f1_cache = ExportCache(path=set_abs_filepath(files[0]))
     f1_set = f1_cache.frozen_content_set()
     f2_cache = ExportCache(path=set_abs_filepath(files[1]))

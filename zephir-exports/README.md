@@ -12,11 +12,11 @@ Zephir-export requires access to the Zephir database using a MySQL library. The 
 
 `pipenv run python zephir-exports --help `
 
-**List**: List available exports
+**List**: List available exports.
 
 *Not implemented yet*
 
-**Generate**: Command to generate the exports.
+**Generate**: Generate Zephir exports files for HathiTrust.
 
 Running from the code:
 
@@ -26,7 +26,7 @@ Running from cron:
 
 `/bin/bash -l -c 'PIPENV_PIPFILE=<Pipfile path location> pipenv run python <zephir-export path location>`
 
-**Compare-Cache**: Compare export caches for content differences
+**Compare-Cache**: Compare export caches for content differences.
 
 `pipenv run python zephir-export compare-cache <cache-file 1> <cache-file 2>`
 
