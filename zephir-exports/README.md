@@ -1,7 +1,7 @@
 ## Zephir-Exports
 
 Zephir-exports is a command-line program to export data from Zephir in various formats for use by HathiTrust and contributors. It is designed to be used mainly by cron for daily exports.
-See [docs/specs](/docs/specs) folder for more information.
+See [docs/specs](docs/specs) folder for more information.
 
 ### Configuration
 Zephir-export requires access to the Zephir database using a MySQL library. The configration location is listed in the `--help` command.
