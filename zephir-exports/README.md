@@ -10,7 +10,7 @@ Zephir-export requires access to the Zephir database using a MySQL library. The 
 
 **Help**: Run for authoritative documentation.
 
-` zephir-exports --help `
+`pipenv run python zephir-exports --help `
 
 **List**: List available exports
 
