@@ -18,8 +18,11 @@ from lib.new_utils import ConsoleMessenger
     default=False,
     help="Emit messages dianostic messages",
 )
-@click.option("--merge-version", nargs=1,
-    help="Specify the merge algoithm version for biblographic creation")
+@click.option(
+    "--merge-version",
+    nargs=1,
+    help="Specify the merge algoithm version for biblographic creation",
+)
 @click.option(
     "-f",
     "--force",
