@@ -57,7 +57,7 @@ def ht_bib_incr(
         datetime.datetime.today().strftime("%Y-%m-%d")
     )
 
-    htmm_db = config.get("database", {}).get(ENV)
+    db = config.get("database", {}).get(ENV)
 
     today_date = datetime.date.today().strftime("%Y-%m-%d")
     tomorrow_date = (datetime.date.today() + datetime.timedelta(days=1)).strftime(
@@ -70,12 +70,20 @@ def ht_bib_incr(
     start_time = datetime.datetime.now()
 
     try:
-        conn = mysql.connector.connect(
-            user=htmm_db.get("username", None),
-            password=htmm_db.get("password", None),
-            host=htmm_db.get("host", None),
-            database=htmm_db.get("database", None),
-        )
+        conn_args = {
+            "user": db.get("username", None),
+            "password": db.get("password", None),
+            "host": db.get("host", None),
+            "database": db.get("database", None),
+            "unix_socket": None,
+        }
+
+        socket = os.environ.get("ZEPHIR_DB_SOCKET") or config.get("socket")
+
+        if socket:
+            conn_args["unix_socket"] = socket
+
+        conn = mysql.connector.connect(**conn_args)
 
         cursor = conn.cursor()
         cursor.execute(cid_stmt)
