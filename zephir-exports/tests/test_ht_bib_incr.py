@@ -20,6 +20,9 @@ def env_setup(td_tmpdir, monkeypatch):
     )
     monkeypatch.setenv("ZEPHIR_EXPORT_PATH", td_tmpdir)
     monkeypatch.setenv("ZEPHIR_CACHE_PATH", td_tmpdir)
+    if "MYSQL_UNIX_PORT" in os.environ:
+        monkeypatch.setenv("ZEPHIR_DB_SOCKET", os.environ["MYSQL_UNIX_PORT"])
+    os.system("mysql --host=localhost --user=root  < {}/micro-db.sql".format(td_tmpdir))
 
 
 @freeze_time("2019-02-18")
