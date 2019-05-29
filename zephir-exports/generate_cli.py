@@ -19,8 +19,10 @@ from lib.new_utils import ConsoleMessenger
     help="Emit messages dianostic messages",
 )
 @click.option(
+    "-mv",
     "--merge-version",
     nargs=1,
+    required="yes",
     help="Specify the merge algoithm version for biblographic creation",
 )
 @click.option(

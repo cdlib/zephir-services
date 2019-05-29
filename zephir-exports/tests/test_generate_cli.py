@@ -27,29 +27,33 @@ def env_setup(td_tmpdir, monkeypatch):
     os.system("mysql --host=localhost --user=root  < {}/micro-db.sql".format(td_tmpdir))
 
 
-def test_merge_version_required(td_tmpdir, env_setup, capsys):
-    with pytest.raises(SystemExit) as pytest_e:
-        sys.argv = sys.argv = [""]
-        generate_cli()
-    out, err = capsys.readouterr()
-    assert "Error" in err
-    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 2]
+def test_required_arguments_enforced(td_tmpdir, env_setup, capsys):
+    incomplete_requirements = [
+        {"args": ["", "ht-bib-full"], "error": "--merge-version"},
+        {"args": ["", "--merge-version", "v3"], "error": "EXPORT_TYPE"},
+    ]
+    for req_set in incomplete_requirements:
+        with pytest.raises(SystemExit) as pytest_e:
+            sys.argv = req_set["args"]
+            generate_cli()
+        out, err = capsys.readouterr()
+        assert req_set["error"] in err
+        assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 2]
 
 
 @freeze_time("2019-02-18")
-def test_exports_successfully(td_tmpdir, env_setup, capsys):
-    test_sets = [["ht-bib-full", "v2", "full"], ["ht-bib-incr", "v3", "incr"]]
-    for test_set in test_sets:
-        export_type = test_set[0]
-        merge_version = test_set[1]
-        name = test_set[2]
-        # test create successful
+def test_exports_complete(td_tmpdir, env_setup, capsys):
+    arg_sets = [
+        {"export-type": "ht-bib-full", "merge-version": "v2"},
+        {"export-type": "ht-bib-incr", "merge-version": "v3"},
+    ]
+    for arg_set in arg_sets:
         with pytest.raises(SystemExit) as pytest_e:
             sys.argv = sys.argv = [
                 "",
-                export_type,
+                arg_set["export-type"],
                 "--merge-version",
-                merge_version,
+                arg_set["merge-version"],
                 "--force",
             ]
             generate_cli()
