@@ -16,7 +16,9 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def ht_bib_cache(console=None, version=None, quiet=False, verbose=True, force=False):
+def ht_bib_cache(
+    console=None, merge_version=None, quiet=False, verbose=True, force=False
+):
 
     # APPLICATION SETUP
     # load environment
@@ -62,98 +64,111 @@ def ht_bib_cache(console=None, version=None, quiet=False, verbose=True, force=Fa
     }
     start_time = datetime.datetime.now()
 
-    tmp_cache_name = "tmp-cache-{}-{}".format(
-        version, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
+    cache_file = os.path.join(
+        CACHE_PATH,
+        "cache-{}-{}.db".format(
+            merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
+        ),
     )
-    cache = ExportCache(CACHE_PATH, tmp_cache_name, force)
 
-    console.debug(
-        "Started: {} (Elapsed: {})".format(
-            version, str(datetime.datetime.now() - start_time)
+    # remove file if force overwrite specified
+    if force and os.path.isfile(cache_file):
+        console.debug("Forced; removing existing cache.")
+        os.remove(cache_file)
+
+    if os.path.isfile(cache_file):
+        console.debug("Skipping; cache file exists. Force to overwrite.")
+    else:
+        console.debug("Creating new cache file.")
+        tmp_cache_name = "tmp-cache-{}-{}".format(
+            merge_version, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
         )
-    )
-    try:
-        bulk_session = cache.session()
-        conn_args = {
-            "user": db.get("username", None),
-            "password": db.get("password", None),
-            "host": db.get("host", None),
-            "database": db.get("database", None),
-            "unix_socket": None,
-        }
+        cache = ExportCache(CACHE_PATH, tmp_cache_name, force)
 
-        socket = os.environ.get("ZEPHIR_DB_SOCKET") or config.get("socket")
-
-        if socket:
-            conn_args["unix_socket"] = socket
-
-        conn = mysql.connector.connect(**conn_args)
-
-        cursor = conn.cursor()
-        cursor.execute(sql_select[version])
-
-        curr_cid = None
-        records = []
-        entries = []
-        max_date = None
-        for idx, row in enumerate(cursor):
-            cid, db_date, record, var_usfeddoc, var_score, vufind_sort = row
-            if cid != curr_cid or curr_cid is None:
-                # write last cluster
-                if curr_cid:
-                    cache_id = curr_cid
-                    cache_data = json.dumps(
-                        VufindFormatter.create_record(curr_cid, records).as_dict(),
-                        separators=(",", ":"),
-                    )
-                    cache_key = zlib.crc32(
-                        "{}{}".format(len(records), max_date).encode("utf8")
-                    )
-                    cache_date = max_date
-                    entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
-                    entries.append(entry)
-
-                # prepare next cluster
-                curr_cid = cid
-                records = [record]
-                max_date = db_date
-            else:
-                if db_date > max_date:
-                    max_date = db_date
-                records.append(record)
-
-            # periodic save to chunk work
-            if idx % 5000 == 0:
-                bulk_session.bulk_save_objects(entries)
-                entries = []
-
-        cache_id = curr_cid
-        cache_data = json.dumps(
-            VufindFormatter.create_record(curr_cid, records).as_dict(),
-            separators=(",", ":"),
-        )
-        cache_key = zlib.crc32("{}{}".format(len(records), max_date).encode("utf8"))
-        cache_date = max_date
-        entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
-        entries.append(entry)
-        bulk_session.bulk_save_objects(entries)
-        bulk_session.commit()
-        bulk_session.close()
-        cache_file = os.path.join(
-            CACHE_PATH,
-            "cache-{}-{}.db".format(
-                version, datetime.datetime.today().strftime("%Y-%m-%d")
-            ),
-        )
-        os.rename(os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file)
         console.debug(
-            "Finished: {} (Elapsed: {})".format(
-                version, str(datetime.datetime.now() - start_time)
+            "Started: {} (Elapsed: {})".format(
+                merge_version, str(datetime.datetime.now() - start_time)
             )
         )
-    finally:
-        cursor.close()
-        conn.close()
+        try:
+            bulk_session = cache.session()
+            conn_args = {
+                "user": db.get("username", None),
+                "password": db.get("password", None),
+                "host": db.get("host", None),
+                "database": db.get("database", None),
+                "unix_socket": None,
+            }
+
+            socket = os.environ.get("ZEPHIR_DB_SOCKET") or config.get("socket")
+
+            if socket:
+                conn_args["unix_socket"] = socket
+
+            conn = mysql.connector.connect(**conn_args)
+
+            cursor = conn.cursor()
+            cursor.execute(sql_select[merge_version])
+
+            curr_cid = None
+            records = []
+            entries = []
+            max_date = None
+            for idx, row in enumerate(cursor):
+                cid, db_date, record, var_usfeddoc, var_score, vufind_sort = row
+                if cid != curr_cid or curr_cid is None:
+                    # write last cluster
+                    if curr_cid:
+                        cache_id = curr_cid
+                        cache_data = json.dumps(
+                            VufindFormatter.create_record(curr_cid, records).as_dict(),
+                            separators=(",", ":"),
+                        )
+                        cache_key = zlib.crc32(
+                            "{}{}".format(len(records), max_date).encode("utf8")
+                        )
+                        cache_date = max_date
+                        entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
+                        entries.append(entry)
+
+                    # prepare next cluster
+                    curr_cid = cid
+                    records = [record]
+                    max_date = db_date
+                else:
+                    if db_date > max_date:
+                        max_date = db_date
+                    records.append(record)
+
+                # periodic save to chunk work
+                if idx % 5000 == 0:
+                    bulk_session.bulk_save_objects(entries)
+                    entries = []
+
+            cache_id = curr_cid
+            cache_data = json.dumps(
+                VufindFormatter.create_record(curr_cid, records).as_dict(),
+                separators=(",", ":"),
+            )
+            cache_key = zlib.crc32("{}{}".format(len(records), max_date).encode("utf8"))
+            cache_date = max_date
+            entry = cache.entry(cache_id, cache_key, cache_data, cache_date)
+            entries.append(entry)
+            bulk_session.bulk_save_objects(entries)
+            bulk_session.commit()
+            bulk_session.close()
+            os.rename(
+                os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file
+            )
+        finally:
+            cursor.close()
+            conn.close()
+
+        console.debug(
+            "Finished: {} (Elapsed: {})".format(
+                merge_version, str(datetime.datetime.now() - start_time)
+            )
+        )
 
     return cache_file
 

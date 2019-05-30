@@ -14,8 +14,10 @@ from lib.new_utils import ConsoleMessenger
 import lib.new_utils as utils
 
 
-def ht_bib_full(console=None, version=None, quiet=False, verbose=True, force=False):
-    prefix = True
+def ht_bib_full(
+    console=None, merge_version=None, quiet=False, verbose=True, force=False
+):
+
     # APPLICATION SETUP
     # load environment
     env = Env()
@@ -45,20 +47,12 @@ def ht_bib_full(console=None, version=None, quiet=False, verbose=True, force=Fal
     if OVERRIDE_CONFIG_PATH is not None and os.path.isdir(OVERRIDE_CONFIG_PATH):
         config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
 
-    if version is None:
-        raise "Must pass a version algorithm to use. See --help"
-
     export_filename = "ht_bib_export_full_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")
     )
-    if prefix:
-        export_filename = "{}-{}".format(version, export_filename)
 
-    # if use_cache:
-    #     cache = "sqlite:///{}".format(use_cache)
-    # else:
     cache = "sqlite:///{}/cache-{}-{}.db".format(
-        CACHE_PATH, version, datetime.datetime.today().strftime("%Y-%m-%d")
+        CACHE_PATH, merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
     )
 
     start_time = datetime.datetime.now()
@@ -77,7 +71,7 @@ def ht_bib_full(console=None, version=None, quiet=False, verbose=True, force=Fal
 
         console.debug(
             "Finished: {} (Elapsed: {})".format(
-                version, str(datetime.datetime.now() - start_time)
+                merge_version, str(datetime.datetime.now() - start_time)
             )
         )
 

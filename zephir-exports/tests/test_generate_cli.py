@@ -27,7 +27,7 @@ def env_setup(td_tmpdir, monkeypatch):
     os.system("mysql --host=localhost --user=root  < {}/micro-db.sql".format(td_tmpdir))
 
 
-def test_version_required(td_tmpdir, env_setup, capsys):
+def test_merge_version_required(td_tmpdir, env_setup, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = sys.argv = [""]
         generate_cli()
@@ -41,33 +41,37 @@ def test_exports_successfully(td_tmpdir, env_setup, capsys):
     test_sets = [["ht-bib-full", "v2", "full"], ["ht-bib-incr", "v3", "incr"]]
     for test_set in test_sets:
         export_type = test_set[0]
-        version = test_set[1]
+        merge_version = test_set[1]
         name = test_set[2]
         # test create successful
         with pytest.raises(SystemExit) as pytest_e:
-            sys.argv = sys.argv = ["", export_type, "--version", version, "--force"]
+            sys.argv = sys.argv = [
+                "",
+                export_type,
+                "--merge-version",
+                merge_version,
+                "--force",
+            ]
             generate_cli()
-            out, err = capsys.readouterr()
-            print(err)
             assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
         # compare cache created to reference cache
         new_cache = ExportCache(
             td_tmpdir,
             "cache-{}-{}".format(
-                version, datetime.datetime.today().strftime("%Y-%m-%d")
+                merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
             ),
         )
-        ref_cache = ExportCache(td_tmpdir, "cache-{}-ref".format(version))
+        ref_cache = ExportCache(td_tmpdir, "cache-{}-ref".format(merge_version))
         assert new_cache.size() == ref_cache.size()
         assert hash(new_cache.frozen_content_set()) == hash(
             ref_cache.frozen_content_set()
         )
-        export_filename = "{}-ht_bib_export_{}_{}.json".format(
-            version, name, datetime.datetime.today().strftime("%Y-%m-%d")
+        export_filename = "ht_bib_export_{}_{}.json".format(
+            name, datetime.datetime.today().strftime("%Y-%m-%d")
         )
         assert filecmp.cmp(
             os.path.join(td_tmpdir, export_filename),
             os.path.join(
-                td_tmpdir, "{}-ht_bib_export_{}_ref.json".format(version, name)
+                td_tmpdir, "{}-ht_bib_export_{}_ref.json".format(merge_version, name)
             ),
         )

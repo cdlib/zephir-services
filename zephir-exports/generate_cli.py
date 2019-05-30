@@ -16,9 +16,13 @@ from lib.new_utils import ConsoleMessenger
     "--verbose",
     is_flag=True,
     default=False,
-    help="Emit messages dianostic messages about everything",
+    help="Emit messages dianostic messages",
 )
-@click.option("--version", nargs=1)
+@click.option(
+    "--merge-version",
+    nargs=1,
+    help="Specify the merge algoithm version for biblographic creation",
+)
 @click.option(
     "-f",
     "--force",
@@ -27,19 +31,31 @@ from lib.new_utils import ConsoleMessenger
     help="Remove and rewrite over existing cache",
 )
 @click.pass_context
-def generate_cli(ctx, export_type, quiet, verbose, version, force):
-    """Generate Zephir export cache and files"""
+def generate_cli(ctx, export_type, quiet, verbose, merge_version, force):
+    """Generate Zephir exports files for HathiTrust."""
     console = ConsoleMessenger(quiet, verbose)
     cache = ht_bib_cache(
-        console=console, version=version, quiet=quiet, verbose=verbose, force=force
+        console=console,
+        merge_version=merge_version,
+        quiet=quiet,
+        verbose=verbose,
+        force=force,
     )
     if export_type == "ht-bib-full":
         ht_bib_full(
-            console=console, version=version, quiet=quiet, verbose=verbose, force=force
+            console=console,
+            merge_version=merge_version,
+            quiet=quiet,
+            verbose=verbose,
+            force=force,
         )
     elif export_type == "ht-bib-incr":
         ht_bib_incr(
-            console=console, version=version, quiet=quiet, verbose=verbose, force=force
+            console=console,
+            merge_version=merge_version,
+            quiet=quiet,
+            verbose=verbose,
+            force=force,
         )
 
 

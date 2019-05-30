@@ -17,9 +17,13 @@ import lib.new_utils as utils
 
 
 def ht_bib_incr(
-    console=None, version=None, use_cache=None, quiet=False, verbose=True, force=False
+    console=None,
+    merge_version=None,
+    use_cache=None,
+    quiet=False,
+    verbose=True,
+    force=False,
 ):
-    prefix = True
     # APPLICATION SETUP
     # load environment
     env = Env()
@@ -49,16 +53,11 @@ def ht_bib_incr(
     if OVERRIDE_CONFIG_PATH is not None and os.path.isdir(OVERRIDE_CONFIG_PATH):
         config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
 
-    if version is None:
-        raise "Must pass a version algorithm to use. See --help"
-
     export_filename = "ht_bib_export_incr_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")
     )
-    if prefix:
-        export_filename = "{}-{}".format(version, export_filename)
 
-    htmm_db = config.get("database", {}).get(ENV)
+    db = config.get("database", {}).get(ENV)
 
     today_date = datetime.date.today().strftime("%Y-%m-%d")
     tomorrow_date = (datetime.date.today() + datetime.timedelta(days=1)).strftime(
@@ -71,23 +70,30 @@ def ht_bib_incr(
     start_time = datetime.datetime.now()
 
     try:
-        conn = mysql.connector.connect(
-            user=htmm_db.get("username", None),
-            password=htmm_db.get("password", None),
-            host=htmm_db.get("host", None),
-            database=htmm_db.get("database", None),
-        )
+        conn_args = {
+            "user": db.get("username", None),
+            "password": db.get("password", None),
+            "host": db.get("host", None),
+            "database": db.get("database", None),
+            "unix_socket": None,
+        }
+
+        socket = os.environ.get("ZEPHIR_DB_SOCKET") or config.get("socket")
+
+        if socket:
+            conn_args["unix_socket"] = socket
+
+        conn = mysql.connector.connect(**conn_args)
 
         cursor = conn.cursor()
         cursor.execute(cid_stmt)
 
         engine = create_engine(
-            "sqlite:///{}/cache-{}-{}.db".format(CACHE_PATH, version, today_date),
+            "sqlite:///{}/cache-{}-{}.db".format(CACHE_PATH, merge_version, today_date),
             echo=False,
         )
 
         export_filepath = os.path.join(EXPORT_PATH, export_filename)
-        console.debug(export_filepath)
 
         with open((export_filepath), "a") as export_file, engine.connect() as con:
             for idx, cid_row in enumerate(cursor):
@@ -101,7 +107,7 @@ def ht_bib_incr(
                     )
         console.debug(
             "Finished: {} (Elapsed: {})".format(
-                version, str(datetime.datetime.now() - start_time)
+                merge_version, str(datetime.datetime.now() - start_time)
             )
         )
     finally:
