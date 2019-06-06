@@ -23,9 +23,7 @@ try:
             MYSQL_DATA
         )
     )
-    os.environ["MYSQL_UNIX_PORT"] = "{0}/mysql.socket".format(
-        MYSQL_DATA
-    )
+    os.environ["MYSQL_UNIX_PORT"] = "{0}/mysql.socket".format(MYSQL_DATA)
 
     print("echo 'Mysql test server started'")
 except subprocess.CalledProcessError as grepexc:
