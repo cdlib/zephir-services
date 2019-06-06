@@ -166,6 +166,7 @@ def ht_bib_cache(
                 os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file
             )
         finally:
+            # TODO(cc): This will fail if cursor not defined
             cursor.close()
             conn.close()
 
