@@ -15,7 +15,12 @@ import lib.new_utils as utils
 
 
 def ht_bib_full(
-    console=None, merge_version=None, quiet=False, verbose=True, force=False
+    console=None,
+    merge_version=None,
+    quiet=False,
+    verbose=True,
+    very_verbose=False,
+    force=False,
 ):
 
     # APPLICATION SETUP
@@ -25,7 +30,7 @@ def ht_bib_full(
 
     # Print handler to manage when and how messages should print
     if not console:
-        console = ConsoleMessenger(quiet, verbose)
+        console = ConsoleMessenger(quiet, verbose, very_verbose)
 
     ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.join(
         os.path.dirname(__file__), ".."

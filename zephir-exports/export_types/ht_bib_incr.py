@@ -22,6 +22,7 @@ def ht_bib_incr(
     use_cache=None,
     quiet=False,
     verbose=True,
+    very_verbose=False,
     force=False,
 ):
     # APPLICATION SETUP
@@ -31,7 +32,7 @@ def ht_bib_incr(
 
     # Print handler to manage when and how messages should print
     if not console:
-        console = ConsoleMessenger(quiet, verbose)
+        console = ConsoleMessenger(quiet, verbose, very_verbose)
 
     ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.join(
         os.path.dirname(__file__), ".."

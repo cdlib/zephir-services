@@ -42,40 +42,52 @@ def test_required_arguments_enforced(td_tmpdir, env_setup, capsys):
 
 
 @freeze_time("2019-02-18")
-def test_exports_complete(td_tmpdir, env_setup, capsys):
+def test_exports_complete(td_tmpdir, env_setup, capsys, pytestconfig):
+    if pytestconfig.getoption("verbose") == "2":
+        very_verbose == "--very-verbose"
+
     arg_sets = [
-        {"export-type": "ht-bib-full", "merge-version": "v2"},
-        {"export-type": "ht-bib-incr", "merge-version": "v3"},
+        {"export-type": "ht-bib-full", "merge-version": "v2", "name": "full"},
+        {"export-type": "ht-bib-incr", "merge-version": "v3", "name": "incr"},
     ]
     for arg_set in arg_sets:
         with pytest.raises(SystemExit) as pytest_e:
-            sys.argv = sys.argv = [
+            sys.argv = [
                 "",
                 arg_set["export-type"],
-                "--merge-version",
+                "-mv",
                 arg_set["merge-version"],
                 "--force",
             ]
+            if pytestconfig.getoption("verbose") == 2:
+                sys.argv.append("--very-verbose")
+
             generate_cli()
+
             assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
         # compare cache created to reference cache
         new_cache = ExportCache(
             td_tmpdir,
             "cache-{}-{}".format(
-                merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
+                arg_set["merge-version"], datetime.datetime.today().strftime("%Y-%m-%d")
             ),
         )
-        ref_cache = ExportCache(td_tmpdir, "cache-{}-ref".format(merge_version))
+        ref_cache = ExportCache(
+            td_tmpdir, "cache-{}-ref".format(arg_set["merge-version"])
+        )
         assert new_cache.size() == ref_cache.size()
         assert hash(new_cache.frozen_content_set()) == hash(
             ref_cache.frozen_content_set()
         )
         export_filename = "ht_bib_export_{}_{}.json".format(
-            name, datetime.datetime.today().strftime("%Y-%m-%d")
+            arg_set["name"], datetime.datetime.today().strftime("%Y-%m-%d")
         )
         assert filecmp.cmp(
             os.path.join(td_tmpdir, export_filename),
             os.path.join(
-                td_tmpdir, "{}-ht_bib_export_{}_ref.json".format(merge_version, name)
+                td_tmpdir,
+                "{}-ht_bib_export_{}_ref.json".format(
+                    arg_set["merge-version"], arg_set["name"]
+                ),
             ),
         )

@@ -22,10 +22,10 @@ def env_setup(td_tmpdir, monkeypatch):
     os.system("mysql --host=localhost --user=root  < {}/micro-db.sql".format(td_tmpdir))
 
 
-def test_create_cache_successfully(td_tmpdir, env_setup, capsys):
+def test_create_cache_successfully(td_tmpdir, env_setup, capsys, pytestconfig):
+    very_verbose = pytestconfig.getoption("verbose")==2
     for merge_version in ["v2", "v3"]:
-
-        ht_bib_cache(merge_version=merge_version, force=True)
+        ht_bib_cache(merge_version=merge_version, very_verbose=very_verbose, force=True)
 
         new_cache = ExportCache(
             td_tmpdir,
