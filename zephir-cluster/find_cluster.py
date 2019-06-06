@@ -64,7 +64,7 @@ def main(argv=None):
 
     # DATABASE SETUP
     # Create database client, connection manager.
-    db = config.get("zephir-db", {}).get(ENV)
+    db = config.get("database", {}).get(ENV)
 
     DB_CONNECT_STR = str(utils.db_connect_url(db))
 
@@ -93,7 +93,7 @@ def main(argv=None):
         with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=",")
             for row in csv_reader:
-                console.report(row)
+                console.info(row)
 
             # Example query
             # session = Session()
@@ -113,7 +113,7 @@ def main(argv=None):
             # finally:
             #     session.close()
 
-    console.report("Done!")
+    console.info("Done!")
     sys.exit(0)
 
 
