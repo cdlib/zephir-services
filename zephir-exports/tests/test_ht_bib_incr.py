@@ -27,7 +27,7 @@ def env_setup(td_tmpdir, monkeypatch):
 
 @freeze_time("2019-02-18")
 def test_create_bib_export_incr(td_tmpdir, env_setup, capsys, pytestconfig):
-    very_verbose = pytestconfig.getoption("verbose")==2
+    very_verbose = pytestconfig.getoption("verbose") == 2
     for merge_version in ["v2", "v3"]:
         os.rename(
             os.path.join(td_tmpdir, "cache-{}-ref.db".format(merge_version)),

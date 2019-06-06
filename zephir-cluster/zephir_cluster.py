@@ -5,8 +5,8 @@ import mysql.connector
 
 import lib.utils as utils
 
-class ZephirCluster:
 
+class ZephirCluster:
     def __init__(self):
         pass
 
@@ -26,7 +26,9 @@ class ZephirCluster:
             ROOT_PATH, "config"
         )
         OVERRIDE_CONFIG_PATH = os.environ.get("ZEPHIR_OVERRIDE_CONFIG_PATH")
-        CACHE_PATH = os.environ.get("ZEPHIR_CACHE_PATH") or os.path.join(ROOT_PATH, "cache")
+        CACHE_PATH = os.environ.get("ZEPHIR_CACHE_PATH") or os.path.join(
+            ROOT_PATH, "cache"
+        )
 
         # load all configuration files in directory
         config = utils.load_config(CONFIG_PATH)
@@ -38,12 +40,13 @@ class ZephirCluster:
         db = config.get("database", {}).get(ENV)
 
         sql_select = (
-        f"select zr.cid from zephir_identifier_records zir "
-        f"join zephir_identifiers zi on zir.identifier_autoid = zi.autoid "
-        f"join zephir_records zr on zr.autoid = zir.record_autoid "
-        f"where (type='oclc' and identifier in ('1570562')) "
-        f"or (type = 'contrib_sys_id' and identifier= '') "
-        f"order by zi.type desc, cid; ")
+            f"select zr.cid from zephir_identifier_records zir "
+            f"join zephir_identifiers zi on zir.identifier_autoid = zi.autoid "
+            f"join zephir_records zr on zr.autoid = zir.record_autoid "
+            f"where (type='oclc' and identifier in ('1570562')) "
+            f"or (type = 'contrib_sys_id' and identifier= '') "
+            f"order by zi.type desc, cid; "
+        )
 
         candidate_list = []
         try:

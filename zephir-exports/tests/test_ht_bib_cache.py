@@ -23,7 +23,7 @@ def env_setup(td_tmpdir, monkeypatch):
 
 
 def test_create_cache_successfully(td_tmpdir, env_setup, capsys, pytestconfig):
-    very_verbose = pytestconfig.getoption("verbose")==2
+    very_verbose = pytestconfig.getoption("verbose") == 2
     for merge_version in ["v2", "v3"]:
         ht_bib_cache(merge_version=merge_version, very_verbose=very_verbose, force=True)
 
