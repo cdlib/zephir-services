@@ -13,18 +13,14 @@ from lib.utils import ConsoleMessenger
 @click.command()
 @click.argument("filepath", nargs=-1, type=click.Path(exists=True))
 @click.option(
-    "-q",
-    "--quiet",
-    is_flag=True,
-    default=False,
-    help="Filepath to files for processing",
+    "-q", "--quiet", is_flag=True, default=False, help="Only emit error messages"
 )
 @click.option(
     "-v",
     "--verbose",
     is_flag=True,
     default=True,
-    help="Emit messages dianostic messages about everything.",
+    help="Emit messages dianostic messages about everything",
 )
 @click.option(
     "-d",
