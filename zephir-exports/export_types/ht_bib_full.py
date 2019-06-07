@@ -23,48 +23,27 @@ def ht_bib_full(
     force=False,
 ):
 
-    # APPLICATION SETUP
-    # load environment
-    env = Env()
-    env.read_env()
-
     # Print handler to manage when and how messages should print
     if not console:
         console = ConsoleMessenger(quiet, verbose, very_verbose)
 
-    ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.join(
-        os.path.dirname(__file__), ".."
-    )
-    ENV = os.environ.get("ZEPHIR_ENV")
-    CONFIG_PATH = os.environ.get("ZEPHIR_CONFIG_PATH") or os.path.join(
-        ROOT_PATH, "config"
-    )
-    OVERRIDE_CONFIG_PATH = os.environ.get("ZEPHIR_OVERRIDE_CONFIG_PATH")
-    CACHE_PATH = os.environ.get("ZEPHIR_CACHE_PATH") or os.path.join(ROOT_PATH, "cache")
-    EXPORT_PATH = os.environ.get("ZEPHIR_EXPORT_PATH") or os.path.join(
-        ROOT_PATH, "export"
-    )
-
-    # load all configuration files in directory
-    config = utils.load_config(CONFIG_PATH)
-
-    # used in testing, config files in test data will override local config files
-    if OVERRIDE_CONFIG_PATH is not None and os.path.isdir(OVERRIDE_CONFIG_PATH):
-        config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
+    # Load application environment, configuration
+    default_root_dir = os.path.join(os.path.dirname(__file__), "..")
+    APP = utils.AppEnv(name="ZEPHIR",root_dir=default_root_dir)
 
     export_filename = "ht_bib_export_full_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")
     )
 
     cache = "sqlite:///{}/cache-{}-{}.db".format(
-        CACHE_PATH, merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
+        APP.CACHE_PATH, merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
     )
 
     start_time = datetime.datetime.now()
 
     console.debug(cache)
 
-    with open(os.path.join(EXPORT_PATH, export_filename), "a") as export_file:
+    with open(os.path.join(APP.EXPORT_PATH, export_filename), "a") as export_file:
 
         engine = create_engine(cache, echo=False)
 
@@ -80,7 +59,7 @@ def ht_bib_full(
             )
         )
 
-    return os.path.join(EXPORT_PATH, export_filename)
+    return os.path.join(APP.EXPORT_PATH, export_filename)
 
 
 if __name__ == "__main__":

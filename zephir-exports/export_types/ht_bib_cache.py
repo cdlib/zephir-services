@@ -25,52 +25,19 @@ def ht_bib_cache(
     force=False,
 ):
 
-    # APPLICATION SETUP
-    # load environment
-    env = Env()
-    env.read_env()
-
-    # Print handler to manage when and how messages should print
+    # Initilize for output and errors
     if not console:
         console = ConsoleMessenger(quiet, verbose, very_verbose)
 
-    ROOT_PATH = os.environ.get("ZEPHIR_ROOT_PATH") or os.path.join(
-        os.path.dirname(__file__), ".."
-    )
-    ENV = os.environ.get("ZEPHIR_ENV")
-    CONFIG_PATH = os.environ.get("ZEPHIR_CONFIG_PATH") or os.path.join(
-        ROOT_PATH, "config"
-    )
-    OVERRIDE_CONFIG_PATH = os.environ.get("ZEPHIR_OVERRIDE_CONFIG_PATH")
-    CACHE_PATH = os.environ.get("ZEPHIR_CACHE_PATH") or os.path.join(ROOT_PATH, "cache")
+    # Load application environment, configuration
+    default_root_dir = os.path.join(os.path.dirname(__file__), "..")
+    APP = utils.AppEnv(name="ZEPHIR",root_dir=default_root_dir)
 
-    # load all configuration files in directory
-    config = utils.load_config(CONFIG_PATH)
-
-    # used in testing, config files in test data will override local config files
-    if OVERRIDE_CONFIG_PATH is not None and os.path.isdir(OVERRIDE_CONFIG_PATH):
-        config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
-
-    db = config.get("database", {}).get(ENV)
-
-    sql_select = {
-        "v2": "select cid, db_updated_at, metadata_json, "
-        "var_usfeddoc, var_score, concat(cid,'_',zr.autoid) as vufind_sort  "
-        "from zephir_records as zr "
-        "inner join zephir_filedata as zf on zr.id = zf.id "
-        "where attr_ingest_date is not null "
-        "order by cid, var_score DESC, vufind_sort ASC",
-        "v3": "select cid, db_updated_at, metadata_json, "
-        "var_usfeddoc, var_score, concat(cid,'_',zr.autoid) as vufind_sort  "
-        "from zephir_records as zr "
-        "inner join zephir_filedata as zf on zr.id = zf.id "
-        "where attr_ingest_date is not null "
-        "order by cid, var_usfeddoc DESC, var_score DESC, vufind_sort ASC",
-    }
-    start_time = datetime.datetime.now()
+    debug_start_time = datetime.datetime.now()
+    console.debug("Starting to build cache: {}".format(debug_start_time))
 
     cache_file = os.path.join(
-        CACHE_PATH,
+        APP.CACHE_PATH,
         "cache-{}-{}.db".format(
             merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
         ),
@@ -88,21 +55,39 @@ def ht_bib_cache(
         tmp_cache_name = "tmp-cache-{}-{}".format(
             merge_version, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
         )
-        cache = ExportCache(CACHE_PATH, tmp_cache_name, force)
+        cache = ExportCache(APP.CACHE_PATH, tmp_cache_name, force)
 
         console.debug(
             "Started: {} (Elapsed: {})".format(
-                merge_version, str(datetime.datetime.now() - start_time)
+                merge_version, str(datetime.datetime.now() - debug_start_time)
             )
         )
         try:
             bulk_session = cache.session()
-            db_config = utils.DatabaseConfig(config=db, env_prefix="ZEPHIR")
+
+            # Load database settings
+            db_settings = APP.CONFIG.get("database", {}).get(APP.ENV)
+            db_config = utils.DatabaseConfig(config=db_settings, env_prefix="ZEPHIR")
             conn_args = db_config.connection_args()
 
             conn = mysql.connector.connect(**conn_args)
-
             cursor = conn.cursor()
+
+
+            sql_select = {
+                "v2": "select cid, db_updated_at, metadata_json, "
+                "var_usfeddoc, var_score, concat(cid,'_',zr.autoid) as vufind_sort  "
+                "from zephir_records as zr "
+                "inner join zephir_filedata as zf on zr.id = zf.id "
+                "where attr_ingest_date is not null "
+                "order by cid, var_score DESC, vufind_sort ASC",
+                "v3": "select cid, db_updated_at, metadata_json, "
+                "var_usfeddoc, var_score, concat(cid,'_',zr.autoid) as vufind_sort  "
+                "from zephir_records as zr "
+                "inner join zephir_filedata as zf on zr.id = zf.id "
+                "where attr_ingest_date is not null "
+                "order by cid, var_usfeddoc DESC, var_score DESC, vufind_sort ASC",
+            }
             cursor.execute(sql_select[merge_version])
 
             curr_cid = None
@@ -153,7 +138,7 @@ def ht_bib_cache(
             bulk_session.commit()
             bulk_session.close()
             os.rename(
-                os.path.join(CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file
+                os.path.join(APP.CACHE_PATH, "{}.db".format(tmp_cache_name)), cache_file
             )
         finally:
             # TODO(cc): This will fail if cursor not defined
@@ -162,7 +147,7 @@ def ht_bib_cache(
 
         console.debug(
             "Finished: {} (Elapsed: {})".format(
-                merge_version, str(datetime.datetime.now() - start_time)
+                merge_version, str(datetime.datetime.now() - debug_start_time)
             )
         )
 

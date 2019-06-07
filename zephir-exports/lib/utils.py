@@ -5,8 +5,64 @@ import os
 import sys
 
 import click
+import environs
 import sqlalchemy.engine.url
 import yaml
+
+class AppEnv:
+    def __init__(self, name, root_dir=os.path.dirname(__file__)):
+        self.name = name
+        prefix = "{}_".format(name)
+
+        # load enviroment variables from .env file
+        app_env = environs.Env()
+        app_env.read_env()
+
+        with app_env.prefixed("{}_".format(name)):
+            self.ROOT_PATH = app_env("ROOT_PATH",False) or root_dir
+            self.ENV = app_env("ENV",False)
+            self.CONFIG_PATH = app_env("CONFIG_PATH",False) or os.path.join(
+                self.ROOT_PATH, "config"
+            )
+            self.OVERRIDE_CONFIG_PATH = app_env("OVERRIDE_CONFIG_PATH",False)
+            self.CACHE_PATH = app_env("CACHE_PATH",False) or os.path.join(self.ROOT_PATH, "cache")
+            self.EXPORT_PATH = app_env("EXPORT_PATH", False) or os.path.join(
+                    self.ROOT_PATH, "export"
+                )
+
+
+        # Load application config
+        config = AppEnv._load_config(self.CONFIG_PATH)
+        # used in testing, config files in test data will override local config files
+        if self.OVERRIDE_CONFIG_PATH is not None and os.path.isdir(self.OVERRIDE_CONFIG_PATH):
+            config = AppEnv._load_config(self.OVERRIDE_CONFIG_PATH, config)
+        self.CONFIG = config
+
+    @staticmethod
+    def _load_config(path, config={}):
+        """Load configuration files in the configuration directory
+        into a unified configuration dictionary.
+
+        Notes: Configuration files must be yaml files. The names
+        of the files become the top-level keys in the dictionary.
+
+        Args:
+            path: Path to a configuration directory.
+            config:  An existing dictionary of configuration values.
+
+        Returns:
+            A configuration dictionary populated with the contents of the
+            configuration files.
+
+            """
+        for entry in os.scandir(path):
+            if entry.is_file() and entry.name.endswith(".yml"):
+                section = os.path.splitext(entry.name)[0]
+                with open(entry, "r") as ymlfile:
+                    config[section] = {}
+                    config[section].update(yaml.safe_load(ymlfile))
+        return config
+
 
 class DatabaseConfig:
     """Database Config stores and manages database configurations to
@@ -23,7 +79,7 @@ class DatabaseConfig:
         A database connection string compatable with sqlalchemy.
 
             """
-    def __init__(self, config, env_prefix="ZEPHIR"):
+    def __init__(self, config, env_prefix):
             self.drivername = os.environ.get("{}_DB_DRIVERNAME".format(env_prefix)) or config.get("drivername")
             self.username = os.environ.get("{}_DB_USERNAME".format(env_prefix)) or config.get("username")
             self.password = os.environ.get("{}_DB_PASSWORD".format(env_prefix)) or config.get("password")
@@ -66,7 +122,7 @@ class DatabaseConfig:
 
         return args
 
-def load_config(path, config={}, ):
+def load_config(path, config={}):
     """Load configuration files in the configuration directory
     into a unified configuration dictionary.
 
