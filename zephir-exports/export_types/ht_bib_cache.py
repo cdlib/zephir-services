@@ -31,7 +31,7 @@ def ht_bib_cache(
 
     # Load application environment, configuration
     default_root_dir = os.path.join(os.path.dirname(__file__), "..")
-    APP = utils.AppEnv(name="ZEPHIR",root_dir=default_root_dir)
+    APP = utils.AppEnv(name="ZEPHIR", root_dir=default_root_dir)
 
     debug_start_time = datetime.datetime.now()
     console.debug("Starting to build cache: {}".format(debug_start_time))
@@ -72,7 +72,6 @@ def ht_bib_cache(
 
             conn = mysql.connector.connect(**conn_args)
             cursor = conn.cursor()
-
 
             sql_select = {
                 "v2": "select cid, db_updated_at, metadata_json, "

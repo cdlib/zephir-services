@@ -32,7 +32,7 @@ def ht_bib_incr(
 
     # Load application environment, configuration
     default_root_dir = os.path.join(os.path.dirname(__file__), "..")
-    APP = utils.AppEnv(name="ZEPHIR",root_dir=default_root_dir)
+    APP = utils.AppEnv(name="ZEPHIR", root_dir=default_root_dir)
 
     export_filename = "ht_bib_export_incr_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")
@@ -59,7 +59,9 @@ def ht_bib_incr(
         cursor.execute(cid_stmt)
 
         engine = create_engine(
-            "sqlite:///{}/cache-{}-{}.db".format(APP.CACHE_PATH, merge_version, today_date),
+            "sqlite:///{}/cache-{}-{}.db".format(
+                APP.CACHE_PATH, merge_version, today_date
+            ),
             echo=False,
         )
 

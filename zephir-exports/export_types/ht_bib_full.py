@@ -29,7 +29,7 @@ def ht_bib_full(
 
     # Load application environment, configuration
     default_root_dir = os.path.join(os.path.dirname(__file__), "..")
-    APP = utils.AppEnv(name="ZEPHIR",root_dir=default_root_dir)
+    APP = utils.AppEnv(name="ZEPHIR", root_dir=default_root_dir)
 
     export_filename = "ht_bib_export_full_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")

@@ -9,6 +9,7 @@ import environs
 import sqlalchemy.engine.url
 import yaml
 
+
 class AppEnv:
     def __init__(self, name, root_dir=os.path.dirname(__file__)):
         self.name = name
@@ -19,22 +20,25 @@ class AppEnv:
         app_env.read_env()
 
         with app_env.prefixed("{}_".format(name)):
-            self.ROOT_PATH = app_env("ROOT_PATH",False) or root_dir
-            self.ENV = app_env("ENV",False)
-            self.CONFIG_PATH = app_env("CONFIG_PATH",False) or os.path.join(
+            self.ROOT_PATH = app_env("ROOT_PATH", False) or root_dir
+            self.ENV = app_env("ENV", False)
+            self.CONFIG_PATH = app_env("CONFIG_PATH", False) or os.path.join(
                 self.ROOT_PATH, "config"
             )
-            self.OVERRIDE_CONFIG_PATH = app_env("OVERRIDE_CONFIG_PATH",False)
-            self.CACHE_PATH = app_env("CACHE_PATH",False) or os.path.join(self.ROOT_PATH, "cache")
+            self.OVERRIDE_CONFIG_PATH = app_env("OVERRIDE_CONFIG_PATH", False)
+            self.CACHE_PATH = app_env("CACHE_PATH", False) or os.path.join(
+                self.ROOT_PATH, "cache"
+            )
             self.EXPORT_PATH = app_env("EXPORT_PATH", False) or os.path.join(
-                    self.ROOT_PATH, "export"
-                )
-
+                self.ROOT_PATH, "export"
+            )
 
         # Load application config
         config = AppEnv._load_config(self.CONFIG_PATH)
         # used in testing, config files in test data will override local config files
-        if self.OVERRIDE_CONFIG_PATH is not None and os.path.isdir(self.OVERRIDE_CONFIG_PATH):
+        if self.OVERRIDE_CONFIG_PATH is not None and os.path.isdir(
+            self.OVERRIDE_CONFIG_PATH
+        ):
             config = AppEnv._load_config(self.OVERRIDE_CONFIG_PATH, config)
         self.CONFIG = config
 
@@ -79,14 +83,29 @@ class DatabaseConfig:
         A database connection string compatable with sqlalchemy.
 
             """
+
     def __init__(self, config, env_prefix):
-            self.drivername = os.environ.get("{}_DB_DRIVERNAME".format(env_prefix)) or config.get("drivername")
-            self.username = os.environ.get("{}_DB_USERNAME".format(env_prefix)) or config.get("username")
-            self.password = os.environ.get("{}_DB_PASSWORD".format(env_prefix)) or config.get("password")
-            self.host = os.environ.get("{}_DB_HOST".format(env_prefix)) or config.get("host")
-            self.port = os.environ.get("{}_DB_PORT".format(env_prefix)) or config.get("port")
-            self.database = os.environ.get("{}_DB_DATABASE".format(env_prefix)) or config.get("database")
-            self.socket = os.environ.get("{}_DB_SOCKET".format(env_prefix)) or config.get("socket")
+        self.drivername = os.environ.get(
+            "{}_DB_DRIVERNAME".format(env_prefix)
+        ) or config.get("drivername")
+        self.username = os.environ.get(
+            "{}_DB_USERNAME".format(env_prefix)
+        ) or config.get("username")
+        self.password = os.environ.get(
+            "{}_DB_PASSWORD".format(env_prefix)
+        ) or config.get("password")
+        self.host = os.environ.get("{}_DB_HOST".format(env_prefix)) or config.get(
+            "host"
+        )
+        self.port = os.environ.get("{}_DB_PORT".format(env_prefix)) or config.get(
+            "port"
+        )
+        self.database = os.environ.get(
+            "{}_DB_DATABASE".format(env_prefix)
+        ) or config.get("database")
+        self.socket = os.environ.get("{}_DB_SOCKET".format(env_prefix)) or config.get(
+            "socket"
+        )
 
     def connection_url(self):
         """
@@ -96,7 +115,14 @@ class DatabaseConfig:
         """
 
         url = str(
-            sqlalchemy.engine.url.URL(self.drivername, self.username, self.password, self.host, self.port, self.database)
+            sqlalchemy.engine.url.URL(
+                self.drivername,
+                self.username,
+                self.password,
+                self.host,
+                self.port,
+                self.database,
+            )
         )
 
         # if using mysql, add the socket to the URL
@@ -121,6 +147,7 @@ class DatabaseConfig:
         }
 
         return args
+
 
 def load_config(path, config={}):
     """Load configuration files in the configuration directory
