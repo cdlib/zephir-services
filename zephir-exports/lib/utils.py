@@ -8,40 +8,65 @@ import click
 import sqlalchemy.engine.url
 import yaml
 
-
-def db_connect_url(config):
-    """Database connection URL creates a connection string through configuration
-    values passed. The method allows for environmental variable overriding.
+class DatabaseConfig:
+    """Database Config stores and manages database configurations to
+    a relational database. The class provides methods for instantiating database
+    connections in different packages (sqlalchemy, mysql.connector)
 
     Notes: These strings depend on the sqlalchemy package.
 
     Args:
         config:  A dictionary of database configuration values.
+        env_prefix: A prefix used to identify environment variables for script
 
     Returns:
         A database connection string compatable with sqlalchemy.
 
+            """
+    def __init__(self, config, env_prefix="ZEPHIR"):
+            self.drivername = os.environ.get("{}_DB_DRIVERNAME".format(env_prefix)) or config.get("drivername")
+            self.username = os.environ.get("{}_DB_USERNAME".format(env_prefix)) or config.get("username")
+            self.password = os.environ.get("{}_DB_PASSWORD".format(env_prefix)) or config.get("password")
+            self.host = os.environ.get("{}_DB_HOST".format(env_prefix)) or config.get("host")
+            self.port = os.environ.get("{}_DB_PORT".format(env_prefix)) or config.get("port")
+            self.database = os.environ.get("{}_DB_DATABASE".format(env_prefix)) or config.get("database")
+            self.socket = os.environ.get("{}_DB_SOCKET".format(env_prefix)) or config.get("socket")
+
+    def connection_url(self):
         """
-    drivername = os.environ.get("ZEPHIR_DB_DRIVERNAME") or config.get("drivername")
-    username = os.environ.get("ZEPHIR_DB_USERNAME") or config.get("username")
-    password = os.environ.get("ZEPHIR_DB_PASSWORD") or config.get("password")
-    host = os.environ.get("ZEPHIR_DB_HOST") or config.get("host")
-    port = os.environ.get("ZEPHIR_DB_PORT") or config.get("port")
-    database = os.environ.get("ZEPHIR_DB_DATABASE") or config.get("database")
-    socket = os.environ.get("ZEPHIR_DB_SOCKET") or config.get("socket")
+        Returns:
+            A database connection string compatable with sqlalchemy.
 
-    url = str(
-        sqlalchemy.engine.url.URL(drivername, username, password, host, port, database)
-    )
+        """
 
-    # if using mysql, add the socket to the URL
-    if drivername == "mysql+mysqlconnector" and socket is not None:
-        url = url + "?unix_socket=" + socket
+        url = str(
+            sqlalchemy.engine.url.URL(self.drivername, self.username, self.password, self.host, self.port, self.database)
+        )
 
-    return url
+        # if using mysql, add the socket to the URL
+        if drivername == "mysql+mysqlconnector" and self.socket is not None:
+            url = "{}?unix_socket={}".format(url, self.socket)
 
+        return url
 
-def load_config(path, config={}):
+    def connection_args(self):
+        """
+        Returns:
+            A database arguments compatable with mysqlconnector.
+
+        """
+
+        args = {
+            "user": self.username,
+            "password": self.password,
+            "host": self.host,
+            "database": self.database,
+            "unix_socket": self.socket,
+        }
+
+        return args
+
+def load_config(path, config={}, ):
     """Load configuration files in the configuration directory
     into a unified configuration dictionary.
 

@@ -71,19 +71,8 @@ def ht_bib_incr(
     start_time = datetime.datetime.now()
 
     try:
-        conn_args = {
-            "user": db.get("username", None),
-            "password": db.get("password", None),
-            "host": db.get("host", None),
-            "database": db.get("database", None),
-            "unix_socket": None,
-        }
-
-        socket = os.environ.get("ZEPHIR_DB_SOCKET") or config.get("socket")
-
-        if socket:
-            conn_args["unix_socket"] = socket
-
+        db_config = utils.DatabaseConfig(config=db, env_prefix="ZEPHIR")
+        conn_args = db_config.connection_args()
         conn = mysql.connector.connect(**conn_args)
 
         cursor = conn.cursor()

@@ -48,7 +48,7 @@ def ht_bib_cache(
     config = utils.load_config(CONFIG_PATH)
 
     # used in testing, config files in test data will override local config files
-    if OVERRIDE_CONFIG_PATH is not None:
+    if OVERRIDE_CONFIG_PATH is not None and os.path.isdir(OVERRIDE_CONFIG_PATH):
         config = utils.load_config(OVERRIDE_CONFIG_PATH, config)
 
     db = config.get("database", {}).get(ENV)
@@ -97,18 +97,8 @@ def ht_bib_cache(
         )
         try:
             bulk_session = cache.session()
-            conn_args = {
-                "user": db.get("username", None),
-                "password": db.get("password", None),
-                "host": db.get("host", None),
-                "database": db.get("database", None),
-                "unix_socket": None,
-            }
-
-            socket = os.environ.get("ZEPHIR_DB_SOCKET") or config.get("socket")
-
-            if socket:
-                conn_args["unix_socket"] = socket
+            db_config = utils.DatabaseConfig(config=db, env_prefix="ZEPHIR")
+            conn_args = db_config.connection_args()
 
             conn = mysql.connector.connect(**conn_args)
 
