@@ -14,18 +14,7 @@ from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
 
-def ht_bib_full(
-    console=None,
-    merge_version=None,
-    quiet=False,
-    verbose=True,
-    very_verbose=False,
-    force=False,
-):
-
-    # Print handler to manage when and how messages should print
-    if not console:
-        console = ConsoleMessenger(quiet, verbose, very_verbose)
+def ht_bib_full(console, merge_version=None, force=False):
 
     # Load application environment, configuration
     default_root_dir = os.path.join(os.path.dirname(__file__), "..")

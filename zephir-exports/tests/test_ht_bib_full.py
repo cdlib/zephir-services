@@ -9,6 +9,7 @@ import pytest
 
 from export_types.ht_bib_full import ht_bib_full
 from export_cache import ExportCache
+from lib.utils import ConsoleMessenger
 
 
 @pytest.fixture
@@ -33,7 +34,10 @@ def test_create_bib_export_full(td_tmpdir, env_setup, capsys, pytestconfig):
                 ),
             ),
         )
-        ht_bib_full(merge_version=merge_version, very_verbose=very_verbose, force=True)
+        console = ConsoleMessenger(
+            verbose=True, very_verbose=pytestconfig.getoption("verbose") == 2
+        )
+        ht_bib_full(console=console, merge_version=merge_version, force=True)
 
         export_filename = "ht_bib_export_full_{}.json".format(
             datetime.datetime.today().strftime("%Y-%m-%d")

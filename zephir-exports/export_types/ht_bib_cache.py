@@ -16,18 +16,7 @@ from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
 
-def ht_bib_cache(
-    console=None,
-    merge_version=None,
-    quiet=False,
-    verbose=True,
-    very_verbose=False,
-    force=False,
-):
-
-    # Initilize for output and errors
-    if not console:
-        console = ConsoleMessenger(quiet, verbose, very_verbose)
+def ht_bib_cache(console, merge_version=None, force=False):
 
     # Load application environment, configuration
     default_root_dir = os.path.join(os.path.dirname(__file__), "..")

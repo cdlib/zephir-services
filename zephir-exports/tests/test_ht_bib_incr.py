@@ -10,6 +10,7 @@ import pytest
 
 from export_types.ht_bib_incr import ht_bib_incr
 from export_cache import ExportCache
+from lib.utils import ConsoleMessenger
 
 
 @pytest.fixture
@@ -38,10 +39,15 @@ def test_create_bib_export_incr(td_tmpdir, env_setup, capsys, pytestconfig):
                 ),
             ),
         )
-        ht_bib_incr(merge_version=merge_version, very_verbose=very_verbose, force=True)
+        console = ConsoleMessenger(
+            verbose=True, very_verbose=pytestconfig.getoption("verbose") == 2
+        )
+        ht_bib_incr(console=console, merge_version=merge_version, force=True)
+
         export_filename = "ht_bib_export_incr_{}.json".format(
             datetime.datetime.today().strftime("%Y-%m-%d")
         )
+
         assert filecmp.cmp(
             os.path.join(td_tmpdir, export_filename),
             os.path.join(

@@ -23,9 +23,12 @@ def env_setup(td_tmpdir, monkeypatch):
 
 
 def test_create_cache_successfully(td_tmpdir, env_setup, capsys, pytestconfig):
-    very_verbose = pytestconfig.getoption("verbose") == 2
     for merge_version in ["v2", "v3"]:
-        ht_bib_cache(merge_version=merge_version, very_verbose=very_verbose, force=True)
+
+        console = ConsoleMessenger(
+            verbose=True, very_verbose=pytestconfig.getoption("verbose") == 2
+        )
+        ht_bib_cache(console=console, merge_version=merge_version, force=True)
 
         new_cache = ExportCache(
             td_tmpdir,
@@ -40,7 +43,7 @@ def test_create_cache_successfully(td_tmpdir, env_setup, capsys, pytestconfig):
         )
 
 
-def test_create_cache_without_force(td_tmpdir, env_setup, capsys):
+def test_create_cache_without_force(td_tmpdir, env_setup, capsys, pytestconfig):
     for merge_version in ["v3", "v3"]:
 
         console = ConsoleMessenger(very_verbose=True)
@@ -51,7 +54,7 @@ def test_create_cache_without_force(td_tmpdir, env_setup, capsys):
     assert "Skipping; cache file exists. Force to overwrite." in err
 
 
-def test_create_cache_with_force(td_tmpdir, env_setup, capsys):
+def test_create_cache_with_force(td_tmpdir, env_setup, capsys, pytestconfig):
     for merge_version in ["v3", "v3"]:
 
         console = ConsoleMessenger(very_verbose=True)
