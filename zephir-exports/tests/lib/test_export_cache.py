@@ -1,5 +1,5 @@
-from export_cache import ExportCache
-from export_cache import CacheComparison
+from lib.export_cache import ExportCache
+from lib.export_cache import CacheComparison
 
 
 def test_loaded_false_when_cache_table_does_not_exists(td_tmpdir):

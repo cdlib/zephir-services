@@ -5,11 +5,10 @@ import shutil
 import sys
 import zlib
 
-from freezegun import freeze_time
 import pytest
 
-from export_types.ht_bib_incr import ht_bib_incr
-from export_cache import ExportCache
+from export_types.ht_bib_full import ht_bib_full
+from lib.export_cache import ExportCache
 from lib.utils import ConsoleMessenger
 
 
@@ -21,15 +20,11 @@ def env_setup(td_tmpdir, monkeypatch):
     )
     monkeypatch.setenv("ZEPHIR_EXPORT_PATH", td_tmpdir)
     monkeypatch.setenv("ZEPHIR_CACHE_PATH", td_tmpdir)
-    if "MYSQL_UNIX_PORT" in os.environ:
-        monkeypatch.setenv("ZEPHIR_DB_SOCKET", os.environ["MYSQL_UNIX_PORT"])
-    os.system("mysql --host=localhost --user=root  < {}/micro-db.sql".format(td_tmpdir))
 
 
-@freeze_time("2019-02-18")
-def test_create_bib_export_incr(td_tmpdir, env_setup, capsys, pytestconfig):
+def test_create_bib_export_full(td_tmpdir, env_setup, capsys, pytestconfig):
     very_verbose = pytestconfig.getoption("verbose") == 2
-    for merge_version in ["v2", "v3"]:
+    for merge_version in ["v2"]:
         os.rename(
             os.path.join(td_tmpdir, "cache-{}-ref.db".format(merge_version)),
             os.path.join(
@@ -42,16 +37,15 @@ def test_create_bib_export_incr(td_tmpdir, env_setup, capsys, pytestconfig):
         console = ConsoleMessenger(
             verbose=True, very_verbose=pytestconfig.getoption("verbose") == 2
         )
-        ht_bib_incr(console=console, merge_version=merge_version, force=True)
+        ht_bib_full(console=console, merge_version=merge_version, force=True)
 
-        export_filename = "ht_bib_export_incr_{}.json".format(
+        export_filename = "ht_bib_export_full_{}.json".format(
             datetime.datetime.today().strftime("%Y-%m-%d")
         )
-
         assert filecmp.cmp(
             os.path.join(td_tmpdir, export_filename),
             os.path.join(
-                td_tmpdir, "{}-ht_bib_export_incr_ref.json".format(merge_version)
+                td_tmpdir, "{}-ht_bib_export_full_ref.json".format(merge_version)
             ),
         )
         # clean up to avoid name conflict next merge-version

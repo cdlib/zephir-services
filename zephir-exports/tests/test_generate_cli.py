@@ -8,7 +8,7 @@ import zlib
 from freezegun import freeze_time
 import pytest
 
-from export_cache import ExportCache
+from lib.export_cache import ExportCache
 from generate_cli import generate_cli
 
 

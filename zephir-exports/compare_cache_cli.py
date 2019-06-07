@@ -2,7 +2,7 @@ import os
 
 import click
 
-from export_cache import ExportCache
+from lib.export_cache import ExportCache
 from lib.utils import ConsoleMessenger
 
 

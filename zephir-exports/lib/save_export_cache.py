@@ -13,17 +13,12 @@ from sqlalchemy.ext.automap import automap_base
 
 
 class ExportCache:
-    def __init__(self, cache_dir=None, name=None, force=False, path=None):
+    def __init__(self, cache_dir, name):
         self.name = name
-
-        if path is None:
-            path = os.path.join(cache_dir, "{}.db".format(name))
-
-        if force and os.path.isfile(path):
-            os.remove(path)
-
-        self.engine = create_engine("sqlite:///{}".format(path), echo=False)
-
+        self.engine = create_engine(
+            "sqlite:///{}".format(os.path.join(cache_dir, "{}.db".format(name))),
+            echo=False,
+        )
         self.cache_schema_exists_on_load = self.engine.dialect.has_table(
             self.engine, "cache"
         )
@@ -154,10 +149,6 @@ class ExportCache:
         for idx, item in enumerate(prechunk_set):
             chunks[idx % mod].add(item)
         return chunks
-
-    def frozen_content_set(self):
-        c_set = frozenset(self._load_index().items())
-        return c_set
 
 
 class CacheComparison:

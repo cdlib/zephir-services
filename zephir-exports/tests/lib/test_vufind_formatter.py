@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from vufind_formatter import VufindFormatter
+from lib.vufind_formatter import VufindFormatter
 
 
 def test_vufind_successfully_merged(td_tmpdir):

@@ -10,8 +10,8 @@ from environs import Env
 import json
 import mysql.connector
 
-from export_cache import ExportCache
-from vufind_formatter import VufindFormatter
+from lib.export_cache import ExportCache
+from lib.vufind_formatter import VufindFormatter
 from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
