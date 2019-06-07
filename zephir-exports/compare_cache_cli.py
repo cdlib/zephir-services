@@ -3,7 +3,7 @@ import os
 import click
 
 from export_cache import ExportCache
-from lib.new_utils import ConsoleMessenger
+from lib.utils import ConsoleMessenger
 
 
 @click.command()

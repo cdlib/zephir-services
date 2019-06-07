@@ -12,8 +12,8 @@ import mysql.connector
 
 from export_cache import ExportCache
 from vufind_formatter import VufindFormatter
-from lib.new_utils import ConsoleMessenger
-import lib.new_utils as utils
+from lib.utils import ConsoleMessenger
+import lib.utils as utils
 
 
 def ht_bib_cache(

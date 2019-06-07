@@ -8,7 +8,7 @@ import pytest
 
 from export_types.ht_bib_cache import ht_bib_cache
 from export_cache import ExportCache
-from lib.new_utils import ConsoleMessenger
+from lib.utils import ConsoleMessenger
 
 
 @pytest.fixture
