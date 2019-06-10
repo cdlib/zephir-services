@@ -21,18 +21,26 @@ def td_tmpdir(request, tmpdir):
 
     """
     td_dirname = os.path.splitext(os.path.basename(request.fspath))[0]
-    td_path = os.path.join(os.path.dirname(__file__), td_dirname)
+    td_path = os.path.splitext(request.fspath)[0]
     tmp_td_path = os.path.join(tmpdir, td_dirname)
     shutil.copytree(td_path, tmp_td_path)
     return tmp_td_path
 
 
 def pytest_configure(config):
+    """Configuration before all tests are run.
+    """
+    # save environment settings for after testing
     if os.environ.get("ZEPHIR_ENV"):
         os.environ["ZEPHIR_TEST_SWAP_ENV"] = os.environ.get("ZED_ENV")
     os.environ["ZEPHIR_ENV"] = "test"
 
 
 def pytest_unconfigure(config):
-    if not os.environ.get("ZEPHIR_TEST_SWAP_ENV"):
+    """Configuration after all tests are run.
+    """
+    # reset to previous enviroment
+    if os.environ.get("ZEPHIR_TEST_SWAP_ENV"):
+        os.environ["ZEPHIR_ENV"] = os.environ.get("ZEPHIR_TEST_SWAP_ENV")
+    else:
         del os.environ["ZEPHIR_ENV"]

@@ -1,8 +1,8 @@
 import click
 
-from export_types.ht_bib_cache import ht_bib_cache
-from export_types.ht_bib_full import ht_bib_full
-from export_types.ht_bib_incr import ht_bib_incr
+from exports.ht_bib_cache import ht_bib_cache
+from exports.ht_bib_full import ht_bib_full
+from exports.ht_bib_incr import ht_bib_incr
 from lib.utils import ConsoleMessenger
 
 

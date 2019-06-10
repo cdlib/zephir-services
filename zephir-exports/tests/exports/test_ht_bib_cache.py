@@ -6,7 +6,7 @@ import zlib
 
 import pytest
 
-from export_types.ht_bib_cache import ht_bib_cache
+from exports.ht_bib_cache import ht_bib_cache
 from lib.export_cache import ExportCache
 from lib.utils import ConsoleMessenger
 
