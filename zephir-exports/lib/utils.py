@@ -28,6 +28,12 @@ class AppEnv:
             self.CACHE_PATH = app_env("CACHE_PATH", False) or os.path.join(
                 self.ROOT_PATH, "cache"
             )
+            self.IMPORT_PATH = app_env("IMPORT_PATH", False) or os.path.join(
+                self.ROOT_PATH)
+            self.OUTPUT_PATH = app_env("OUTPUT_PATH", False) or os.path.join(
+                self.ROOT_PATH, "export"
+            )
+            # TODO(ccollett): Refactor this to output path
             self.EXPORT_PATH = app_env("EXPORT_PATH", False) or os.path.join(
                 self.ROOT_PATH, "export"
             )
