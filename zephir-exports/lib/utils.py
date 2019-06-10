@@ -13,7 +13,6 @@ import yaml
 class AppEnv:
     def __init__(self, name, root_dir=os.path.dirname(__file__)):
         self.name = name
-        prefix = "{}_".format(name)
 
         # load enviroment variables from .env file
         app_env = environs.Env()
@@ -32,7 +31,6 @@ class AppEnv:
             self.EXPORT_PATH = app_env("EXPORT_PATH", False) or os.path.join(
                 self.ROOT_PATH, "export"
             )
-
         # Load application config
         config = AppEnv._load_config(self.CONFIG_PATH)
         # used in testing, config files in test data will override local config files
@@ -68,8 +66,8 @@ class AppEnv:
         return config
 
 
-class DatabaseConfig:
-    """Database Config stores and manages database configurations to
+class DatabaseHelper:
+    """Database Helper stores and manages database configurations to
     a relational database. The class provides methods for instantiating database
     connections in different packages (sqlalchemy, mysql.connector)
 
