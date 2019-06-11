@@ -34,8 +34,8 @@ def test_create_bib_export_full(td_tmpdir, env_setup, capsys, pytestconfig):
                 ),
             ),
         )
-        console = ConsoleMessenger(app="ZEPHIR-EXPORT", 
-            verbose=True, very_verbose=pytestconfig.getoption("verbose") == 2
+        console = ConsoleMessenger(
+            app="ZEPHIR-EXPORT", verbosity=pytestconfig.getoption("verbose")
         )
         ht_bib_full(console=console, merge_version=merge_version, force=True)
 

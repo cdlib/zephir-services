@@ -37,15 +37,14 @@ def test_required_arguments_enforced(td_tmpdir, env_setup, capsys):
             sys.argv = req_set["args"]
             generate_cli()
         out, err = capsys.readouterr()
+        print(out, file=sys.stdout)
+        print(err, file=sys.stderr)
         assert req_set["error"] in err
         assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 2]
 
 
 @freeze_time("2019-02-18")
 def test_exports_complete(td_tmpdir, env_setup, capsys, pytestconfig):
-    if pytestconfig.getoption("verbose") == "2":
-        very_verbose == "--very-verbose"
-
     arg_sets = [
         {"export-type": "ht-bib-full", "merge-version": "v2", "name": "full"},
         {"export-type": "ht-bib-incr", "merge-version": "v3", "name": "incr"},
@@ -58,9 +57,9 @@ def test_exports_complete(td_tmpdir, env_setup, capsys, pytestconfig):
                 "-mv",
                 arg_set["merge-version"],
                 "--force",
+                "--verbosity",
+                pytestconfig.getoption("verbose"),
             ]
-            if pytestconfig.getoption("verbose") == 2:
-                sys.argv.append("--very-verbose")
 
             generate_cli()
 

@@ -25,9 +25,7 @@ def env_setup(td_tmpdir, monkeypatch):
 def test_create_cache_successfully(td_tmpdir, env_setup, capsys, pytestconfig):
     for merge_version in ["v2", "v3"]:
 
-        console = ConsoleMessenger(
-            verbose=True, very_verbose=pytestconfig.getoption("verbose") == 2
-        )
+        console = ConsoleMessenger(verbosity=pytestconfig.getoption("verbose"))
         ht_bib_cache(console=console, merge_version=merge_version, force=True)
 
         new_cache = ExportCache(
@@ -46,7 +44,7 @@ def test_create_cache_successfully(td_tmpdir, env_setup, capsys, pytestconfig):
 def test_create_cache_without_force(td_tmpdir, env_setup, capsys, pytestconfig):
     for merge_version in ["v3", "v3"]:
 
-        console = ConsoleMessenger(very_verbose=True)
+        console = ConsoleMessenger(verbosity=2)
         ht_bib_cache(console=console, merge_version=merge_version, force=False)
 
     out, err = capsys.readouterr()
@@ -57,7 +55,7 @@ def test_create_cache_without_force(td_tmpdir, env_setup, capsys, pytestconfig):
 def test_create_cache_with_force(td_tmpdir, env_setup, capsys, pytestconfig):
     for merge_version in ["v3", "v3"]:
 
-        console = ConsoleMessenger(very_verbose=True)
+        console = ConsoleMessenger(verbosity=2)
         ht_bib_cache(console=console, merge_version=merge_version, force=True)
 
     out, err = capsys.readouterr()

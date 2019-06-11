@@ -9,26 +9,29 @@ from lib.utils import ConsoleMessenger
 @click.command()
 @click.argument("files", nargs=2, required="true")
 @click.option(
-    "-q", "--quiet", is_flag=True, default=False, help="Only emit error messages"
+    "-q", "--quiet", "verbosity", flag_value=0, help="Only emit error messages"
 )
 @click.option(
     "-v",
     "--verbose",
-    is_flag=True,
-    default=False,
+    "verbosity",
+    flag_value=1,
     help="Emit messages dianostic messages",
 )
 @click.option(
     "-vv",
     "--very-verbose",
-    is_flag=True,
-    default=False,
+    "verbosity",
+    flag_value=2,
     help="Emit messages excessive debugging messages",
 )
+@click.option(
+    "-vb", "--verbosity", "verbosity", default=0, help="Set the verbosity of messages"
+)
 @click.pass_context
-def compare_cache_cli(ctx, files, quiet, verbose, very_verbose):
+def compare_cache_cli(ctx, files, verbosity):
     """Compare export caches for content differences. Ignores datetime of cache creation."""
-    console = ConsoleMessenger(app="ZEPHIR-EXPORT", quiet=quiet, verbose=verbose, very_verbose=very_verbose)
+    console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=verbosity)
     f1_cache = ExportCache(path=set_abs_filepath(files[0]))
     f1_set = f1_cache.frozen_content_set()
     f2_cache = ExportCache(path=set_abs_filepath(files[1]))
@@ -38,9 +41,9 @@ def compare_cache_cli(ctx, files, quiet, verbose, very_verbose):
             console.out("-(cid:{},key:{})".format(line[0], line[1]))
         for line in f2_set - f1_set:
             console.out("+(cid:{},key:{})".format(line[0], line[1]))
-        SystemExit(0)
+        console.info("Differences found between cache files  🍎 ==🍊")
     else:
-        console.info("No differences found between cache files")
+        console.info("No differences found between cache files  🍎 ==🍎")
 
 
 def set_abs_filepath(file):

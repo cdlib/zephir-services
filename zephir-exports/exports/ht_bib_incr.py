@@ -16,7 +16,9 @@ from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
 
-def ht_bib_incr(console, cache_path=None, output_path=None, merge_version=None, force=False):
+def ht_bib_incr(
+    console, cache_path=None, output_path=None, merge_version=None, force=False
+):
     """ HathiTrust Bibliographic Export (FULL) method. This method is dependent on the
     cli calling script. It selects all the entries from a cache and exports them
     into a file.
@@ -45,7 +47,6 @@ def ht_bib_incr(console, cache_path=None, output_path=None, merge_version=None, 
     export_filename = "ht_bib_export_incr_{}.json".format(
         datetime.datetime.today().strftime("%Y-%m-%d")
     )
-
 
     # DATABASE: Prepare connection and statements
     try:
@@ -96,14 +97,17 @@ def ht_bib_incr(console, cache_path=None, output_path=None, merge_version=None, 
         conn.close()
 
     console.debug(
-        "Completed: {}".format(
-            str(datetime.datetime.now() - debug_start_time)
+        "Completed: {}".format(str(datetime.datetime.now() - debug_start_time))
+    )
+
+    console.info(
+        "💫 📝  All done! Created ht-bib-incr({}) export with {} records".format(
+            merge_version, count
         )
     )
 
-    console.info("💫 📝  All done! Created ht-bib-incr({}) export with {} records".format(merge_version, count))
-
     return output_path
+
 
 if __name__ == "__main__":
     create_bib_export()

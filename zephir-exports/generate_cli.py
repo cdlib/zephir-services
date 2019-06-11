@@ -9,21 +9,24 @@ from lib.utils import ConsoleMessenger
 @click.command()
 @click.argument("export-type")
 @click.option(
-    "-q", "--quiet", is_flag=True, default=False, help="Only emit error messages"
+    "-q", "--quiet", "verbosity", flag_value=1, help="Only emit error messages"
 )
 @click.option(
     "-v",
     "--verbose",
-    is_flag=True,
-    default=False,
+    "verbosity",
+    flag_value=1,
     help="Emit messages dianostic messages",
 )
 @click.option(
     "-vv",
     "--very-verbose",
-    is_flag=True,
-    default=False,
+    "verbosity",
+    flag_value=2,
     help="Emit messages excessive debugging messages",
+)
+@click.option(
+    "-vb", "--verbosity", "verbosity", default=0, help="Set the verbosity of messages"
 )
 @click.option(
     "-mv",
@@ -40,9 +43,9 @@ from lib.utils import ConsoleMessenger
     help="Remove and rewrite over existing cache",
 )
 @click.pass_context
-def generate_cli(ctx, export_type, quiet, verbose, very_verbose, merge_version, force):
+def generate_cli(ctx, export_type, verbosity, merge_version, force):
     """Generate Zephir exports files for HathiTrust."""
-    console = ConsoleMessenger(app="ZEPHIR-EXPORT", quiet=quiet, verbose=verbose, very_verbose=very_verbose)
+    console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=verbosity)
     cache = ht_bib_cache(console=console, merge_version=merge_version, force=force)
     if export_type == "ht-bib-full":
         ht_bib_full(console=console, merge_version=merge_version, force=force)

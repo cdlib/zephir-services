@@ -40,9 +40,7 @@ def test_create_bib_export_incr(td_tmpdir, env_setup, capsys, pytestconfig):
                 ),
             ),
         )
-        console = ConsoleMessenger(
-            verbose=True, very_verbose=pytestconfig.getoption("verbose") == 2
-        )
+        console = ConsoleMessenger(verbosity=pytestconfig.getoption("verbose"))
         ht_bib_incr(console=console, merge_version=merge_version, force=True)
 
         export_filename = "ht_bib_export_incr_{}.json".format(

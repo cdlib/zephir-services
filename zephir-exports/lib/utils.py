@@ -30,7 +30,8 @@ class AppEnv:
                 self.ROOT_PATH, "cache"
             )
             self.IMPORT_PATH = app_env("IMPORT_PATH", False) or os.path.join(
-                self.ROOT_PATH)
+                self.ROOT_PATH
+            )
             self.OUTPUT_PATH = app_env("OUTPUT_PATH", False) or os.path.join(
                 self.ROOT_PATH, "export"
             )
@@ -181,48 +182,62 @@ def load_config(path, config={}):
 
 class ConsoleMessenger:
     """ConsoleMessenger Class provides utility functions for outputing
-    messages to the console, which can be configured for both
-    quiet and verbose flags. This eliminates having to track these
-    flags and use conditional logic to know when to print specific
-    messages.
+    messages to the console, which can be configured for verbosity.
+    This eliminates having to track these conditional logic to know when to print
+    specific messages.
 
     Args:
-        quiet: A flag to suppress all output except errors
-        verbose: A flag to print diagnostic messages
+        app: The name of the application (to prepend stderr messages)
+        verbosity: verbosity level of application
+            * -1: quiet [No stdout, ERROR stderr]
+            * 0: default [stdout, ERROR stderr]
+            * 1: verbose [stdout, INFO stderr]
+            * 2: very_verbose [stdout, DEBUG stderr]
+
         """
 
-    def __init__(self, app=None, quiet=False, verbose=False, very_verbose=False):
+    def __init__(self, app=None, verbosity=0):
         self.app = app
-        self.quiet = quiet
-        self.verbose = verbose or very_verbose
-        self.very_verbose = very_verbose
+        self.verbosity = verbosity
 
     # verbose diagnostic messages only
     def info(self, message):
-        if self.verbose:
+        if self.verbose():
             self.send_error(message, level="INFO")
 
     # very verbose debug messages only
     def debug(self, message):
-        if self.very_verbose:
+        if self.very_verbose():
             self.send_error(message, level="DEBUG")
 
     # concise error handling messages
     def error(self, message):
-            self.send_error(message, level="ERROR")
+        self.send_error(message, level="ERROR")
 
     # standard output for use by chained applications
     def out(self, message):
-        if not self.quiet:
+        if not self.quiet():
             click.secho(message, file=sys.stdout)
 
     def send_error(self, message, level=None):
         line = ""
-        if self.very_verbose:
+        if self.very_verbose():
             line += datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S.%f ")
-        if level and self.very_verbose:
+        if level and self.very_verbose():
             line += level + " "
-        if self.app and self.verbose:
+        if self.app:
             line += self.app + ": "
         line += message
         click.secho(line, file=sys.stderr)
+
+    def quiet(self):
+        return self.verbosity == -1
+
+    def default(self):
+        return self.verbosity == 0
+
+    def verbose(self):
+        return self.verbosity >= 1
+
+    def very_verbose(self):
+        return self.verbosity >= 2

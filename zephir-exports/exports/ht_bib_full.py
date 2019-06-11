@@ -14,7 +14,9 @@ from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
 
-def ht_bib_full(console, cache_path=None, output_path=None, merge_version=None, force=False):
+def ht_bib_full(
+    console, cache_path=None, output_path=None, merge_version=None, force=False
+):
     """ HathiTrust Bibliographic Export (FULL) method. This method is dependent on the
     cli calling script. It selects all the entries from a cache and exports them
     into a file.
@@ -41,7 +43,6 @@ def ht_bib_full(console, cache_path=None, output_path=None, merge_version=None, 
     console.debug("Environment: {}".format(APP.ENV))
     console.debug("Configuration: {}".format(APP.CONFIG_PATH))
 
-
     # CACHE: What cache should be used?
     cache_path = cache_path or APP.CACHE_PATH
     if not os.path.exists(cache_path):
@@ -60,7 +61,6 @@ def ht_bib_full(console, cache_path=None, output_path=None, merge_version=None, 
     cache = "sqlite:///{}/cache-{}-{}.db".format(
         APP.CACHE_PATH, merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
     )
-
 
     # OUTPUT: Where should the results go?
     output_path = output_path or APP.OUTPUT_PATH
@@ -91,11 +91,13 @@ def ht_bib_full(console, cache_path=None, output_path=None, merge_version=None, 
                 count += 1
 
     console.debug(
-        "Completed: {}".format(
-            str(datetime.datetime.now() - debug_start_time)
+        "Completed: {}".format(str(datetime.datetime.now() - debug_start_time))
+    )
+    console.info(
+        "💫 📝  All done! Created ht-bib-full({}) export with {} records".format(
+            merge_version, count
         )
     )
-    console.info("💫 📝  All done! Created ht-bib-full({}) export with {} records".format(merge_version, count))
     return output_path
 
 
