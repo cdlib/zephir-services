@@ -12,6 +12,16 @@ import yaml
 
 
 class AppEnv:
+    """ AppEnv Class provides an easy helper for loading enviroment variables with
+    default values and yaml configuration files into an object for Zephir Services.
+    Enviroment variables include: ROOT_PATH, CONFIG_PATH, CACHE_PATH, IMPORT_PATH,
+    and OUTPUT_PATH. OVERRIDE_CONFIG_PATH is a special environment variable that
+    load after the CONFIG_PATH is loaded.
+
+    Args:
+        name: Prefix for application specific environment variables
+        root: The default root directory.
+    """
     def __init__(self, name, root_dir=os.path.dirname(__file__)):
         self.name = name
 
@@ -41,7 +51,8 @@ class AppEnv:
             )
         # Load application config
         config = AppEnv._load_config(self.CONFIG_PATH)
-        # used in testing, config files in test data will override local config files
+
+        # Used in testing, config files in test data will override local config files
         if self.OVERRIDE_CONFIG_PATH is not None and os.path.isdir(
             self.OVERRIDE_CONFIG_PATH
         ):
