@@ -155,31 +155,6 @@ class DatabaseHelper:
         return args
 
 
-def load_config(path, config={}):
-    """Load configuration files in the configuration directory
-    into a unified configuration dictionary.
-
-    Notes: Configuration files must be yaml files. The names
-    of the files become the top-level keys in the dictionary.
-
-    Args:
-        path: Path to a configuration directory.
-        config:  An existing dictionary of configuration values.
-
-    Returns:
-        A configuration dictionary populated with the contents of the
-        configuration files.
-
-        """
-    for entry in os.scandir(path):
-        if entry.is_file() and entry.name.endswith(".yml"):
-            section = os.path.splitext(entry.name)[0]
-            with open(entry, "r") as ymlfile:
-                config[section] = {}
-                config[section].update(yaml.safe_load(ymlfile))
-    return config
-
-
 class ConsoleMessenger:
     """ConsoleMessenger Class provides utility functions for outputing
     messages to the console, which can be configured for verbosity.
