@@ -22,6 +22,7 @@ class AppEnv:
         name: Prefix for application specific environment variables
         root: The default root directory.
     """
+
     def __init__(self, name, root_dir=os.path.dirname(__file__)):
         self.name = name
 
