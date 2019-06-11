@@ -18,7 +18,7 @@ def env_setup(td_tmpdir, monkeypatch):
     monkeypatch.setenv(
         "ZEPHIR_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
     )
-    monkeypatch.setenv("ZEPHIR_EXPORT_PATH", td_tmpdir)
+    monkeypatch.setenv("ZEPHIR_OUTPUT_PATH", td_tmpdir)
     monkeypatch.setenv("ZEPHIR_CACHE_PATH", td_tmpdir)
 
 
@@ -34,7 +34,7 @@ def test_create_bib_export_full(td_tmpdir, env_setup, capsys, pytestconfig):
                 ),
             ),
         )
-        console = ConsoleMessenger(
+        console = ConsoleMessenger(app="ZEPHIR-EXPORT", 
             verbose=True, very_verbose=pytestconfig.getoption("verbose") == 2
         )
         ht_bib_full(console=console, merge_version=merge_version, force=True)

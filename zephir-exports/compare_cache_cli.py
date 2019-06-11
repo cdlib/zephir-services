@@ -28,7 +28,7 @@ from lib.utils import ConsoleMessenger
 @click.pass_context
 def compare_cache_cli(ctx, files, quiet, verbose, very_verbose):
     """Compare export caches for content differences. Ignores datetime of cache creation."""
-    console = ConsoleMessenger(quiet, verbose, very_verbose)
+    console = ConsoleMessenger(app="ZEPHIR-EXPORT", quiet=quiet, verbose=verbose, very_verbose=very_verbose)
     f1_cache = ExportCache(path=set_abs_filepath(files[0]))
     f1_set = f1_cache.frozen_content_set()
     f2_cache = ExportCache(path=set_abs_filepath(files[1]))

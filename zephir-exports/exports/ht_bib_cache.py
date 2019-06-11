@@ -16,7 +16,7 @@ from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
 
-def ht_bib_cache(console, merge_version=None, force=False):
+def ht_bib_cache(console, input_path=None, output_path=None, merge_version=None, force=False):
 
     # Load application environment, configuration
     default_root_dir = os.path.join(os.path.dirname(__file__), "..")
@@ -56,7 +56,7 @@ def ht_bib_cache(console, merge_version=None, force=False):
 
             # Load database settings
             db_settings = APP.CONFIG.get("database", {}).get(APP.ENV)
-            db_config = utils.DatabaseConfig(config=db_settings, env_prefix="ZEPHIR")
+            db_config = utils.DatabaseHelper(config=db_settings, env_prefix="ZEPHIR")
             conn_args = db_config.connection_args()
 
             conn = mysql.connector.connect(**conn_args)

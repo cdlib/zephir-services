@@ -18,7 +18,7 @@ def env_setup(td_tmpdir, monkeypatch):
     monkeypatch.setenv(
         "ZEPHIR_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
     )
-    monkeypatch.setenv("ZEPHIR_EXPORT_PATH", td_tmpdir)
+    monkeypatch.setenv("ZEPHIR_OUTPUT_PATH", td_tmpdir)
     monkeypatch.setenv("ZEPHIR_CACHE_PATH", td_tmpdir)
 
     if "MYSQL_UNIX_PORT" in os.environ:
