@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Utils.py: Utils are a collection of methods used across scripts"""
 
+import datetime
 import os
 import sys
 
@@ -190,7 +191,8 @@ class ConsoleMessenger:
         verbose: A flag to print diagnostic messages
         """
 
-    def __init__(self, quiet=False, verbose=False, very_verbose=False):
+    def __init__(self, app=None, quiet=False, verbose=False, very_verbose=False):
+        self.app = app
         self.quiet = quiet
         self.verbose = verbose or very_verbose
         self.very_verbose = very_verbose
@@ -198,18 +200,29 @@ class ConsoleMessenger:
     # verbose diagnostic messages only
     def info(self, message):
         if self.verbose:
-            print(message, file=sys.stderr)
+            self.send_error(message, level="INFO")
 
     # very verbose debug messages only
     def debug(self, message):
         if self.very_verbose:
-            print(message, file=sys.stderr)
+            self.send_error(message, level="DEBUG")
 
     # concise error handling messages
     def error(self, message):
-        print(message, file=sys.stderr)
+            self.send_error(message, level="ERROR")
 
     # standard output for use by chained applications
     def out(self, message):
         if not self.quiet:
-            print(message, file=sys.stdout)
+            click.secho(message, file=sys.stdout)
+
+    def send_error(self, message, level=None):
+        line = ""
+        if self.very_verbose:
+            line += datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S.%f ")
+        if level and self.very_verbose:
+            line += level + " "
+        if self.app and self.verbose:
+            line += self.app + ": "
+        line += message
+        click.secho(line, file=sys.stderr)
