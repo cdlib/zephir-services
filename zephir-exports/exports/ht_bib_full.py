@@ -53,6 +53,7 @@ def ht_bib_full(
     console.debug("Using Cache: {}".format(cache_path))
 
     cache_url = "sqlite:///{}".format(cache_path)
+    cache = create_engine(cache_url, echo=False)
 
     # OUTPUT: Where should the results go?
     output_path = output_path or APP.OUTPUT_PATH
@@ -69,12 +70,10 @@ def ht_bib_full(
                 datetime.datetime.today().strftime("%Y-%m-%d")
             )
             output_path = os.path.join(APP.OUTPUT_PATH, file_template)
-            console.debug("Using Output: {}".format(output_path))
+        console.debug("Using Output: {}".format(output_path))
 
     # GENERATE: Create the file from the cache
-    with open(output_path, "a") as export_file:
-        engine = create_engine(cache_url, echo=False)
-        with engine.connect() as con:
+    with open(output_path, "a") as export_file, cache.connect() as con:
             create_table_stmt = "select cache_data from cache"
             result = con.execute(create_table_stmt)
             count = 0
