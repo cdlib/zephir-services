@@ -2,15 +2,10 @@
 
 import datetime
 import os
-import socket
 import zlib
 
-from environs import Env
 from sqlalchemy import create_engine
 
-from lib.export_cache import ExportCache
-from lib.vufind_formatter import VufindFormatter
-from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
 
@@ -58,9 +53,6 @@ def ht_bib_full(
     console.debug("Using Cache: {}".format(cache_path))
 
     cache_url = "sqlite:///{}".format(cache_path)
-    cache = "sqlite:///{}/cache-{}-{}.db".format(
-        APP.CACHE_PATH, merge_version, datetime.datetime.today().strftime("%Y-%m-%d")
-    )
 
     # OUTPUT: Where should the results go?
     output_path = output_path or APP.OUTPUT_PATH
@@ -102,4 +94,4 @@ def ht_bib_full(
 
 
 if __name__ == "__main__":
-    create_bib_export()
+    ht_bib_full()

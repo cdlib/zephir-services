@@ -26,9 +26,6 @@ class ZephirCluster:
             ROOT_PATH, "config"
         )
         OVERRIDE_CONFIG_PATH = os.environ.get("ZEPHIR_OVERRIDE_CONFIG_PATH")
-        CACHE_PATH = os.environ.get("ZEPHIR_CACHE_PATH") or os.path.join(
-            ROOT_PATH, "cache"
-        )
 
         # load all configuration files in directory
         config = utils.load_config(CONFIG_PATH)

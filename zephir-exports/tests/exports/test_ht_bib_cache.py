@@ -1,8 +1,5 @@
 import datetime
 import os
-import shutil
-import sys
-import zlib
 
 import pytest
 

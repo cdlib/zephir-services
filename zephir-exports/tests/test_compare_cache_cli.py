@@ -1,9 +1,5 @@
-import datetime
-import filecmp
 import os
-import shutil
 import sys
-import zlib
 
 import pytest
 

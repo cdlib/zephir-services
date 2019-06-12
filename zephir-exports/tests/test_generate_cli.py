@@ -1,9 +1,7 @@
 import datetime
 import filecmp
 import os
-import shutil
 import sys
-import zlib
 
 from freezegun import freeze_time
 import pytest

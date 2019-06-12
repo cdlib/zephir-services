@@ -1,15 +1,11 @@
 import datetime
 import filecmp
 import os
-import shutil
-import sys
-import zlib
 
 from freezegun import freeze_time
 import pytest
 
 from exports.ht_bib_incr import ht_bib_incr
-from lib.export_cache import ExportCache
 from lib.utils import ConsoleMessenger
 
 
@@ -28,8 +24,6 @@ def env_setup(td_tmpdir, monkeypatch):
 
 @freeze_time("2019-02-18")
 def test_create_bib_export_incr(td_tmpdir, env_setup, capsys, pytestconfig):
-    pass
-    very_verbose = pytestconfig.getoption("verbose") == 2
     for merge_version in ["v2", "v3"]:
         os.rename(
             os.path.join(td_tmpdir, "cache-{}-ref.db".format(merge_version)),
@@ -47,11 +41,11 @@ def test_create_bib_export_incr(td_tmpdir, env_setup, capsys, pytestconfig):
             datetime.datetime.today().strftime("%Y-%m-%d")
         )
 
-        # assert filecmp.cmp(
-        #     os.path.join(td_tmpdir, export_filename),
-        #     os.path.join(
-        #         td_tmpdir, "{}-ht_bib_export_incr_ref.json".format(merge_version)
-        #     ),
-        # )
+        assert filecmp.cmp(
+            os.path.join(td_tmpdir, export_filename),
+            os.path.join(
+                td_tmpdir, "{}-ht_bib_export_incr_ref.json".format(merge_version)
+            ),
+        )
         # clean up to avoid name conflict next merge-version
-        # os.remove(os.path.join(td_tmpdir, export_filename))
+        os.remove(os.path.join(td_tmpdir, export_filename))

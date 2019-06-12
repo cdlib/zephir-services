@@ -144,7 +144,7 @@ class DatabaseHelper:
         )
 
         # if using mysql, add the socket to the URL
-        if drivername == "mysql+mysqlconnector" and self.socket is not None:
+        if self.drivername == "mysql+mysqlconnector" and self.socket is not None:
             url = "{}?unix_socket={}".format(url, self.socket)
 
         return url

@@ -46,7 +46,7 @@ from lib.utils import ConsoleMessenger
 def generate_cli(ctx, export_type, verbosity, merge_version, force):
     """Generate Zephir exports files for HathiTrust."""
     console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=verbosity)
-    cache = ht_bib_cache(console=console, merge_version=merge_version, force=force)
+    ht_bib_cache(console=console, merge_version=merge_version, force=force)
     if export_type == "ht-bib-full":
         ht_bib_full(console=console, merge_version=merge_version, force=force)
     elif export_type == "ht-bib-incr":
@@ -54,4 +54,4 @@ def generate_cli(ctx, export_type, verbosity, merge_version, force):
 
 
 if __name__ == "__main__":
-    generate()
+    generate_cli()

@@ -2,17 +2,13 @@
 
 import datetime
 import os
-import socket
 import zlib
 
-import click
-from environs import Env
 import json
 import mysql.connector
 
 from lib.export_cache import ExportCache
 from lib.vufind_formatter import VufindFormatter
-from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
 
@@ -145,4 +141,4 @@ def ht_bib_cache(
 
 
 if __name__ == "__main__":
-    create_cache()
+    ht_bib_cache()

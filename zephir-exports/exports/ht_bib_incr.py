@@ -2,17 +2,11 @@
 
 import datetime
 import os
-import socket
 import zlib
 
-import click
-from environs import Env
 import mysql.connector
 from sqlalchemy import create_engine
 
-from lib.export_cache import ExportCache
-from lib.vufind_formatter import VufindFormatter
-from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
 
@@ -110,4 +104,4 @@ def ht_bib_incr(
 
 
 if __name__ == "__main__":
-    create_bib_export()
+    ht_bib_incr()

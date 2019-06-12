@@ -1,14 +1,10 @@
 import datetime
 import filecmp
 import os
-import shutil
-import sys
-import zlib
 
 import pytest
 
 from exports.ht_bib_full import ht_bib_full
-from lib.export_cache import ExportCache
 from lib.utils import ConsoleMessenger
 
 
@@ -23,7 +19,6 @@ def env_setup(td_tmpdir, monkeypatch):
 
 
 def test_create_bib_export_full(td_tmpdir, env_setup, capsys, pytestconfig):
-    very_verbose = pytestconfig.getoption("verbose") == 2
     for merge_version in ["v2"]:
         os.rename(
             os.path.join(td_tmpdir, "cache-{}-ref.db".format(merge_version)),
