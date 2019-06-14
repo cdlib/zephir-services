@@ -39,7 +39,6 @@ def ht_bib_incr(
     console.debug("Environment: {}".format(APP.ENV))
     console.debug("Configuration: {}".format(APP.CONFIG_PATH))
 
-
     try:
         # DATABASE: Prepare connection and statements
         # get database connection
@@ -61,9 +60,12 @@ def ht_bib_incr(
 
         # CACHE: What cache should be used?
         cache_path = cache_path or APP.CACHE_PATH
+        # use working directory if relative path given
+        if not os.path.isabs(cache_path):
+            cache_path = os.path.join(os.getcwd(), cache_path)
         if not os.path.exists(cache_path):
             console.error("Cache path invalid")
-            os.SystemExit(2)
+            SystemExit(2)
         if os.path.isdir(cache_path):
             console.debug("Cache file not given. Using cache template")
             cache_template = "cache-{}-{}.db".format(
@@ -75,23 +77,25 @@ def ht_bib_incr(
         cache_url = "sqlite:///{}".format(cache_path)
         cache = create_engine(cache_url, echo=False)
 
-
         # OUTPUT: Where should the results go?
         output_path = output_path or APP.OUTPUT_PATH
-        if output_path:
-            if os.path.isfile(output_path):
-                if force:
-                    console.debug("File exists. Force option provided. Removing file")
-                else:
-                    console.error("File exists. Please remove file or use force option")
-                    os.SystemExit(2)
-            if os.path.isdir(output_path):
-                console.debug("File not given. Using filename template")
-                file_template = "ht_bib_export_incr_{}.json".format(
-                    datetime.datetime.today().strftime("%Y-%m-%d")
-                )
-                output_path = os.path.join(APP.OUTPUT_PATH, file_template)
-            console.debug("Using Output: {}".format(output_path))
+        # use working directory if relative path given
+        if not os.path.isabs(output_path):
+            output_path = os.path.join(os.getcwd(), output_path)
+        if os.path.isfile(output_path):
+            if force:
+                console.debug("File exists. Force option provided. Removing file")
+                os.remove(output_path)
+            else:
+                console.error("File exists. Please remove file or use force option")
+                SystemExit(2)
+        if os.path.isdir(output_path):
+            console.debug("File not given. Using filename template")
+            file_template = "ht_bib_export_incr_{}.json".format(
+                datetime.datetime.today().strftime("%Y-%m-%d")
+            )
+            output_path = os.path.join(output_path, file_template)
+        console.debug("Using Output: {}".format(output_path))
 
         with open((output_path), "a") as export_file, cache.connect() as con:
             for idx, cid_row in enumerate(db_cursor):

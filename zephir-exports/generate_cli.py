@@ -36,6 +36,15 @@ from lib.utils import ConsoleMessenger
     help="Specify the merge algoithm version for biblographic creation",
 )
 @click.option(
+    "-o",
+    "--output_path",
+    nargs=1,
+    help="File or directory path for the generated export",
+)
+@click.option(
+    "-c", "--cache_path", nargs=1, help="File or directory path for export cache"
+)
+@click.option(
     "-f",
     "--force",
     is_flag=True,
@@ -43,14 +52,29 @@ from lib.utils import ConsoleMessenger
     help="Remove and rewrite over existing cache",
 )
 @click.pass_context
-def generate_cli(ctx, export_type, verbosity, merge_version, force):
+def generate_cli(
+    ctx, export_type, verbosity, merge_version, output_path, cache_path, force
+):
     """Generate Zephir exports files for HathiTrust."""
     console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=verbosity)
-    cache = ht_bib_cache(console=console, merge_version=merge_version, force=force)
+    cache = ht_bib_cache(
+        console=console, cache_path=cache_path, merge_version=merge_version, force=force
+    )
     if export_type == "ht-bib-full":
-        ht_bib_full(console=console, merge_version=merge_version, force=force)
+        ht_bib_full(
+            console=console,
+            cache_path=cache_path,
+            output_path=output_path,
+            merge_version=merge_version,
+            force=force,
+        )
     elif export_type == "ht-bib-incr":
-        ht_bib_incr(console=console, merge_version=merge_version, force=force)
+        ht_bib_incr(
+            console=console,
+            cache_path=cache_path,
+            merge_version=merge_version,
+            force=force,
+        )
 
 
 if __name__ == "__main__":
