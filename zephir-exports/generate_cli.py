@@ -57,7 +57,7 @@ def generate_cli(
 ):
     """Generate Zephir exports files for HathiTrust."""
     console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=verbosity)
-    cache = ht_bib_cache(
+    ht_bib_cache(
         console=console, cache_path=cache_path, merge_version=merge_version, force=force
     )
     if export_type == "ht-bib-full":
