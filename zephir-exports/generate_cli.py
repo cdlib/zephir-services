@@ -1,3 +1,5 @@
+import os
+
 import click
 
 from exports.ht_bib_cache import ht_bib_cache
@@ -57,23 +59,28 @@ def generate_cli(
 ):
     """Generate Zephir exports files for HathiTrust."""
     console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=verbosity)
-    ht_bib_cache(
-        console=console, cache_path=cache_path, merge_version=merge_version, force=force
-    )
+
+    if cache_path and os.path.exists(cache_path):
+        console.debug("Using existing cache {}".format(cache_path))
+        cache = cache_path
+    else:
+        cache = ht_bib_cache(
+            console=console,
+            cache_path=cache_path,
+            merge_version=merge_version,
+            force=force,
+        )
     if export_type == "ht-bib-full":
         ht_bib_full(
             console=console,
-            cache_path=cache_path,
+            cache_path=cache,
             output_path=output_path,
             merge_version=merge_version,
             force=force,
         )
     elif export_type == "ht-bib-incr":
         ht_bib_incr(
-            console=console,
-            cache_path=cache_path,
-            merge_version=merge_version,
-            force=force,
+            console=console, cache_path=cache, merge_version=merge_version, force=force
         )
 
 

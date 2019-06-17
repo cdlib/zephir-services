@@ -128,3 +128,37 @@ def test_export_with_alternate_cache_and_output(
     # CLEANUP
     # unset temp current working directory
     os.chdir(real_cwd)
+
+
+def test_use_existing_cache(td_tmpdir, env_setup, capsys, pytestconfig):
+    # SETUP TODO (cscollett: there may be a better place to put this)
+    # set temp current working directory
+    real_cwd = os.getcwd()
+    os.chdir(td_tmpdir)
+
+    with pytest.raises(SystemExit) as pytest_e:
+        sys.argv = [
+            "",
+            "ht-bib-full",
+            "-mv",
+            "v3",
+            "--cache-path",
+            "cache-v3-ref.db",
+            "--output-path",
+            "my_custom_output.json",
+            "--force",
+            "--verbosity",
+            pytestconfig.getoption("verbose"),
+        ]
+
+        generate_cli()
+
+    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
+    # compare cache created to reference cache
+    assert filecmp.cmp(
+        os.path.join(td_tmpdir, "my_custom_output.json"),
+        os.path.join(td_tmpdir, "v3-ht_bib_export_full_ref.json"),
+    )
+    # CLEANUP
+    # unset temp current working directory
+    os.chdir(real_cwd)
