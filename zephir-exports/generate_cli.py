@@ -37,12 +37,12 @@ from lib.utils import ConsoleMessenger
 )
 @click.option(
     "-o",
-    "--output_path",
+    "--output-path",
     nargs=1,
     help="File or directory path for the generated export",
 )
 @click.option(
-    "-c", "--cache_path", nargs=1, help="File or directory path for export cache"
+    "-c", "--cache-path", nargs=1, help="File or directory path for export cache"
 )
 @click.option(
     "-f",
