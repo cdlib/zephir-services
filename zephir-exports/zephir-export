@@ -1,6 +1,7 @@
 import click
 
 from compare_cache_cli import compare_cache_cli
+from compare_file_cli import compare_file_cli
 from generate_cli import generate_cli
 
 
@@ -13,6 +14,7 @@ def entry_point(ctx):
 
 entry_point.add_command(generate_cli, name="generate")
 entry_point.add_command(compare_cache_cli, name="compare-cache")
+entry_point.add_command(compare_file_cli, name="compare-file")
 
 if __name__ == "__main__":
     entry_point()
