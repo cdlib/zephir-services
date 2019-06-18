@@ -52,7 +52,7 @@ def ht_bib_full(
         cache_path = "{}/{}".format(cache_path, cache_template)
     if not os.path.exists(cache_path):
         console.error("Cache path invalid")
-        SystemExit(2)
+        raise SystemExit(2)
     console.debug("Cache: {}".format(cache_path))
 
     cache_url = "sqlite:///{}".format(cache_path)
@@ -70,7 +70,7 @@ def ht_bib_full(
             os.remove(output_path)
         else:
             console.error("File exists. Please remove file or use force option")
-            SystemExit(2)
+            raise SystemExit(2)
     if os.path.isdir(output_path):
         console.debug("File not given. Using filename template")
         file_template = "ht_bib_export_full_{}.json".format(

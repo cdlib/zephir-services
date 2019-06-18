@@ -41,7 +41,7 @@ def ht_bib_cache(
     # if the directory doesn't exist, faile
     if not os.path.exists(os.path.dirname(cache_path)):
         console.error("Cache path invalid")
-        SystemExit(2)
+        raise SystemExit(2)
 
     #  create temporary cache
     tmp_cache_template = "tmp-cache-{}-{}".format(

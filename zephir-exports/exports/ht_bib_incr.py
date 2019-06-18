@@ -65,7 +65,7 @@ def ht_bib_incr(
             cache_path = os.path.join(os.getcwd(), cache_path)
         if not os.path.exists(cache_path):
             console.error("Cache path invalid")
-            SystemExit(2)
+            raise SystemExit(2)
         if os.path.isdir(cache_path):
             console.debug("Cache file not given. Using cache template")
             cache_template = "cache-{}-{}.db".format(
@@ -88,7 +88,7 @@ def ht_bib_incr(
                 os.remove(output_path)
             else:
                 console.error("File exists. Please remove file or use force option")
-                SystemExit(2)
+                raise SystemExit(2)
         if os.path.isdir(output_path):
             console.debug("File not given. Using filename template")
             file_template = "ht_bib_export_incr_{}.json".format(
