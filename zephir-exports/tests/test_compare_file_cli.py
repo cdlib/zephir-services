@@ -31,7 +31,7 @@ def test_compare_different(td_tmpdir, capsys, pytestconfig):
             os.path.join(td_tmpdir, "output-ref.json"),
             os.path.join(td_tmpdir, "output-ref-different.json"),
             "--verbosity",
-            pytestconfig.getoption("verbose"),
+            pytestconfig.getoption("verbose") or 1,
         ]
         compare_file_cli()
     out, err = capsys.readouterr()
