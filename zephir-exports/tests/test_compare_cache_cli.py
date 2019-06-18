@@ -6,7 +6,7 @@ import pytest
 from compare_cache_cli import compare_cache_cli
 
 
-def test_compare_identical_files(td_tmpdir, capsys, pytestconfig):
+def test_compare_identical(td_tmpdir, capsys, pytestconfig):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = sys.argv = [
             "",
