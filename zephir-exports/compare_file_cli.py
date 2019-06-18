@@ -1,8 +1,5 @@
-import os
-
 import click
 
-from lib.export_cache import ExportCache
 from lib.utils import ConsoleMessenger
 
 
