@@ -38,7 +38,7 @@ def ht_bib_incr(
     console.debug("Loading application environment and configuration")
     console.debug("Environment: {}".format(APP.ENV))
     console.debug("Configuration: {}".format(APP.CONFIG_PATH))
-
+    count = 0
     try:
         # DATABASE: Prepare connection and statements
         # get database connection
