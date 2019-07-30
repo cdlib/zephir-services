@@ -103,7 +103,6 @@ def ht_bib_incr(
                     cid_row[0]
                 )
                 cache_result = con.execute(get_cache_stmt)
-                count = 0
                 for idx, cache_row in enumerate(cache_result):
                     export_file.write(
                         zlib.decompress(cache_row[0]).decode("utf8") + "\n"
