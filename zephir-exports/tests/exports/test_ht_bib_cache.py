@@ -37,11 +37,12 @@ def test_create_cache_successfully(td_tmpdir, env_setup, capsys, pytestconfig):
             ref_cache.frozen_content_set()
         )
 
+
 def test_reuse_existing_cache(td_tmpdir, env_setup, capsys, pytestconfig):
-        console = ConsoleMessenger(verbosity=2)
-        ht_bib_cache(console=console, merge_version="v3", force=False)
-        out, err = capsys.readouterr()
-        assert "Using existing cache" not in err
-        ht_bib_cache(console=console, merge_version="v3", force=False)
-        out, err = capsys.readouterr()
-        assert "Using existing cache" in err
+    console = ConsoleMessenger(verbosity=2)
+    ht_bib_cache(console=console, merge_version="v3", force=False)
+    out, err = capsys.readouterr()
+    assert "Using existing cache" not in err
+    ht_bib_cache(console=console, merge_version="v3", force=False)
+    out, err = capsys.readouterr()
+    assert "Using existing cache" in err
