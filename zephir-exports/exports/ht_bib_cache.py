@@ -43,6 +43,14 @@ def ht_bib_cache(
         console.error("Cache path invalid")
         raise SystemExit(2)
 
+    # handle existing files
+    if os.path.exists(cache_path):
+        if force:
+            console.debug("Cache file exist. Forcing overwrite")
+        else:
+            console.debug("Using existing cache: {}".format(cache_path))
+            return cache_path
+
     #  create temporary cache
     tmp_cache_template = "tmp-cache-{}-{}".format(
         merge_version, datetime.datetime.today().strftime("%Y-%m-%d_%H%M%S.%f")
