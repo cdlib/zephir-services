@@ -11,7 +11,7 @@ try:
     subprocess.check_output("touch {0}/out.log".format(MYSQL_DATA), shell=True)
     # start the mysql server
     mysqld_output = subprocess.check_output(
-        "mysqld --datadir={0} --pid-file={0}/mysql.pid --socket={0}/mysql.socket --skip-networking --skip-grant-tables &> {0}/out.log &".format(
+        "mysqld --datadir={0} --log-error={0}/mysql.pid --pid-file={0}/mysql.pid --socket={0}/mysql.socket --skip-networking --skip-grant-tables &> {0}/out.log &".format(
             MYSQL_DATA
         ),
         shell=True,
