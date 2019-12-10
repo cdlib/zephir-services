@@ -1,13 +1,10 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import json
 import re
 import os
 import uuid
 
 import jsonschema
-
-
-# (datetime.now(timezone.utc) + timedelta(days=3)).timestamp() * 1e3
 
 
 class ZedEvent:
