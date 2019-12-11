@@ -36,9 +36,7 @@ class ZedEvent:
 
     @classmethod
     def generate_timestamp(self):
-        return datetime.now(timezone.utc).strftime(
-            "%Y-%m-%dT%H:%M:%S.%fZ"
-        )
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
     # INSTANCE BLOCK
     # Define ZedEvent instances for event logging
