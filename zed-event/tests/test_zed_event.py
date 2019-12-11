@@ -42,5 +42,4 @@ def test_skip_validation_errors():
 def test_validation_errors_default(td_tmpdir):
     event_dict = {}
     with pytest.raises(jsonschema.exceptions.ValidationError):
-        e = ZedEvent(event_dict)
-        assert e.isvalidated() is False
+        ZedEvent(event_dict)
