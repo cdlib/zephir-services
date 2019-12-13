@@ -22,5 +22,3 @@ setuptools.setup(
      ],
      install_requires=['jsonschema'],
  )
-
-git+https://github.com/cdlib/zephir-services.git#egg=zed_event\&subdirectory=zed-event
