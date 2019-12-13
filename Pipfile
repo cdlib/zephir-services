@@ -18,6 +18,7 @@ codecov = "*"
 jsonschema = "*"
 selenium = "*"
 freezegun = "*"
+setuptools = "*"
 
 [dev-packages]
 
