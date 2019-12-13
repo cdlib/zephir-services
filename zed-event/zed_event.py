@@ -8,9 +8,18 @@ import jsonschema
 
 
 class ZedEvent:
-    """ Zed Event """
+    """For creating and validating Zed Event JSON strings for logs and other services.
 
-    # CLASS BLOCK
+        Usage examples:
+
+        isvalid_zed = ZedEvent.validate(zed_data, schema="SCHEMA_NAME")
+
+        zed_event = ZedEvent(event_data)
+
+        validated_zed_event = ZedEvent(event_data, validate="SCHEMA_NAME")
+    """
+
+    # CLASS-LEVEL BLOCK
     # Define schemas and validation methods for Zed Events.
     __schemas_dir = os.path.join(os.path.dirname(__file__), "schemas")
     __schemas = {}
@@ -22,55 +31,71 @@ class ZedEvent:
                 __schemas[re.search("^(.*)_schema", filename).group(1).upper()] = schema
 
     @classmethod
-    def schemas(self, schema):
-        return ZedEvent.__schemas[schema]
+    def schemas(cls,):
+        """Return a dictionary of available json schemas.
+
+            Returns: dict of schemas
+        """
+        return cls.__schemas
 
     @classmethod
-    def validate(self, event, schema="ZED"):
-        jsonschema.validate(event, ZedEvent.schemas(schema))
+    def validate(cls, data, schema="ZED"):
+        """Validate Zed Event data against a json schema."""
+        jsonschema.validate(data, ZedEvent.schemas()[schema])
         return True
 
     @classmethod
-    def generate_key(self):
+    def generate_key(cls):
+        """Generate a UUID version 4 key."""
         return str(uuid.uuid4())
 
     @classmethod
-    def generate_timestamp(self):
+    def generate_timestamp(cls):
+        """Generate a UTC ISO 8601 formatted timestamp"""
         return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-    # INSTANCE BLOCK
-    # Define ZedEvent instances for event logging
-    def __init__(
-        self,
-        event={},
-        init=["event", "process", "timestamp"],
-        validate=True,
-        schema="ZED",
-    ):
-        self._event = event
+    # INSTANCE-LEVEL BLOCK
+    def __init__(self, data, init=["event", "process", "timestamp"], validate=None):
+        """ZedEvent instance for creating ZedEvent objects for logging.
+
+        Args:
+            data (dict): The Zed Event properties as a dictionary.
+            init (:list:`str`, optional): Zed Event properties to be initialized
+                on object creation if they are not passed in the data. Default:
+                event, process, and timestamp.
+            validate (str, optional): Class-defined schema to validate against
+                object. Default: None.
+        """
+        self._data = data
         self._validated = False
 
         if init is None:
             init = []
-        if "event" in init and ("event" not in self._event or not self._event["event"]):
-            self._event["event"] = ZedEvent.generate_key()
+        if "event" in init and ("event" not in self._data or not self._data["event"]):
+            self._data["event"] = ZedEvent.generate_key()
         if "process" in init and (
-            "process" not in self._event or not self._event["process"]
+            "process" not in self._data or not self._data["process"]
         ):
-            self._event["process"] = ZedEvent.generate_key()
+            self._data["process"] = ZedEvent.generate_key()
         if "timestamp" in init and (
-            "timestamp" not in self._event or not self._event["timestamp"]
+            "timestamp" not in self._data or not self._data["timestamp"]
         ):
-            self._event["timestamp"] = ZedEvent.generate_timestamp()
+            self._data["timestamp"] = ZedEvent.generate_timestamp()
 
         if validate:
-            self._validated = ZedEvent.validate(self._event, schema)
+            self._validated = ZedEvent.validate(self._data, validate)
 
-    def event(self):
-        return self._event
+    @property
+    def data(self):
+        """dict: The Zed Event data for the object"""
+        return self._data
 
     def isvalidated(self):
+        """Return whether or not an object has been validated against a schema
+        Returns:
+        True if object has been validated, False otherwise"""
         return self._validated
 
     def __str__(self):
-        return json.dumps(self._event)
+        """Print object represented as Zed Event data in json"""
+        return json.dumps(self._data)
