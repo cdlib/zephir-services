@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "fab0a0312864698f84d836b0eadd1bd2d9c75f6791e4046e27a213b43eb6f227"
+            "sha256": "13b591f2a655e91d622b9e3041dc04752a73d89fc1f63e0c14e27dda8e8c8cd2"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -392,6 +392,11 @@
                 "sha256:f4ebe71925af7b40a864553f761ed559b43544f8f71746c2d756c7fe788ade7c"
             ],
             "version": "==0.1.7"
+        },
+        "zed-event": {
+            "git": "https://github.com/cdlib/zephir-services.git",
+            "ref": "86e39a09f76244fc235f170be8fb7dd419fae0e2",
+            "subdirectory": "zed-event"
         },
         "zipp": {
             "hashes": [
