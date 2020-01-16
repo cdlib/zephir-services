@@ -34,10 +34,10 @@ def compare_file_cli(ctx, files, verbosity):
         for line_a in a:
             count += 1
             if line_a != b.readline():
-                console.info("🍎🍊  Differences start on line: {}".format(count))
+                console.info("Differences start on line: {}".format(count))
                 raise SystemExit(0)
 
-    console.info("🍎🍎  No differences found between files")
+    console.info("No differences found between files")
 
 
 if __name__ == "__main__":

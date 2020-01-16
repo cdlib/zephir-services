@@ -116,7 +116,7 @@ def ht_bib_incr(
         "Completed: {}".format(str(datetime.datetime.now() - debug_start_time))
     )
     console.info(
-        "💫 📝  All done! Created ht-bib-incr({}) export with {} records".format(
+        "All done! Created ht-bib-incr({}) export with {} records".format(
             merge_version, count
         )
     )
