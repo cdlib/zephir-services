@@ -92,7 +92,7 @@ def ht_bib_full(
         "Completed: {}".format(str(datetime.datetime.now() - debug_start_time))
     )
     console.info(
-        "💫 📝  All done! Created ht-bib-full({}) export with {} records".format(
+        "All done! Created ht-bib-full({}) export with {} records".format(
             merge_version, count
         )
     )

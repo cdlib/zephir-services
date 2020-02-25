@@ -18,11 +18,13 @@ codecov = "*"
 jsonschema = "*"
 selenium = "*"
 freezegun = "*"
+setuptools = "*"
+zed-event = {git = "https://github.com/cdlib/zephir-services.git",ref = "amz2_branch",subdirectory = "zed-event"}
 
 [dev-packages]
 
 [requires]
-python_version = "3.6"
+python_version = "3"
 
 [pipenv]
 allow_prereleases = true
