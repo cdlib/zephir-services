@@ -5,7 +5,7 @@ import sys
 import pytest
 
 from audit import audit
-
+mysql --host=localhost --user=root --exectue="set @@global.show_compatibility_56=ON;"
 
 @pytest.fixture
 def env_setup(td_tmpdir, monkeypatch):
@@ -14,6 +14,7 @@ def env_setup(td_tmpdir, monkeypatch):
     )
     if "MYSQL_UNIX_PORT" in os.environ:
         monkeypatch.setenv("ZED_DB_SOCKET", os.environ["MYSQL_UNIX_PORT"])
+        s.system("mysql --host=localhost --user=root --execute=\"set @@global.show_compatibility_56=ON;\""
     os.system("mysql --host=localhost --user=root  < {}/events.sql".format(td_tmpdir))
 
 
