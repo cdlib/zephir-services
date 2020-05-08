@@ -12,6 +12,8 @@ def env_setup(td_tmpdir, monkeypatch):
     monkeypatch.setenv(
         "ZED_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
     )
+    if "MYSQL_UNIX_PORT" in os.environ:
+        monkeypatch.setenv("ZED_DB_SOCKET", os.environ["MYSQL_UNIX_PORT"])
     os.system("mysql --host=localhost --user=root  < {}/events.sql".format(td_tmpdir))
 
 
