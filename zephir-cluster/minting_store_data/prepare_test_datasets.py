@@ -44,17 +44,17 @@ for k, v in cid_sysid.items():
 cid_ids={}
 for k, v in cid_htid.items():
     cid_ids[k] = {
+            "_id": k,
             "cid": k,
             "htid": v,
             "ocns": list(cid_oclc[k]),
             "sysid": list(cid_sysid[k])}
-    print(type(cid_oclc[k]))
 
-
+# output cid ids and convert single quotes to double quotes
 with open("cid_ids.json", 'w') as out_file:
     for k, v in cid_ids.items():
         print("cid: {} Json: {}".format(k, v))
-        out_file.write(str(v) + "\n")
+        out_file.write(json.dumps(v) + "\n")
 
 
 
