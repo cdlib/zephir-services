@@ -46,13 +46,15 @@ for k, v in cid_htid.items():
     cid_ids[k] = {
             "cid": k,
             "htid": v,
-            "ocns": cid_oclc[k],
-            "sysid": cid_sysid[k]}
+            "ocns": list(cid_oclc[k]),
+            "sysid": list(cid_sysid[k])}
+    print(type(cid_oclc[k]))
+
 
 with open("cid_ids.json", 'w') as out_file:
     for k, v in cid_ids.items():
         print("cid: {} Json: {}".format(k, v))
-        out_file.write(str(v))
+        out_file.write(str(v) + "\n")
 
 
 
