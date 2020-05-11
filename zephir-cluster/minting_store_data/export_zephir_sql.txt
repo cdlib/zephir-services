@@ -1,0 +1,23 @@
+select cid, id from zephir_records where cid < '000000300';
+
+select distinct
+z.cid, i.identifier 
+from zephir_records z
+join zephir_identifier_records z_i
+on z.autoid = z_i.`record_autoid`
+join zephir_identifiers i
+on i.autoid = z_i.`identifier_autoid`
+where z.cid < '000000300'
+and i.type= 'oclc';
+
+select distinct
+z.cid, i.identifier 
+from zephir_records z
+join zephir_identifier_records z_i
+on z.autoid = z_i.`record_autoid`
+join zephir_identifiers i
+on i.autoid = z_i.`identifier_autoid`
+where z.cid < '000000300'
+and i.type= 'contrib_sys_id';
+
+

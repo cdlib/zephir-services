@@ -1,0 +1,17 @@
+# create testdb
+> use testdb
+
+# create collection
+> db.createCollection("cluster")
+
+# insert cid_ids.json to testdb.cluster
+pipenv run python prepare_testdb.py
+
+# insert one document
+# insert a duplicated doc (id/cid='000000297') will cuase duplicate key error:
+#
+db.cluster.insert({'_id': '000000297', 'cid': '000000297', 'htid': 'pst.000001135725', 'ocns': ['28263'], 'sysid': ['pst.a1372204', 'miu000000297']})
+
+"code" : 11000,
+"errmsg" : "E11000 duplicate key error collection: testdb.cluster index: _id_ dup key: { _id: \"000000297\" }"
+
