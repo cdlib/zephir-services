@@ -1,0 +1,22 @@
+# create testdb
+> use testdb
+
+# create collection
+> db.createCollection("cluster")
+
+# insert cid_ids.json to testdb.cluster
+pipenv run python prepare_testdb.py testdb cluster
+
+# or insert to mintstore.cluster
+pipenv run python prepare_testdb.py testdb cluster
+
+# insert one document
+# insert a duplicated doc (id/cid='000000001') will cuase duplicate key error:
+#
+#{ "_id" : "000000001", "cid" : "000000001", "htid" : [ "uc1.$b759626", "uc1.$b759627", "mdp.39015066356695", "mdp.39015018415946", "mdp.39015066356406", "mdp.39015066356547", "uc1.$b759628", "mdp.39015066356554" ], "ocns" : [ "2779601" ], "sysid" : [ "nrlf.b133236481", "miu000000001" ] }
+#
+db.cluster.insert({ "_id" : "000000001", "cid" : "000000001", "htid" : [ "uc1.$b759626", "uc1.$b759627", "mdp.39015066356695", "mdp.39015018415946", "mdp.39015066356406", "mdp.39015066356547", "uc1.$b759628", "mdp.39015066356554" ], "ocns" : [ "2779601" ], "sysid" : [ "nrlf.b133236481", "miu000000001" ] })
+
+"code" : 11000,
+"errmsg" : "E11000 duplicate key error collection: testdb.cluster index: _id_ dup key: { _id: \"000000001\" }"
+
