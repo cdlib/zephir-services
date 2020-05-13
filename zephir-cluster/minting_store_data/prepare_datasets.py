@@ -6,8 +6,16 @@ input_file = "cid_htid.txt"
 with open(input_file) as my_file:
     reader = csv.reader(my_file, delimiter='\t')
     for row in reader:
-        print("cid: {}, htid: {}".format(row[0], row[1]))
-        cid_htid[row[0]] = row[1]
+        key = row[0]
+        value = row[1]
+        #print("cid: {}, htid: {}".format(key, value))
+        if key in cid_htid.keys():
+            cid_htid[key].add(value)
+        else:
+            cid_htid[key] = {value}
+
+for k, v in cid_htid.items():
+    print("cid: {} htid: {}".format(k, v))
 
 cid_oclc={}
 input_file = "cid_oclc.txt"
@@ -16,7 +24,7 @@ with open(input_file) as my_file:
     for row in reader:
         key = row[0]
         value = row[1]
-        print("cid: {}, ocn: {}".format(key, value))
+        #print("cid: {}, ocn: {}".format(key, value))
         if key in cid_oclc.keys():
             cid_oclc[key].add(value)
         else:
@@ -32,7 +40,7 @@ with open(input_file) as my_file:
     for row in reader:
         key = row[0]
         value = row[1]
-        print("cid: {}, sysid: {}".format(key, value))
+        #print("cid: {}, sysid: {}".format(key, value))
         if key in cid_sysid.keys():
             cid_sysid[key].add(value)
         else:
@@ -46,7 +54,7 @@ for k, v in cid_htid.items():
     cid_ids[k] = {
             "_id": k,
             "cid": k,
-            "htid": v,
+            "htid": list(cid_htid[k]),
             "ocns": list(cid_oclc[k]),
             "sysid": list(cid_sysid[k])}
 
