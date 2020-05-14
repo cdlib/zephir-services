@@ -12,6 +12,11 @@ def env_setup(td_tmpdir, monkeypatch):
     monkeypatch.setenv(
         "ZED_OVERRIDE_CONFIG_PATH", os.path.join(str(td_tmpdir), "config")
     )
+    if "MYSQL_UNIX_PORT" in os.environ:
+        monkeypatch.setenv("ZED_DB_SOCKET", os.environ["MYSQL_UNIX_PORT"])
+        os.system(
+            "mysql --host=localhost --user=root --execute='set @@global.show_compatibility_56=ON;'"
+        )
     os.system("mysql --host=localhost --user=root  < {}/events.sql".format(td_tmpdir))
 
 
@@ -22,6 +27,16 @@ def test_audit_errors_with_no_files(env_setup, capsys):
     out, err = capsys.readouterr()
     assert "No files given to process." in err
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 1]
+
+
+def test_audit_handles_empty_log(env_setup, td_tmpdir, capsys):
+    with pytest.raises(SystemExit) as pytest_e:
+        sys.argv = ["", os.path.join(td_tmpdir, "empty.log")]
+        audit()
+    out, err = capsys.readouterr()
+    assert "empty.log: pass" in err
+    assert os.path.isfile(os.path.join(td_tmpdir, "empty.log.audited"))
+    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
 
 def test_audit_passes_received_events(env_setup, td_tmpdir, capsys):
