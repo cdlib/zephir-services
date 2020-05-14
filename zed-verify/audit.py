@@ -119,7 +119,7 @@ def audit(filepath, quiet, verbose, dry_run, suffix):
                     console.error("ERROR: Innvalid JSON on line {0}".format(ln_cnt))
                     break  # invalid json, stop successive validation routines
 
-        if file_pass:
+        if file_pass and len(log_events) > 0:
             query_params = {
                 "event_type": log_events[0]["type"],
                 "first_timestamp": (
