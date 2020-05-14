@@ -26,6 +26,15 @@ def test_audit_errors_with_no_files(env_setup, capsys):
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 1]
 
 
+def test_audit_handles_empty_log(env_setup, td_tmpdir, capsys):
+    with pytest.raises(SystemExit) as pytest_e:
+        sys.argv = ["", os.path.join(td_tmpdir, "empty.log")]
+        audit()
+    out, err = capsys.readouterr()
+    assert "empty.log: pass" in err
+    assert os.path.isfile(os.path.join(td_tmpdir, "empty.log.audited"))
+    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
+
 def test_audit_passes_received_events(env_setup, td_tmpdir, capsys):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "found_events.log")]
