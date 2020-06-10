@@ -8,7 +8,7 @@
 pipenv run python prepare_testdb.py testdb cluster
 
 # or insert to mintstore.cluster
-pipenv run python prepare_testdb.py testdb cluster
+pipenv run python prepare_testdb.py mintstore cluster
 
 # insert one document
 # insert a duplicated doc (id/cid='000000001') will cuase duplicate key error:
@@ -19,4 +19,23 @@ db.cluster.insert({ "_id" : "000000001", "cid" : "000000001", "htid" : [ "uc1.$b
 
 "code" : 11000,
 "errmsg" : "E11000 duplicate key error collection: testdb.cluster index: _id_ dup key: { _id: \"000000001\" }"
+
+> use testdb
+switched to db testdb
+> db.cluster.find({ocns: "252"})
+
+> db.cluster.find({$or: [{ocns: "252"}, {"sysid": "miu000000013"}]})
+
+db.cluster.find(
+    {$or:[
+        {"ocns":{"$in":["252","25909"]}},
+        {"sysid":"miu000000013"}
+    ]}
+)
+
+# text indexes.
+
+db.collection.ensureIndex({"field1":"text","field2":"text"})
+db.records.runCommand("text",{search:"foo bar"})
+# note from the web: When I run my actual query with many more strings and fields (and about 100,000 records), the $or/$in approach takes 620 milliseconds while the text index takes 131 milliseconds. The one drawback is that it returns a different type of document as a result; luckily the actual documents are a parameter of each result object.
 
