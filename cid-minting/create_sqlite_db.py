@@ -41,7 +41,7 @@ def insert_query(conn, sql, data):
 def insert_data(conn):
     sql = "INSERT INTO cid_minting_store(type, identifier, cid) VALUES(?,?,?)" 
     minting_data = [("oclc", "8727632", "002492721"),
-            ("icontrib_sys_id", "pur215476", "002492721"),
+            ("contrib_sys_id", "pur215476", "002492721"),
             ("oclc", "32882115", "011323405"),
             ("contrib_sys_id", "pur864352", "011323405")]
 
