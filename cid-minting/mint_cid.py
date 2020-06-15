@@ -47,8 +47,8 @@ def main():
         env = "test"
 
     # load environment in .env file
-    env = environs.Env()
-    env.read_env()
+    #envs = environs.Env()
+    #envs.read_env()
 
     ENV = os.environ.get("MINTER_ENV") or env
     print("env: {}".format(ENV))
