@@ -2,4 +2,4 @@
 !tests/.env
 .pytest_cache
 config/*.yml
-database/*.db
+*.db
