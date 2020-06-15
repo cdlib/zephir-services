@@ -42,6 +42,7 @@ def main():
     pw = "htmmrw3dev"
 
     database_info = ("localhost","root","1234","users")
+    database_info = (host, user, pw, "htmm")
     minter = Minter(database_info)
     sql = "select * from cid_minting_store"
     minter.execute(sql)
