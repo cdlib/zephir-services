@@ -2,8 +2,10 @@ import pytest
 from create_sqlite_db import create_connection, execute_sql, insert_query, list_data
 
 @pytest.fixture
-def create_test_db():
-    database = r"test_db/test_sqlite.db" 
+#def create_test_db(datadir):
+#    database = "{}/test_sqlite_1.db".format(datadir)
+def create_test_db(tmpdir):
+    database = tmpdir/"test_sqlite_1.db"
     sql_drop_table = "DROP TABLE IF EXISTS cid_minting_store"
     sql_create_table = """ CREATE TABLE IF NOT EXISTS cid_minting_store (
         id integer PRIMARY KEY AUTOINCREMENT,
@@ -37,5 +39,5 @@ def test_list_data(create_test_db):
 
     select_sql = "select * from cid_minting_store"
     rows = list_data(create_test_db, select_sql)
-    assert len(rows) == 4 
+    assert len(rows) == 4
 
