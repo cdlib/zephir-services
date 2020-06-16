@@ -56,7 +56,7 @@ def list_data(conn, sql):
     return rows
 
 def main():
-    database = r"database/test_sqlite.db"
+    database = r"database/test_minter_sqlite.db"
 
     sql_drop_table = "DROP TABLE IF EXISTS cid_minting_store" 
     sql_create_table = """ CREATE TABLE IF NOT EXISTS cid_minting_store (

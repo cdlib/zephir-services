@@ -8,6 +8,25 @@ import environs
 from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
+def get_db_conn_string_from_config_by_key(config_dir_name, config_fname, key):
+    """return database connection string from db_config.yml file
+       config_dir: directory of configuration files
+       config_fname: configuration filename
+       key: configuration key
+    """
+    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    CONFIG_PATH = os.path.join(ROOT_PATH, config_dir_name)
+
+    # load all configuration files in directory
+    configs = utils.load_config(CONFIG_PATH)
+    print(configs)
+
+    # get config value by filename and key 
+    config = configs.get(config_fname, {}).get(key)
+    print(config)
+
+    return str(utils.db_connect_url(config))
+
 def define_session(db_connect_str):
     engine = sqla.create_engine(db_connect_str)
 
@@ -27,14 +46,26 @@ def find_all(CidMintingStore, session):
 
     for rd in query.all():
         print("type: {}, value: {}, cid {} ".format(rd.type, rd.identifier, rd.cid))
+    return query.all()
 
-def find_one(CidMintingStore, session, ocn):
+def find_by_ocn(CidMintingStore, session, ocn):
     query = session.query(CidMintingStore).filter(CidMintingStore.type=='oclc').filter(CidMintingStore.identifier==ocn)
 
-    for rd in query.all():
-        print("type: {}, value: {}, cid {} ".format(rd.type, rd.identifier, rd.cid))
+    record = query.first()
+    if record:
+        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
+    return record
 
-    
+def find_query(db_conn_str, sql):
+    engine = sqla.create_engine(db_conn_str)
+
+    with engine.connect() as connection:
+        results = connection.execute(sql)
+        return results.fetchall()
+
+def insert_a_record():
+    pass
+
 def main():
     #engine = db.create_engine('dialect+driver://user:pass@host:port/db')
 
@@ -46,45 +77,26 @@ def main():
     else:
         env = "test"
 
-    # load environment in .env file
-    #envs = environs.Env()
-    #envs.read_env()
+    # get environment variable in .env file
 
     ENV = os.environ.get("MINTER_ENV") or env
     print("env: {}".format(ENV))
+    
+    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or get_db_conn_string_from_config_by_key('config', 'minter_db', ENV)
+    print("db_connect_str {}".format(DB_CONNECT_STR))
 
-    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-    CONFIG_PATH = os.path.join(ROOT_PATH, "config")
+    sql = "select * from cid_minting_store"
+    result = find_query(DB_CONNECT_STR, sql)
 
-    # load all configuration files in directory
-    config = utils.load_config(CONFIG_PATH)
-    print(config)
+    print("find by sql: {}".format(sql))
+    print(result)
 
-    # DATABASE SETUP 
-    # config/minter_db.xml
-    # Create database client, connection manager.
-    db = config.get('minter_db', {}).get(ENV)
-    print(db)
-
-    DB_CONNECT_STR = str(utils.db_connect_url(db))
-    engine = sqla.create_engine(DB_CONNECT_STR)
-
-    connection = engine.connect()
-    metadata = sqla.MetaData()
-    cid_minting_store = sqla.Table('cid_minting_store', metadata, autoload=True, autoload_with=engine)
-
-    print(cid_minting_store.columns.keys())
-
-    query = sqla.select([cid_minting_store])
-    ResultProxy = connection.execute(query)
-    ResultSet = ResultProxy.fetchall()
-
-    print(ResultSet)
-
-
+    # mapping class, define session
     CidMintingStore, session = define_session(DB_CONNECT_STR)
+    print("find all")
     find_all(CidMintingStore, session)
-    find_one(CidMintingStore, session, '1')
+    print("find one")
+    find_by_ocn(CidMintingStore, session, '8727632')
 
 if __name__ == "__main__":
     main()
