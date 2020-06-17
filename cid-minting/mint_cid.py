@@ -1,8 +1,10 @@
 import os
 import sys
 
-import sqlalchemy as sqla 
-import sqlalchemy.ext.automap as sqla_automap 
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+
 import environs
 
 from lib.utils import ConsoleMessenger
@@ -27,19 +29,17 @@ def get_db_conn_string_from_config_by_key(config_dir_name, config_fname, key):
 
     return str(utils.db_connect_url(config))
 
-def define_session(db_connect_str):
-    engine = sqla.create_engine(db_connect_str)
+def prepare_database(db_connect_str):
+    engine = create_engine(db_connect_str)
+    session = Session(engine)
 
-    # Create classes through reflection
-    Base = sqla_automap.automap_base()
+    Base = automap_base()
+    # reflect the tables
     Base.prepare(engine, reflect=True)
+    # map class to table by table name
     CidMintingStore = Base.classes.cid_minting_store
+    return engine, session, CidMintingStore
 
-    # Create a session to the database.
-    Session = sqla.orm.sessionmaker()
-    Session.configure(bind=engine)
-    session = Session()
-    return (CidMintingStore, session)
 
 def find_all(CidMintingStore, session):
     query = session.query(CidMintingStore)
@@ -56,15 +56,29 @@ def find_by_ocn(CidMintingStore, session, ocn):
         print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
     return record
 
-def find_query(db_conn_str, sql):
-    engine = sqla.create_engine(db_conn_str)
-
+def find_query(engine, sql):
     with engine.connect() as connection:
         results = connection.execute(sql)
         return results.fetchall()
 
-def insert_a_record():
-    pass
+def insert_a_record(log, session, record):
+
+    try:
+    #    log_info(log, "Inserting to cid_minting_store table ")
+        session.add(record)
+        # throws()
+    except Exception as e:
+        session.rollback()
+     #   log_error(
+     #       log,
+     #       "Insert to the events table failed. Rolling back transaction. " + str(e),
+     #   )
+        raise
+    else:
+    #    log_info(log, "Committing transaction")
+        session.commit()
+
+    return
 
 def main():
     #engine = db.create_engine('dialect+driver://user:pass@host:port/db')
@@ -85,18 +99,22 @@ def main():
     DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or get_db_conn_string_from_config_by_key('config', 'minter_db', ENV)
     print("db_connect_str {}".format(DB_CONNECT_STR))
 
-    sql = "select * from cid_minting_store"
-    result = find_query(DB_CONNECT_STR, sql)
+    engine, session, CidMintingStore = prepare_database(DB_CONNECT_STR)
 
+    sql = "select * from cid_minting_store"
+    result = find_query(engine, sql)
     print("find by sql: {}".format(sql))
     print(result)
 
-    # mapping class, define session
-    CidMintingStore, session = define_session(DB_CONNECT_STR)
     print("find all")
     find_all(CidMintingStore, session)
     print("find one")
     find_by_ocn(CidMintingStore, session, '8727632')
+
+    print("add oclc=30461866")
+    record = CidMintingStore(type='oclc', identifier='30461866', cid='011323406')
+    insert_a_record('log', session, record)
+    result = find_by_ocn(CidMintingStore, session, '30461866')
 
 if __name__ == "__main__":
     main()
