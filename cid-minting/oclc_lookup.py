@@ -11,39 +11,66 @@ def int_from_bytes(bnum):
     return int.from_bytes(bnum, 'big')
 
 
-# given an oclc, get the master
-def get_master_ocn(ocn):
-    master = None
+# given an ocn, get the primary ocn 
+# return None if not find
+def get_primary_ocn(ocn):
+    """Gets the primary oclc number from the primary-lookup db
+
+    Retrieves the primary oclc number for a given oclc number (ocn) from LevelDB primary-lookup
+    which contains the key/value pairs of oclc number (key) and the primary oclc number (value)
+
+    Args:
+        ocn: An oclc number
+
+    Returns:
+        The primary oclc number of the given ocn;
+        Or None if the goven ocn has no matched entry in the database 
+    """
+    primary = None
     try:
-        mdb = plyvel.DB("master-lookup/", create_if_missing=True) 
-        if mdb.get(int_to_bytes(ocn)):
-            master = int_from_bytes(mdb.get(int_to_bytes(ocn)))
-        print("ocn: {}, master: {}".format(ocn, master))
+        mdb = plyvel.DB("primary-lookup/", create_if_missing=True) 
+        key = int_to_bytes(ocn)
+        if mdb.get(key):
+            primary = int_from_bytes(mdb.get(key))
+        print("ocn: {}, primary: {}".format(ocn, primary))
     finally:
         mdb.close()
-    return master
+    return primary
 
-# given a master, get a cluster of 1+
-def get_cluster_by_master_ocn(master):
+# given a primary ocn, return the cluster of ocns from the cluster-lookup db 
+# which contains clusterw with more than one ocns;
+# if not found, retrun a cluster of it self (the primary ocn)
+def get_cluster_by_primary_ocn(primary):
     cluster = [] 
     try:
         cdb = plyvel.DB("cluster-lookup/", create_if_missing=True)
-        if cdb.get(int_to_bytes(master)):
-            cluster = msgpack.unpackb(cdb.get(int_to_bytes(master)))
+        key = int_to_bytes(primary)
+        if cdb.get(key):
+            val=cdb.get(key)
+            print(val)
+            print(type(val))
+            cluster = msgpack.unpackb(cdb.get(key))
+            print(type(cluster))
         else:
-            cluster = [master]
-        print("master: {}, cluster: {}".format(master, cluster))
+            cluster = [primary]
+        print("primary: {}, cluster: {}".format(primary, cluster))
     finally:
         cdb.close()
     return cluster
 
 
 def get_cluster_by_ocn(ocn):
-    master = get_master_ocn(ocn)
-    if master is None:
-        master = ocn
-    cluster = get_cluster_by_master_ocn(master)
+    cluster = []
+    primary = get_primary_ocn(ocn)
+    if primary:
+        cluster = get_cluster_by_primary_ocn(primary)
     return cluster
+
+def test(ocn):
+    print("get primary ocn for ocn={}".format(ocn))
+    primary = get_primary_ocn(ocn)
+    get_cluster_by_primary_ocn(primary)
+    get_cluster_by_ocn(ocn)
 
 def lookup_ocns_from_oclc():
     """For a given oclc number, find all OCNs in the OCN cluster from the OCLC Concordance Table
@@ -52,6 +79,26 @@ def lookup_ocns_from_oclc():
         ocn = int(sys.argv[1])
     else:
         ocn = 53095235
+
+    ocn=1
+    print("test primary ocn={}".format(ocn))
+    test(ocn)
+
+    ocn=1000000000
+    print("test primary 10 digits ocn={}".format(ocn))
+    test(ocn)
+
+    ocn=53095235
+    print("test previous ocn={}".format(ocn))
+    test(ocn)
+
+    ocn=12345678901 
+    print("test a 11 digits (OK), invalid ocn={}".format(ocn))
+    test(ocn)
+
+    ocn=1234567890123
+    print("test a 13 digits (OK), invalid ocn={}".format(ocn))
+    test(ocn)
 
     cluster = get_cluster_by_ocn(ocn)
 
