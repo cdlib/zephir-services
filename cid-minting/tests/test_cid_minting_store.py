@@ -2,7 +2,7 @@ import os
 
 import pytest
 import environs
-from mint_cid import prepare_database, find_all, find_by_ocn, find_query, insert_a_record
+from cid_minting_store import prepare_database, find_all, find_by_ocn, find_query, insert_a_record
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
