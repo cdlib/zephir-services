@@ -42,6 +42,8 @@ def get_primary_ocn(ocn):
 # if not found, retrun a cluster of it self (the primary ocn)
 def get_cluster_by_primary_ocn(primary):
     cluster = [] 
+    if primary is None:
+        return cluster
     try:
         cdb = plyvel.DB("cluster-lookup/", create_if_missing=True)
         key = int_to_bytes(primary)
