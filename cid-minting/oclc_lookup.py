@@ -32,7 +32,7 @@ def get_primary_ocn(ocn):
         key = int_to_bytes(ocn)
         if mdb.get(key):
             primary = int_from_bytes(mdb.get(key))
-        print("ocn: {}, primary: {}".format(ocn, primary))
+        #print("ocn: {}, primary: {}".format(ocn, primary))
     finally:
         mdb.close()
     return primary
@@ -49,13 +49,10 @@ def get_cluster_by_primary_ocn(primary):
         key = int_to_bytes(primary)
         if cdb.get(key):
             val=cdb.get(key)
-            print(val)
-            print(type(val))
             cluster = msgpack.unpackb(cdb.get(key))
-            print(type(cluster))
         else:
             cluster = [primary]
-        print("primary: {}, cluster: {}".format(primary, cluster))
+        #print("primary: {}, cluster: {}".format(primary, cluster))
     finally:
         cdb.close()
     return cluster
@@ -68,11 +65,26 @@ def get_cluster_by_ocn(ocn):
         cluster = get_cluster_by_primary_ocn(primary)
     return cluster
 
+def get_clusters_by_ocns(ocns):
+    clusters = []
+    for ocn in ocns:
+        cluster = get_cluster_by_ocn(ocn)
+        clusters.append(cluster)
+    return clusters
+
 def test(ocn):
-    print("get primary ocn for ocn={}".format(ocn))
+    print("#### testing OCN={}".format(ocn))
     primary = get_primary_ocn(ocn)
-    get_cluster_by_primary_ocn(primary)
-    get_cluster_by_ocn(ocn)
+    print("primary OCN: {}".format(primary))
+    cluster = get_cluster_by_primary_ocn(primary)
+    print("cluster by primary ({}): {}".format(primary, cluster))
+    cluster = get_cluster_by_ocn(ocn)
+    print("cluster by ocn ({}): {}".format(ocn, cluster))
+
+def test_ocns(ocns):
+    print("#### testing OCN={}".format(ocns))
+    clusters = get_clusters_by_ocns(ocns)
+    print("clusters by ocns ({}): {}".format(ocns, clusters))
 
 def lookup_ocns_from_oclc():
     """For a given oclc number, find all OCNs in the OCN cluster from the OCLC Concordance Table
@@ -83,26 +95,30 @@ def lookup_ocns_from_oclc():
         ocn = 53095235
 
     ocn=1
-    print("test primary ocn={}".format(ocn))
+    print("#### test primary ocn={}".format(ocn))
     test(ocn)
 
     ocn=1000000000
-    print("test primary 10 digits ocn={}".format(ocn))
+    print("#### test primary 10 digits ocn={}".format(ocn))
     test(ocn)
 
     ocn=53095235
-    print("test previous ocn={}".format(ocn))
+    print("#### test previous ocn={}".format(ocn))
     test(ocn)
 
     ocn=12345678901 
-    print("test a 11 digits (OK), invalid ocn={}".format(ocn))
+    print("#### test a 11 digits (OK), invalid ocn={}".format(ocn))
     test(ocn)
 
     ocn=1234567890123
-    print("test a 13 digits (OK), invalid ocn={}".format(ocn))
+    print("#### test a 13 digits (OK), invalid ocn={}".format(ocn))
     test(ocn)
 
-    cluster = get_cluster_by_ocn(ocn)
+    ocns=[1,2, 1000000000]
+    print("test list of ocns={}".format(ocns))
+    test_ocns(ocns)
+
+    #cluster = get_cluster_by_ocn(ocn)
 
 if __name__ == "__main__":
     lookup_ocns_from_oclc()
