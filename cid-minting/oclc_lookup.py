@@ -118,6 +118,10 @@ def lookup_ocns_from_oclc():
     print("test list of ocns={}".format(ocns))
     test_ocns(ocns)
 
+    ocns=[1, 12345678901, 1000000000]
+    print("test list of ocns={}".format(ocns))
+    test_ocns(ocns)
+
     #cluster = get_cluster_by_ocn(ocn)
 
 if __name__ == "__main__":
