@@ -1,4 +1,4 @@
-import sys 
+import sys
 
 import msgpack
 import plyvel
@@ -11,8 +11,15 @@ def int_from_bytes(bnum):
     return int.from_bytes(bnum, 'big')
 
 
+<<<<<<< HEAD
 def get_primary_ocn(ocn):
     """Gets the primary oclc number for a given oclc number. 
+=======
+# given an ocn, get the primary ocn
+# return None if not find
+def get_primary_ocn(ocn, db_path="primary-lookup/"):
+    """Gets the primary oclc number from the primary-lookup db
+>>>>>>> Add parameter to specify database path for testing
 
     Retrieves the primary oclc number for a given oclc number (ocn) from LevelDB primary-lookup
     which contains the key/value pairs of an oclc number (key) and the resolved primary oclc number (value).
@@ -22,12 +29,17 @@ def get_primary_ocn(ocn):
         ocn: An integer representing an oclc number.
 
     Returns:
+<<<<<<< HEAD
         An integer representing the primary oclc number for the given ocn;
         None if the given ocn has no matched key in the primary-lookup database.
+=======
+        The primary oclc number of the given ocn;
+        Or None if the goven ocn has no matched entry in the database
+>>>>>>> Add parameter to specify database path for testing
     """
     primary = None
     try:
-        mdb = plyvel.DB("primary-lookup/", create_if_missing=True) 
+        mdb = plyvel.DB(db_path, create_if_missing=True)
         key = int_to_bytes(ocn)
         if mdb.get(key):
             primary = int_from_bytes(mdb.get(key))
@@ -35,6 +47,7 @@ def get_primary_ocn(ocn):
         mdb.close()
     return primary
 
+<<<<<<< HEAD
 def get_ocns_cluster_by_primary_ocn(primary_ocn):
     """Gets all OCNs of an oclc cluster by a primary OCN. 
 
@@ -73,6 +86,26 @@ def get_ocns_cluster_by_primary_ocn(primary_ocn):
                 cluster = msgpack.unpackb(cdb.get(key))
         finally:
             cdb.close()
+=======
+# given a primary ocn, return the cluster of ocns from the cluster-lookup db
+# which contains clusterw with more than one ocns;
+# if not found, retrun a cluster of it self (the primary ocn)
+def get_cluster_by_primary_ocn(primary):
+    cluster = []
+    if primary is None:
+        return cluster
+    try:
+        cdb = plyvel.DB("cluster-lookup/", create_if_missing=True)
+        key = int_to_bytes(primary)
+        if cdb.get(key):
+            val=cdb.get(key)
+            cluster = msgpack.unpackb(cdb.get(key))
+        else:
+            cluster = [primary]
+        #print("primary: {}, cluster: {}".format(primary, cluster))
+    finally:
+        cdb.close()
+>>>>>>> Add parameter to specify database path for testing
     return cluster
 
 
@@ -174,8 +207,13 @@ def lookup_ocns_from_oclc():
     print("#### test previous ocn={}".format(ocn))
     test(ocn)
 
+<<<<<<< HEAD
     ocn=999999999 
     print("#### 9 digits, invalid ocn={}".format(ocn))
+=======
+    ocn=12345678901
+    print("#### test a 11 digits (OK), invalid ocn={}".format(ocn))
+>>>>>>> Add parameter to specify database path for testing
     test(ocn)
 
     ocn=1234567890123
@@ -206,4 +244,3 @@ def lookup_ocns_from_oclc():
 
 if __name__ == "__main__":
     lookup_ocns_from_oclc()
-
