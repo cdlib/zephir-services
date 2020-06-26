@@ -1,4 +1,4 @@
-import sys 
+import sys
 
 import msgpack
 import plyvel
@@ -11,9 +11,9 @@ def int_from_bytes(bnum):
     return int.from_bytes(bnum, 'big')
 
 
-# given an ocn, get the primary ocn 
+# given an ocn, get the primary ocn
 # return None if not find
-def get_primary_ocn(ocn):
+def get_primary_ocn(ocn, db_path="primary-lookup/"):
     """Gets the primary oclc number from the primary-lookup db
 
     Retrieves the primary oclc number for a given oclc number (ocn) from LevelDB primary-lookup
@@ -24,11 +24,11 @@ def get_primary_ocn(ocn):
 
     Returns:
         The primary oclc number of the given ocn;
-        Or None if the goven ocn has no matched entry in the database 
+        Or None if the goven ocn has no matched entry in the database
     """
     primary = None
     try:
-        mdb = plyvel.DB("primary-lookup/", create_if_missing=True) 
+        mdb = plyvel.DB(db_path, create_if_missing=True)
         key = int_to_bytes(ocn)
         if mdb.get(key):
             primary = int_from_bytes(mdb.get(key))
@@ -37,11 +37,11 @@ def get_primary_ocn(ocn):
         mdb.close()
     return primary
 
-# given a primary ocn, return the cluster of ocns from the cluster-lookup db 
+# given a primary ocn, return the cluster of ocns from the cluster-lookup db
 # which contains clusterw with more than one ocns;
 # if not found, retrun a cluster of it self (the primary ocn)
 def get_cluster_by_primary_ocn(primary):
-    cluster = [] 
+    cluster = []
     if primary is None:
         return cluster
     try:
@@ -106,7 +106,7 @@ def lookup_ocns_from_oclc():
     print("#### test previous ocn={}".format(ocn))
     test(ocn)
 
-    ocn=12345678901 
+    ocn=12345678901
     print("#### test a 11 digits (OK), invalid ocn={}".format(ocn))
     test(ocn)
 
@@ -126,4 +126,3 @@ def lookup_ocns_from_oclc():
 
 if __name__ == "__main__":
     lookup_ocns_from_oclc()
-
