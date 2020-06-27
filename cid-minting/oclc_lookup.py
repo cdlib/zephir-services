@@ -60,11 +60,11 @@ def get_ocns_cluster_by_primary_ocn(primary):
         when primary=4, return: [4, 518119215]
         when primary=1000000000, return: [1000000000] (1000000000 in not in the key/value cluster-lookup db) 
 
-        If the given primary OCN is None, return an empty list [].
+        None if the given primary OCN is None.
     """
-    cluster = [] 
+    cluster = None 
     if primary is None:
-        return cluster
+        return None
     try:
         cdb = plyvel.DB("cluster-lookup/", create_if_missing=True)
         key = int_to_bytes(primary)
@@ -85,7 +85,8 @@ def get_ocns_cluster_by_ocn(ocn):
     Retrieves the OCNs of an OCLC record:
         1. Finds the primary OCN of the given OCN;
         2. If found primary OCN, retrieves the OCNs cluster by the primary OCN;
-        3. Returns the OCNs cluster if found; otherwise return emply list []. 
+        3. Returns the OCNs cluster if found; 
+        4. Otherwise return None. 
 
     Args:
         ocn: An integer representing an OCN.
@@ -96,10 +97,10 @@ def get_ocns_cluster_by_ocn(ocn):
         when ocn=4, return: [4, 518119215]
         when ocn=1000000000, return: [1000000000]
 
-        If the given OCN is None, return an empty list [].
+        Returns None if the given OCN does not belong to any oclc cluster.
     """
 
-    cluster = []
+    cluster = None 
     primary = get_primary_ocn(ocn)
     if primary:
         cluster = get_ocns_cluster_by_primary_ocn(primary)
@@ -109,7 +110,8 @@ def get_clusters_by_ocns(ocns):
     clusters = []
     for ocn in ocns:
         cluster = get_ocns_cluster_by_ocn(ocn)
-        clusters.append(cluster)
+        if cluster:
+            clusters.append(cluster)
     # dedup
     print("clusters before dedup: {}".format(clusters))
     deduped_cluster = set(tuple(i) for i in clusters)
@@ -150,20 +152,32 @@ def lookup_ocns_from_oclc():
     print("#### test previous ocn={}".format(ocn))
     test(ocn)
 
-    ocn=12345678901 
-    print("#### test a 11 digits (OK), invalid ocn={}".format(ocn))
+    ocn=999999999 
+    print("#### 9 digits, invalid ocn={}".format(ocn))
     test(ocn)
 
     ocn=1234567890123
-    print("#### test a 13 digits (OK), invalid ocn={}".format(ocn))
+    print("#### test a 13 digits, invalid ocn={}".format(ocn))
     test(ocn)
 
     ocns=[1,2, 1000000000]
-    print("test list of ocns={}".format(ocns))
+    print("#### test list of ocns={}".format(ocns))
     test_ocns(ocns)
 
     ocns=[1, 1, 53095235, 2, 12345678901, 1000000000]
-    print("test list of ocns={}".format(ocns))
+    print("#### test list of ocns={}".format(ocns))
+    test_ocns(ocns)
+
+    ocns=[1234567890]
+    print("#### test list of ocns={}".format(ocns))
+    test_ocns(ocns)
+
+    ocns=[1234567890, 12345678901]
+    print("#### test list of ocns={}".format(ocns))
+    test_ocns(ocns)
+
+    ocns=[]
+    print("#### test list of ocns={}".format(ocns))
     test_ocns(ocns)
 
     #cluster = get_ocns_cluster_by_ocn(ocn)
