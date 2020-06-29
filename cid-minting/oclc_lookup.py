@@ -19,11 +19,11 @@ def get_primary_ocn(ocn):
     Both key and value are integers.
 
     Args:
-        ocn: An integer representing an oclc number
+        ocn: An integer representing an oclc number.
 
     Returns:
-        An integer representing the primary oclc number of the given ocn;
-        None if the given ocn has no matched key in the database.
+        An integer representing the primary oclc number for the given ocn;
+        None if the given ocn has no matched key in the primary-lookup database.
     """
     primary = None
     try:
@@ -31,95 +31,116 @@ def get_primary_ocn(ocn):
         key = int_to_bytes(ocn)
         if mdb.get(key):
             primary = int_from_bytes(mdb.get(key))
-        #print("ocn: {}, primary: {}".format(ocn, primary))
     finally:
         mdb.close()
     return primary
 
-def get_ocns_cluster_by_primary_ocn(primary):
-    """Gets all OCNs of an oclc record by the primary OCN. 
+def get_ocns_cluster_by_primary_ocn(primary_ocn):
+    """Gets all OCNs of an oclc cluster by a primary OCN. 
 
-    Retrieves the OCNs of an OCLC record identified by a primary OCN from the key/value LevelDB cluster-lookup.
-    The key and value  are defined as:
-        key: an integer representing a primary OCN
-        value: list of integers containig [primary OCN + previous OCN(s) belong to the OCLC primary record].
+    Retrieves the OCNs of an OCLC cluster from the LevelDB cluster-lookup with key and value defined as:
+        key: an integer representing a primary OCN.
+        value: list of integers containig the primary and previous OCNs of the OCLC cluster.
     
-    The cluster-lookup database only contains key/value pairs for OCLC records with previous OCN(s). For example:
-        key=1, value=[1, 433981287, 6567842, 53095235, 9987701]
-        key=4, value=[4, 518119215]
-
-    When the given OCN is missing from the key of the cluster-lookup database, assume the resolved record 
-    only contains a primary OCN and returns a list of the given OCN.
+    Note: 
+    The cluster-lookup database only contains key/value pairs for OCLC clusters with previous OCN(s).
+    This means the value fields are lists with 2 or more items containing the primary OCN and one or more previous OCNs. 
+    For example:
+        key=1 (primary ocn), value=[1, 433981287, 6567842, 53095235, 9987701]
+        key=4 (primary ocn), value=[4, 518119215]
 
     Args:
-        primary: An integer representing a primary OCN. 
+        primary_ocn: An integer representing a primary OCN. 
 
     Returns:
-        A list of integers representing the primary OCN + previous OCN(s) cluster the given OCN belongs. For example:
-        when primary=1, return: [1, 433981287, 6567842, 53095235, 9987701]
-        when primary=4, return: [4, 518119215]
-        when primary=1000000000, return: [1000000000] (1000000000 in not in the key/value cluster-lookup db) 
+        A list of integers representing an OCLC cluster with the primary and previous OCNs;
+        None if the given OCN is None or is missing from the key/primary OCN of the cluster-lookup database.
 
-        None if the given primary OCN is None.
+        For exampe:
+            when primary_ocn=1, return: [1, 433981287, 6567842, 53095235, 9987701]
+            when primary_ocn=4, return: [4, 518119215]
+            when primary_ocn=1000000000, return: None 
+                (1000000000 is a primary ocn for an OCN cluster without previous OCNs. It is not in the cluster-lookup db) 
+            when primary_ocn=1234567890, return: None 
+                (1234567890 is an invalid ocn and is not in the key/value cluster-looup db)
     """
     cluster = None 
-    if primary is None:
-        return None
-    try:
-        cdb = plyvel.DB("cluster-lookup/", create_if_missing=True)
-        key = int_to_bytes(primary)
-        if cdb.get(key):
-            val=cdb.get(key)
-            cluster = msgpack.unpackb(cdb.get(key))
-        else:
-            cluster = [primary]
-        #print("primary: {}, cluster: {}".format(primary, cluster))
-    finally:
-        cdb.close()
+    if primary_ocn:
+        try:
+            cdb = plyvel.DB("cluster-lookup/", create_if_missing=True)
+            key = int_to_bytes(primary_ocn)
+            if cdb.get(key):
+                cluster = msgpack.unpackb(cdb.get(key))
+        finally:
+            cdb.close()
     return cluster
 
 
 def get_ocns_cluster_by_ocn(ocn):
-    """Gets all ONCs of an oclc record by an OCN 
+    """Gets all OCNs of an oclc cluster by an OCN. 
 
-    Retrieves the OCNs of an OCLC record:
-        1. Finds the primary OCN of the given OCN;
-        2. If found primary OCN, retrieves the OCNs cluster by the primary OCN;
-        3. Returns the OCNs cluster if found; 
-        4. Otherwise return None. 
+    Retrieves the OCNs of an OCLC cluster by a given OCN:
+        1. Finds the primary OCN of the given OCN from the primary-lookup LevelDB;
+        2. If found the primary OCN, retrieves the OCNs cluster by the primary OCN from the cluster-lookup LevelDB;
+        3. If no cluster was found, creates a cluster contains only the primary OCN; 
 
     Args:
         ocn: An integer representing an OCN.
 
     Returns:
-        A list of integers representing the primary OCN + previous OCN(s) cluster the given OCN belongs to. For example:
+        A list of integers representing an OCN cluster the given OCN belongs to in the format of [primary_OCN, previous_OCN(s)];
+        None if the given OCN does not belong to any oclc cluster.
+
+        For example:
         when ocn=1, return: [1, 433981287, 6567842, 53095235, 9987701]
         when ocn=4, return: [4, 518119215]
-        when ocn=1000000000, return: [1000000000]
-
-        Returns None if the given OCN does not belong to any oclc cluster.
+        when ocn=1000000000, return: [1000000000] (a cluster without previous OCNs) 
+        when ocn=1234567890, return: None (for an invalid ocn)
     """
 
     cluster = None 
     primary = get_primary_ocn(ocn)
     if primary:
         cluster = get_ocns_cluster_by_primary_ocn(primary)
+        if cluster is None:
+            cluster = [primary]
     return cluster
 
 def get_clusters_by_ocns(ocns):
+    """Finds the OCN clusters for a list of OCNs.
+
+    Finds the OCN cluster each given OCN belongs to. 
+    Returns found clusters with duplications removed. 
+
+    Args:
+        ocns: A list of integers representing OCNs.
+
+    Returns:
+        A Set of tuples containing OCNs of resolved OCN clusters;
+        An empty set when there is no resolved OCN clusters.
+
+    For example:
+    When incoming ocns = [1, 433981287, 1000000000, 1234567890] where
+        ocn=1 resolves to OCN cluster [1, 433981287, 6567842, 53095235, 9987701]
+        ocn=433981287 also resolves to OCN cluster [1, 433981287, 6567842, 53095235, 9987701]
+        ocn=1000000000 resolves to OCN cluster [1000000000]
+        ocn=1234567890 resolves to None
+    Returns a set: {(1000000000,), (1, 433981287, 6567842, 53095235, 9987701)}
+    
+    When incoming ocns only contains an invalid OCN(s), an empty set() will be returned.
+
+    """
     clusters = []
     for ocn in ocns:
         cluster = get_ocns_cluster_by_ocn(ocn)
         if cluster:
             clusters.append(cluster)
     # dedup
-    print("clusters before dedup: {}".format(clusters))
     deduped_cluster = set(tuple(i) for i in clusters)
-    print("dedup'ed cluster: {}".format(deduped_cluster))
     return deduped_cluster
 
 def test(ocn):
-    print("#### testing OCN={}".format(ocn))
+    print(".... testing OCN={}".format(ocn))
     primary = get_primary_ocn(ocn)
     print("primary OCN: {}".format(primary))
     cluster = get_ocns_cluster_by_primary_ocn(primary)
@@ -128,9 +149,10 @@ def test(ocn):
     print("cluster by ocn ({}): {}".format(ocn, cluster))
 
 def test_ocns(ocns):
-    print("#### testing OCN={}".format(ocns))
+    print(".... testing OCN={}".format(ocns))
     clusters = get_clusters_by_ocns(ocns)
-    print("clusters by ocns ({}): {}".format(ocns, clusters))
+    print("clusters by ocns ({}):".format(ocns))
+    print("clusters: {}".format(clusters))
 
 def lookup_ocns_from_oclc():
     """For a given oclc number, find all OCNs in the OCN cluster from the OCLC Concordance Table
