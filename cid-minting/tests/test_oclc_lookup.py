@@ -8,7 +8,10 @@ from oclc_lookup import get_primary_ocn
 # TESTS
 def test_get_primary_ocn(setup):
     input, expect = split(setup["data"]["primary.json"])
-    results = [get_primary_ocn(ocn, os.path.join(setup["tmpdatadir"],"primary/")) for ocn in input]
+    results = [
+        get_primary_ocn(ocn, os.path.join(setup["tmpdatadir"], "primary/"))
+        for ocn in input
+    ]
     assert expect.sort() == results.sort()
 
 
@@ -17,17 +20,20 @@ def test_get_primary_ocn(setup):
 def setup(tmpdatadir, json_loader):
     data = json_loader
     db_path = create_primary_db(tmpdatadir, data["primary.json"])
-    return{
+    return {
         "tmpdatadir": tmpdatadir,
         "data": json_loader,
     }
+
 
 # HELPERS
 def int_to_bytes(inum):
     return inum.to_bytes((inum.bit_length() + 7) // 8, "big")
 
+
 def int_from_bytes(bnum):
     return int.from_bytes(bnum, "big")
+
 
 def create_primary_db(path, data):
     """Create a primary ocn lookup LevelDB database based on case data
@@ -51,6 +57,7 @@ def create_primary_db(path, data):
     db.close()
     return db_path
 
+
 def split(data):
     """Splits ocn case data into input and expected output
 
@@ -67,4 +74,4 @@ def split(data):
     for x in data:
         input.append(x[0])
         expect.append(x[1])
-    return [input,expect]
+    return [input, expect]

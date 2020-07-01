@@ -6,7 +6,8 @@ import sys
 import plyvel
 import pytest
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
+
 
 @pytest.fixture
 def tmpdatadir(request, tmpdir):
@@ -43,10 +44,14 @@ def json_loader(tmpdatadir, request):
         Json data files converted into dictionary
 
     """
-    files = [f for f in os.listdir(tmpdatadir) if os.path.isfile(os.path.join(tmpdatadir,f)) and f.endswith(".json")]
+    files = [
+        f
+        for f in os.listdir(tmpdatadir)
+        if os.path.isfile(os.path.join(tmpdatadir, f)) and f.endswith(".json")
+    ]
     data = {}
     for file in files:
-        with open(os.path.join(tmpdatadir,file), "r") as read_file:
+        with open(os.path.join(tmpdatadir, file), "r") as read_file:
             data[file] = json.load(read_file)
     return data
 
