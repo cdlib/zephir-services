@@ -63,6 +63,7 @@ def split(data):
     Returns:
         List of "input" and "expect" lists
 
+<<<<<<< HEAD
     """
     input = []
     expect = []
@@ -70,3 +71,12 @@ def split(data):
         input.append(x[0])
         expect.append(x[1])
     return [input,expect]
+=======
+@pytest.mark.parametrize("prepare_primary_db_tests", ["primary.json"], indirect=True)
+def test_get_primary_ocn(td_tmpdir, prepare_primary_db_tests):
+    cases = prepare_primary_db_tests["cases"]
+    db_path = prepare_primary_db_tests["db_path"]
+    results = [get_primary_ocn(ocn, db_path) for ocn in cases["input"]]
+    assert cases["expected"].sort() == results.sort()
+    assert True
+>>>>>>> 556eed7f17ac8d725dd4fd1f819a3e88df0a984f
