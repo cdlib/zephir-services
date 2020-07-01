@@ -7,10 +7,6 @@ import plyvel
 import pytest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'helpers'))
-<<<<<<< HEAD
-=======
-import utils
->>>>>>> 556eed7f17ac8d725dd4fd1f819a3e88df0a984f
 
 @pytest.fixture
 def tmpdatadir(request, tmpdir):
@@ -29,32 +25,6 @@ def tmpdatadir(request, tmpdir):
         Filepath of test data subdirectory within the temporary dirctory.
 
     """
-<<<<<<< HEAD
-    data_dirname = os.path.splitext(os.path.basename(request.fspath))[0]
-    data_path = os.path.splitext(request.fspath)[0]
-    tmp_data_path = os.path.join(tmpdir, data_dirname)
-    shutil.copytree(data_path, tmp_data_path)
-    return tmp_data_path
-
-
-@pytest.fixture
-def json_loader(tmpdatadir, request):
-    """Load json data files into a Dict
-
-    Args:
-        tmpdatadir: Populated temporary directory with test data
-
-    Returns:
-        Json data files converted into dictionary
-
-    """
-    files = [f for f in os.listdir(tmpdatadir) if os.path.isfile(os.path.join(tmpdatadir,f)) and f.endswith(".json")]
-    data = {}
-    for file in files:
-        with open(os.path.join(tmpdatadir,file), "r") as read_file:
-            data[file] = json.load(read_file)
-    return data
-=======
     td_dirname = os.path.splitext(os.path.basename(request.fspath))[0]
     td_path = os.path.splitext(request.fspath)[0]
     tmp_td_path = os.path.join(tmpdir, td_dirname)
@@ -63,7 +33,7 @@ def json_loader(tmpdatadir, request):
 
 
 @pytest.fixture
-def json_loader(td_tmpdir, request):
+def json_loader(tmpdatadir, request):
     """Create a case data set by loading json test data
 
     Note:
@@ -77,10 +47,10 @@ def json_loader(td_tmpdir, request):
         Json test case data converted into dictionary
 
     """
-    files = [f for f in os.listdir(td_tmpdir) if os.path.isfile(os.path.join(td_tmpdir,f)) and f.endswith(".json")]
+    files = [f for f in os.listdir(tmpdatadir) if os.path.isfile(os.path.join(tmpdatadir,f)) and f.endswith(".json")]
     data = {}
     for file in files:
-        with open(os.path.join(td_tmpdir,file), "r") as read_file:
+        with open(os.path.join(tmpdatadir,file), "r") as read_file:
             data[file] = json.load(read_file)
     return data
 
@@ -104,7 +74,6 @@ def prepare_primary_db_tests(td_tmpdir, request, json_loader):
     db_path = utils.create_primary_ldb(td_tmpdir, data)
     cases = utils.split_cases(data)
     return {"cases":cases, "db_path":db_path}
->>>>>>> 556eed7f17ac8d725dd4fd1f819a3e88df0a984f
 
 
 @pytest.fixture
