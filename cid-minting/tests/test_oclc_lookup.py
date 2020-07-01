@@ -22,7 +22,6 @@ def setup(tmpdatadir, json_loader):
         "data": json_loader,
     }
 
-
 # HELPERS
 def int_to_bytes(inum):
     return inum.to_bytes((inum.bit_length() + 7) // 8, "big")
