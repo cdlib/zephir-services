@@ -28,7 +28,7 @@ def get_primary_ocn(ocn, db_path="primary-lookup"):
     primary = None
     if ocn:
         try:
-            mdb = plyvel.DB("primary-lookup/", create_if_missing=True) 
+            mdb = plyvel.DB(db_path, create_if_missing=True)
             key = int_to_bytes(ocn)
             if mdb.get(key):
                 primary = int_from_bytes(mdb.get(key))
@@ -36,7 +36,7 @@ def get_primary_ocn(ocn, db_path="primary-lookup"):
             mdb.close()
     return primary
 
-def get_ocns_cluster_by_primary_ocn(primary_ocn):
+def get_ocns_cluster_by_primary_ocn(primary_ocn, db_path="cluster-lookup"):
     """Gets all OCNs of an oclc cluster by a primary OCN.
 
     Retrieves the OCNs of an OCLC cluster from the LevelDB cluster-lookup with key and value defined as:
@@ -68,7 +68,7 @@ def get_ocns_cluster_by_primary_ocn(primary_ocn):
     cluster = None
     if primary_ocn:
         try:
-            cdb = plyvel.DB("cluster-lookup/", create_if_missing=True)
+            cdb = plyvel.DB(db_path, create_if_missing=True)
             key = int_to_bytes(primary_ocn)
             if cdb.get(key):
                 cluster = msgpack.unpackb(cdb.get(key))
