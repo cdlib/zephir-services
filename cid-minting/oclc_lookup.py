@@ -10,9 +10,9 @@ def int_to_bytes(inum):
 def int_from_bytes(bnum):
     return int.from_bytes(bnum, 'big')
 
-
 def get_primary_ocn(ocn, db_path="primary-lookup"):
     """Gets the primary oclc number for a given oclc number.
+
 
     Retrieves the primary oclc number for a given oclc number (ocn) from LevelDB primary-lookup
     which contains the key/value pairs of an oclc number (key) and the resolved primary oclc number (value).
@@ -26,13 +26,14 @@ def get_primary_ocn(ocn, db_path="primary-lookup"):
         None if the given ocn has no matched key in the primary-lookup database.
     """
     primary = None
-    try:
-        mdb = plyvel.DB(db_path, create_if_missing=True)
-        key = int_to_bytes(ocn)
-        if mdb.get(key):
-            primary = int_from_bytes(mdb.get(key))
-    finally:
-        mdb.close()
+    if ocn:
+        try:
+            mdb = plyvel.DB("primary-lookup/", create_if_missing=True) 
+            key = int_to_bytes(ocn)
+            if mdb.get(key):
+                primary = int_from_bytes(mdb.get(key))
+        finally:
+            mdb.close()
     return primary
 
 def get_ocns_cluster_by_primary_ocn(primary_ocn):
@@ -136,7 +137,7 @@ def get_clusters_by_ocns(ocns):
         if cluster:
             clusters.append(cluster)
     # dedup
-    deduped_cluster = set(tuple(i) for i in clusters)
+    deduped_cluster = set([tuple(sorted(i)) for i in clusters])
     return deduped_cluster
 
 def test(ocn):
@@ -160,49 +161,92 @@ def lookup_ocns_from_oclc():
     if (len(sys.argv) > 1):
         ocn = int(sys.argv[1])
     else:
-        ocn = 53095235
+        ocn = None
 
-    ocn=1
-    print("#### test primary ocn={}".format(ocn))
-    test(ocn)
+    clusters = {'1': [6567842, 9987701, 53095235, 433981287, 1],
+            '1000000000': [1000000000],
+            '2': [2, 9772597, 35597370, 60494959, 813305061, 823937796, 1087342349],
+            '17216714': [17216714, 535434196],
+            }
 
-    ocn=1000000000
-    print("#### test primary 10 digits ocn={}".format(ocn))
-    test(ocn)
+    set_1 = set([tuple(sorted(clusters['1']))])
+    set_10 = set([tuple(sorted(clusters['1000000000']))])
+    set_2 = set([tuple(sorted(clusters['2']))])
 
-    ocn=53095235
-    print("#### test previous ocn={}".format(ocn))
-    test(ocn)
+    print("#### testing get_primary_ocn(ocn)")
+    ocn = 1000000000
+    assert get_primary_ocn(ocn) == 1000000000
 
-    ocn=999999999
-    print("#### 9 digits, invalid ocn={}".format(ocn))
-    test(ocn)
+    ocn = 1
+    assert get_primary_ocn(ocn) == 1
 
-    ocn=1234567890123
-    print("#### test a 13 digits, invalid ocn={}".format(ocn))
-    test(ocn)
+    ocn = 6567842
+    assert get_primary_ocn(ocn) == 1
 
-    ocns=[1,2, 1000000000]
-    print("#### test list of ocns={}".format(ocns))
-    test_ocns(ocns)
+    ocn = 1234567890
+    assert get_primary_ocn(ocn) == None
+
+    ocn = None
+    assert get_primary_ocn(ocn) == None
+    print("**** finished testing get_primary_ocn")
+
+    print("#### testing get_ocns_cluster_by_primary_ocn(primary_ocn)")
+
+    primary_ocn = 1000000000
+    assert get_ocns_cluster_by_primary_ocn(primary_ocn) == None
+
+    primary_ocn = 1
+    assert get_ocns_cluster_by_primary_ocn(primary_ocn).sort() == clusters['1'].sort()
+
+    primary_ocn = 6567842     # a previous ocn
+    assert get_ocns_cluster_by_primary_ocn(primary_ocn) == None
+
+    primary_ocn = 1234567890  # an invalid ocn
+    assert get_ocns_cluster_by_primary_ocn(primary_ocn) == None
+
+    primary_ocn = None
+    assert get_ocns_cluster_by_primary_ocn(primary_ocn) == None
+    print("**** finished testing get_ocns_cluster_by_primary_ocn(primary_ocn)")
+
+    print("#### testing get_ocns_cluster_by_ocn: returning list of integers")
+    ocn = 1000000000
+    assert get_ocns_cluster_by_ocn(ocn) == clusters['1000000000']
+
+    ocn = 1
+    assert get_ocns_cluster_by_ocn(ocn).sort() == clusters['1'].sort()
+
+    ocn = 6567842    # previous ocn
+    assert get_ocns_cluster_by_ocn(ocn).sort() == clusters['1'].sort()
+
+    ocn = 1234567890 # invalid ocn
+    assert get_ocns_cluster_by_ocn(ocn) == None
+
+    ocn = None
+    assert get_ocns_cluster_by_ocn(ocn) == None
+    print("**** finished testing get_ocns_cluster_by_ocn")
+
+    print("#### testing  get_clusters_by_ocns(ocns)")
+    ocns=[1]    # resolve to cluster[1]
+    assert get_clusters_by_ocns(ocns) ^ set_1 == set()
+
+    ocns=[1000000000, 1000000000]    #  resolve to cluster[1000000000]
+    assert get_clusters_by_ocns(ocns) ^ set_10 == set()
+
+    ocns=[1, 1000000000]    #    resolve to 2 ocn clusters
+    clusters = get_clusters_by_ocns(ocns)
+    assert get_clusters_by_ocns(ocns) ^ (set_1 | set_10) == set()
 
     ocns=[1, 1, 53095235, 2, 12345678901, 1000000000]
-    print("#### test list of ocns={}".format(ocns))
-    test_ocns(ocns)
+    assert get_clusters_by_ocns(ocns) ^ (set_1 | set_2 | set_10) == set()
 
     ocns=[1234567890]
-    print("#### test list of ocns={}".format(ocns))
-    test_ocns(ocns)
+    assert get_clusters_by_ocns(ocns) == set()
 
     ocns=[1234567890, 12345678901]
-    print("#### test list of ocns={}".format(ocns))
-    test_ocns(ocns)
+    assert get_clusters_by_ocns(ocns) == set()
 
     ocns=[]
-    print("#### test list of ocns={}".format(ocns))
-    test_ocns(ocns)
-
-    #cluster = get_ocns_cluster_by_ocn(ocn)
+    assert get_clusters_by_ocns(ocns) == set()
 
 if __name__ == "__main__":
     lookup_ocns_from_oclc()
