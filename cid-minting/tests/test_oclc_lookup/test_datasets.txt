@@ -1,0 +1,15 @@
+Primary OCN	OCNs of the OCLC Cluster
+1000000000	[1000000000]
+123456789	[123456789]
+1	[1, 6567842, 9987701, 53095235, 433981287]
+2	[2, 35597370, 60494959, 813305061, 823937796, 1087342349, 9772597]
+17216714	[17216714, 535434196]
+5587664	[5587664, 19939101, 220653269]
+
+Note:
+Col1: primary OCN
+Col2: OCNs cluster with primary and previous OCNs.
+Cluster(1) is in order;
+Cluster(2) is not in order. This should not affect the get_clusters functions.
+Compare sorted lists for functions return list;
+Compoare sets of sorted tuples for function returns set

@@ -195,7 +195,7 @@ def lookup_ocns_from_oclc():
     assert get_ocns_cluster_by_primary_ocn(primary_ocn) == None
 
     primary_ocn = 1
-    assert set(get_ocns_cluster_by_primary_ocn(primary_ocn)) == set(clusters['1'])
+    assert get_ocns_cluster_by_primary_ocn(primary_ocn).sort() == clusters['1'].sort()
 
     primary_ocn = 6567842     # a previous ocn
     assert get_ocns_cluster_by_primary_ocn(primary_ocn) == None
