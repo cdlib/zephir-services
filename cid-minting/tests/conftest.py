@@ -3,6 +3,7 @@ import json
 import shutil
 import sys
 
+import pandas
 import plyvel
 import pytest
 
@@ -34,25 +35,26 @@ def tmpdatadir(request, tmpdir):
 
 
 @pytest.fixture
-def json_loader(tmpdatadir, request):
+def csv_to_df_loader(tmpdatadir, request):
     """Load json data files into a Dict
 
     Args:
         tmpdatadir: Populated temporary directory with test data
 
     Returns:
-        Json data files converted into dictionary
+        CSV data files converted into dictionary of pandas dataframes
 
     """
     files = [
         f
         for f in os.listdir(tmpdatadir)
-        if os.path.isfile(os.path.join(tmpdatadir, f)) and f.endswith(".json")
+        if os.path.isfile(os.path.join(tmpdatadir, f)) and f.endswith(".csv")
     ]
     data = {}
+
     for file in files:
         with open(os.path.join(tmpdatadir, file), "r") as read_file:
-            data[file] = json.load(read_file)
+            data[file] = pandas.read_csv(read_file)
     return data
 
 
