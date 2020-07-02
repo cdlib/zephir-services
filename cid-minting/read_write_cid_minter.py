@@ -1,8 +1,8 @@
-import MySQLdb
+import mysql.connector as mysql 
 
 class Minter:
     def __init__(self, database):
-        self._conn = MySQLdb.connect(database)
+        self._conn = mysql.connect(**database)
         self._cursor = self._conn.cursor()
 
     @property
@@ -39,15 +39,22 @@ def main():
     database = "htmm"
     host = "rds-d2d-htmm-dev.cmcguhglinoa.us-west-2.rds.amazonaws.com"
     user = "htmmrw"
-    pw = "htmmrw3dev"
+    password = "htmmrw3dev"
 
-    database_info = ("localhost","root","1234","users")
-    database_info = (host, user, pw, "htmm")
+ #   database_info = dict(host=host, user=user, password=password, database=database)
+    database_info = {'host': host, 'user': user, 'password': password, 'database': database}
+
     minter = Minter(database_info)
     sql = "select * from cid_minting_store"
+    sql = """select distinct z.cid
+     from zephir_identifiers as i inner join zephir_identifier_records as r 
+     on i.autoid = r.identifier_autoid inner join zephir_records as z 
+     on r.record_autoid = z.autoid where i.type = 'oclc' and identifier in ('8727632')
+     """
     minter.execute(sql)
-    print(minter.fetchone)
-    print(p1.age)
+    m = minter.fetchone()
+    print(type(m))
+    print(m)
 
 if __name__ == '__main__':
     main()
