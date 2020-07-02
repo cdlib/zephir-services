@@ -1,0 +1,78 @@
+# records with multiple ocns
+select  z.cid, z.id, count(z.id), i.identifier
+from zephir_records as z 
+inner join zephir_identifier_records as r on r.record_autoid = z.autoid 
+inner join zephir_identifiers as i on i.autoid = r.identifier_autoid
+where  i.type = 'oclc'
+group by z.id having count(z.id) >1;
+
+# find the records and ocns
+select  distinct z.cid, z.id, i.identifier
+from zephir_records as z 
+inner join zephir_identifier_records as r on r.record_autoid = z.autoid 
+inner join zephir_identifiers as i on i.autoid = r.identifier_autoid
+where i.type = 'oclc' 
+and z.cid in ('009547317', '001693730' );
+
+# find the ocns
+select  distinct i.identifier
+from zephir_records as z 
+inner join zephir_identifier_records as r on r.record_autoid = z.autoid 
+inner join zephir_identifiers as i on i.autoid = r.identifier_autoid
+where i.type = 'oclc' 
+and z.cid in ('009547317', '001693730' );
+
+# OCNs from CID in ('009547317', '001693730' ) 
+6758168
+15437990
+5663662
+33393343
+28477569
+
+# Zephir record with one OCN
+select  distinct z.cid, z.id, i.identifier
+from zephir_records as z 
+inner join zephir_identifier_records as r on r.record_autoid = z.autoid 
+inner join zephir_identifiers as i on i.autoid = r.identifier_autoid
+where i.type = 'oclc' 
+and z.cid in ('002492721');
+
+# OCN: 8727632
+
+# find cid, htid and ocns
+select distinct z.cid, z.id, i.identifier
+from zephir_records as z 
+inner join zephir_identifier_records as r on r.record_autoid = z.autoid 
+inner join zephir_identifiers as i on i.autoid = r.identifier_autoid
+where i.type = 'oclc' and i.identifier in (
+'6758168',
+'15437990',
+'5663662',
+'33393343',
+'28477569',
+'8727632')
+order by z.cid, z.id;
+
+# find cid and ocns
+select distinct z.cid, i.identifier
+from zephir_records as z 
+inner join zephir_identifier_records as r on r.record_autoid = z.autoid 
+inner join zephir_identifiers as i on i.autoid = r.identifier_autoid
+where i.type = 'oclc' and i.identifier in (
+'6758168',
+'15437990',
+'5663662',
+'33393343',
+'28477569',
+'8727632')
+order by z.cid, z.id;
+
+# cluster with 3 OCNs
+001693730	15437990
+001693730	6758168
+001693730	5663662
+# cluster with 2 OCNs
+009547317	33393343
+009547317	28477569
+# cluster with 1 OCN
+002492721	8727632

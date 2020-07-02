@@ -46,13 +46,26 @@ def main():
 
     minter = Minter(database_info)
     sql = "select * from cid_minting_store"
-    sql = """select distinct z.cid
-     from zephir_identifiers as i inner join zephir_identifier_records as r 
-     on i.autoid = r.identifier_autoid inner join zephir_records as z 
-     on r.record_autoid = z.autoid where i.type = 'oclc' and identifier in ('8727632')
-     """
+    sql = """select distinct z.cid, i.identifier
+    from zephir_records as z
+    inner join zephir_identifier_records as r on r.record_autoid = z.autoid
+    inner join zephir_identifiers as i on i.autoid = r.identifier_autoid
+    where i.type = 'oclc' and i.identifier in (
+    '6758168',
+    '15437990',
+    '5663662',
+    '33393343',
+    '28477569',
+    '8727632')
+    order by z.cid, z.id
+    """
+
     minter.execute(sql)
-    m = minter.fetchone()
+    #m = minter.fetchone()
+    #print(type(m))
+    #print(m)
+
+    m = minter.fetchall()
     print(type(m))
     print(m)
 
