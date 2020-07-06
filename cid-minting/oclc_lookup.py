@@ -77,7 +77,7 @@ def get_ocns_cluster_by_primary_ocn(primary_ocn, db_path="cluster-lookup"):
     return cluster
 
 
-def get_ocns_cluster_by_ocn(ocn):
+def get_ocns_cluster_by_ocn(ocn, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup"):
     """Gets all OCNs of an oclc cluster by an OCN.
 
     Retrieves the OCNs of an OCLC cluster by a given OCN:
@@ -100,14 +100,16 @@ def get_ocns_cluster_by_ocn(ocn):
     """
 
     cluster = None
-    primary = get_primary_ocn(ocn)
+    primary = get_primary_ocn(ocn, primarydb_path)
     if primary:
-        cluster = get_ocns_cluster_by_primary_ocn(primary)
-        if cluster is None:
+        cluster = get_ocns_cluster_by_primary_ocn(primary, clusterdb_path)
+        if cluster:
+            cluster.append(primary)
+        else:
             cluster = [primary]
     return cluster
 
-def get_clusters_by_ocns(ocns):
+def get_clusters_by_ocns(ocns, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup"):
     """Finds the OCN clusters for a list of OCNs.
 
     Finds the OCN cluster each given OCN belongs to.
@@ -133,9 +135,10 @@ def get_clusters_by_ocns(ocns):
     """
     clusters = []
     for ocn in ocns:
-        cluster = get_ocns_cluster_by_ocn(ocn)
+        cluster = get_ocns_cluster_by_ocn(ocn, primarydb_path, clusterdb_path)
         if cluster:
             clusters.append(cluster)
+
     # dedup
     deduped_cluster = set([tuple(sorted(i)) for i in clusters])
     return deduped_cluster
@@ -228,6 +231,7 @@ def lookup_ocns_from_oclc():
     print("#### testing  get_clusters_by_ocns(ocns)")
     ocns=[1]    # resolve to cluster[1]
     assert get_clusters_by_ocns(ocns) ^ set_1 == set()
+    print(get_clusters_by_ocns([1]))
 
     ocns=[1000000000, 1000000000]    #  resolve to cluster[1000000000]
     assert get_clusters_by_ocns(ocns) ^ set_10 == set()

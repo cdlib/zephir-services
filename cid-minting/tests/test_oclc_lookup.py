@@ -6,6 +6,8 @@ import plyvel
 
 from oclc_lookup import get_primary_ocn
 from oclc_lookup import get_ocns_cluster_by_primary_ocn
+from oclc_lookup import get_ocns_cluster_by_ocn
+from oclc_lookup import get_clusters_by_ocns
 
 # TESTS
 def test_get_primary_ocn(setup):
@@ -15,7 +17,7 @@ def test_get_primary_ocn(setup):
         get_primary_ocn(ocn, setup["primarydb_path"])
         for ocn in input
     ]
-    assert expect.sort() == result.sort()
+    assert sorted(expect) == sorted(result)
 
 def test_get_primary_ocn_with_null_cases(setup):
     # case: ocn passed is None
@@ -27,14 +29,20 @@ def test_get_primary_ocn_with_null_cases(setup):
 
 def test_get_ocns_cluster_by_primary_ocn(setup):
     primary_ocn = 1
-    cluster = [6567842, 9987701, 53095235, 433981287]
+    cluster = [9987701, 53095235, 433981287, 6567842]
     result = get_ocns_cluster_by_primary_ocn(primary_ocn, setup["clusterdb_path"])
-    assert cluster.sort() == result.sort()
+    assert sorted(cluster) == sorted(result)
 
 def test_get_cluster_missing_primary(setup):
     primary_ocn = 1
     result = get_ocns_cluster_by_primary_ocn(primary_ocn, setup["clusterdb_path"])
     assert primary_ocn not in result
+
+def test_get_ocns_cluster_by_primary_ocn_2(setup):
+    primary_ocn = 17216714 
+    cluster = [535434196]
+    result = get_ocns_cluster_by_primary_ocn(primary_ocn, setup["clusterdb_path"])
+    assert sorted(cluster) == sorted(result)
 
 def test_get_cluster_ocn_with_null_cases(setup):
     null_cases = {
@@ -46,6 +54,66 @@ def test_get_cluster_ocn_with_null_cases(setup):
     for k,v in null_cases.items():
         assert None == get_ocns_cluster_by_primary_ocn(v, setup["clusterdb_path"])
         
+def test_get_ocns_cluster_by_ocn(setup):
+    clusters = {
+        # ocn: list of all ocns of the cluster
+        1000000000: [1000000000],                               # cluster_of_one_ocn
+        1: [6567842, 9987701, 53095235, 433981287, 1],          # cluster_of_multi_ocns_by_primary_ocn
+        6567842: [1, 6567842, 9987701, 53095235, 433981287],    # cluster_of_multi_ocns_by_other_ocn
+        17216714: [17216714, 535434196],                        # cluster_of_2_ocns_by_primary_ocn, 
+    }
+    for ocn, cluster in clusters.items():
+        result = get_ocns_cluster_by_ocn(ocn, setup["primarydb_path"], setup["clusterdb_path"])
+        assert sorted(cluster) == sorted(result)
+
+def test_get_ocns_cluster_by_ocn_with_null_cases(setup):
+    null_cases = {
+        "invalid_ocn": 1234567890,
+        "none_ocn": None,
+    }
+    for k, v in null_cases.items():
+        assert None == get_ocns_cluster_by_ocn(v, setup["primarydb_path"], setup["clusterdb_path"])
+
+def test_get_ocns_cluster_by_ocns(setup):
+    clusters = {
+        # primary_ocn, list of all ocns of the cluster 
+        1000000000: [1000000000],                               # cluster_of_one_ocn
+        1: [6567842, 9987701, 53095235, 433981287, 1],          # cluster_of_multi_ocns
+        17216714: [17216714, 535434196],                        # cluster_of_2_ocns,
+    }
+    sets = {
+        1000000000: set([tuple(sorted(clusters[1000000000]))]),
+        1: set([tuple(sorted(clusters[1]))]),
+        17216714: set([tuple(sorted(clusters[17216714]))]),
+    }
+    input_ocns_list = {
+        "1_one_primary_ocn_cluster_of_one": [1000000000],
+        "2_one_other_ocn_cluster_of_multi": [6567842],
+        "3_two_primary_ocns_dups": [1000000000, 1000000000],
+        "4_two_primary_ocns": [1, 1000000000],
+        "5_ocns_with_primary_secondary_dups_invalid": [1, 1, 6567842, 17216714, 535434196, 12345678901, 1000000000],
+    }
+    expected = {
+        "1_one_primary_ocn_cluster_of_one": sets[1000000000],
+        "2_one_other_ocn_cluster_of_multi": sets[1],
+        "3_two_primary_ocns_dups": sets[1000000000],
+        "4_two_primary_ocns": (sets[1] | sets[1000000000]),
+        "5_ocns_with_primary_secondary_dups_invalid": (sets[1] | sets[17216714] | sets[1000000000]),
+    }
+    for k, ocns in input_ocns_list.items():
+        result = get_clusters_by_ocns(ocns, setup["primarydb_path"], setup["clusterdb_path"])
+        assert result != None
+        assert result == expected[k] 
+
+def test_get_ocns_cluster_by_ocns_wthnull_cases(setup):
+    input_ocns_list = {
+        "one_invalid_ocn": [1234567890],
+        "two_invalid_ocns": [1234567890, 12345678901],
+        "no_ocns": [],
+    }
+    for k, ocns in input_ocns_list.items():
+        result = get_clusters_by_ocns(ocns, setup["primarydb_path"], setup["clusterdb_path"])
+        assert result == set()
 
 # FIXTURES
 @pytest.fixture
