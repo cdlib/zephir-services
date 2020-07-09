@@ -1,6 +1,6 @@
-oclc|8727632|002492721
-contrib_sys_id|pur215476|002492721
+# setup cid  minter store test datasets
+sqlite3 zephir_test.db < ../tests/test_cid_minting_store/setup_cid_minter_db.sql
 
-"oclc","32882115","011323405"
-"contrib_sys_id","pur864352","011323405
+sqlite3 zephir_test.db < ../tests/test_zephir_cluster_lookup/setup_zephir_test_db.sql
+
 
