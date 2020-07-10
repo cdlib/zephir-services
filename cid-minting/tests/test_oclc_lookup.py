@@ -8,6 +8,9 @@ from oclc_lookup import get_primary_ocn
 from oclc_lookup import get_ocns_cluster_by_primary_ocn
 from oclc_lookup import get_ocns_cluster_by_ocn
 from oclc_lookup import get_clusters_by_ocns
+from oclc_lookup import convert_set_to_list
+from oclc_lookup import lists_to_str
+from oclc_lookup import OclcLookupResult
 
 # TESTS
 def test_get_primary_ocn(setup):
@@ -93,17 +96,18 @@ def test_get_ocns_cluster_by_ocns(setup):
         "4_two_primary_ocns": [1, 1000000000],
         "5_ocns_with_primary_secondary_dups_invalid": [1, 1, 6567842, 17216714, 535434196, 12345678901, 1000000000],
     }
-    expected = {
+    expected_set = {
         "1_one_primary_ocn_cluster_of_one": sets[1000000000],
         "2_one_other_ocn_cluster_of_multi": sets[1],
         "3_two_primary_ocns_dups": sets[1000000000],
         "4_two_primary_ocns": (sets[1] | sets[1000000000]),
         "5_ocns_with_primary_secondary_dups_invalid": (sets[1] | sets[17216714] | sets[1000000000]),
     }
+    
     for k, ocns in input_ocns_list.items():
         result = get_clusters_by_ocns(ocns, setup["primarydb_path"], setup["clusterdb_path"])
         assert result != None
-        assert result == expected[k] 
+        assert result == expected_set[k] 
 
 def test_get_ocns_cluster_by_ocns_wthnull_cases(setup):
     input_ocns_list = {
@@ -114,6 +118,90 @@ def test_get_ocns_cluster_by_ocns_wthnull_cases(setup):
     for k, ocns in input_ocns_list.items():
         result = get_clusters_by_ocns(ocns, setup["primarydb_path"], setup["clusterdb_path"])
         assert result == set()
+
+def test_convert_set_to_list():
+    input_sets = {
+        "one_tuple_single_item": {(1000000000,)},
+        "one_tuple_multi_items": {(1, 6567842, 9987701, 53095235, 433981287)},
+        "two_tuples": {(1000000000,), (1, 6567842, 9987701, 53095235, 433981287)},
+        "empty_set": set(),
+    }
+    expected_lists = {
+        "one_tuple_single_item": [[1000000000]],
+        "one_tuple_multi_items": [[1, 6567842, 9987701, 53095235, 433981287]],
+        "two_tuples": [[1000000000], [1, 6567842, 9987701, 53095235, 433981287]],
+        "empty_set": []
+    }
+    for k, a_set in input_sets.items():
+        assert convert_set_to_list(a_set) == expected_lists[k]
+
+def test_lists_to_str():
+    input_lists = {
+        "one_list_single_item": [[1000000000]],
+        "one_list_multi_items": [[1, 6567842, 9987701, 53095235, 433981287]],
+        "two_lists": [[1000000000], [1, 6567842, 9987701, 53095235, 433981287]],
+        "empty_list": [],
+    }
+    expected_str = {
+        "one_list_single_item": "'1000000000'",
+        "one_list_multi_items": "'1', '6567842', '9987701', '53095235', '433981287'",
+        "two_lists": "'1000000000', '1', '6567842', '9987701', '53095235', '433981287'",
+        "empty_list": ""
+    }
+    for k, a_list in input_lists.items():
+        assert lists_to_str(a_list) == expected_str[k]
+
+def test_oclclookupresult_class(setup):
+    input_ocns = {
+        "one_ocn_primary_single_cluster": [1000000000],
+        "one_ocn_primary_multi_cluster": [1],
+        "one_other_ocn": [6567842],
+        "two_ocns": [1000000000, 6567842],
+        "one_invalid": [1234567890],
+        "two_invalid": [1234567890, 12345678901],
+    }
+    expected = {
+        "one_ocn_primary_single_cluster": {
+            "matched_ocns_clusters": [[1000000000]],
+            "matched_ocns": "'1000000000'",
+            "num_of_matched_clusters": 1,
+            },
+        "one_ocn_primary_multi_cluster": {
+            "matched_ocns_clusters": [[1, 6567842, 9987701, 53095235, 433981287]],
+            "matched_ocns": "'1', '6567842', '9987701', '53095235', '433981287'",
+            "num_of_matched_clusters": 1,
+            },
+        "one_other_ocn": {
+            "matched_ocns_clusters": [[1, 6567842, 9987701, 53095235, 433981287]],
+            "matched_ocns": "'1', '6567842', '9987701', '53095235', '433981287'",
+            "num_of_matched_clusters": 1,
+            },
+        "two_ocns": {
+            "matched_ocns_clusters": [[1000000000], [1, 6567842, 9987701, 53095235, 433981287]],
+            "matched_ocns": "'1000000000', '1', '6567842', '9987701', '53095235', '433981287'",
+            "num_of_matched_clusters": 2,
+            },
+        "one_invalid": {
+            "matched_ocns_clusters": [],
+            "matched_ocns": "",
+            "num_of_matched_clusters": 0,
+            },
+        "two_invalid": {
+            "matched_ocns_clusters": [],
+            "matched_ocns": "",
+            "num_of_matched_clusters": 0,
+            },
+    }
+
+    for k, ocns in input_ocns.items():
+        result = OclcLookupResult(ocns, setup["primarydb_path"], setup["clusterdb_path"])
+        assert result.record_ocns == ocns
+        assert result.matched_ocns_clusters == expected[k]["matched_ocns_clusters"] 
+        assert result.matched_ocns == expected[k]["matched_ocns"]
+        assert result.num_of_matched_clusters == expected[k]["num_of_matched_clusters"] 
+
+
+
 
 # FIXTURES
 @pytest.fixture

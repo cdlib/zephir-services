@@ -3,6 +3,31 @@ import sys
 import msgpack
 import plyvel
 
+class OclcLookupResult: 
+    def __init__(self, record_ocns, primarydb_path="primary-lookup", clusterdb_path="cluster-lookupi"):
+        result_set_of_tuples = get_clusters_by_ocns(record_ocns, primarydb_path, clusterdb_path)
+        result_list = convert_set_to_list(result_set_of_tuples)
+
+        self.record_ocns = record_ocns
+        self.matched_ocns = lists_to_str(result_list)
+        self.matched_ocns_clusters = result_list
+        self.num_of_matched_clusters = len(result_list)
+
+    # list of OCNs in integer
+    def get_record_ocns(self):
+        return self.record_ocns
+
+    # matched ocns in string: comma separated, single quoted OCNs 
+    def get_matched_ocns(self):
+        return self.matched_ocns
+
+    # matched ocns clusters in list of lists of integers
+    def get_matched_ocns_clusters(self):
+        return self.matched_ocns_clusters
+
+    def get_num_of_matched_clusters(self):
+        return self.num_of_matched_clusters
+
 # convenience methods for converting ints to and from bytes
 def int_to_bytes(inum):
     return inum.to_bytes((inum.bit_length() + 7) // 8, 'big')
@@ -142,6 +167,21 @@ def get_clusters_by_ocns(ocns, primarydb_path="primary-lookup", clusterdb_path="
     # dedup
     deduped_cluster = set([tuple(sorted(i)) for i in clusters])
     return deduped_cluster
+
+def convert_set_to_list(set_of_tuples):
+    list_of_tuples = list(set_of_tuples)
+    list_of_lists = [list(a_tuple) for a_tuple in list_of_tuples]
+    return list_of_lists
+
+def lists_to_str(list_of_lists):
+    ocns = "" 
+    for a_list in list_of_lists:
+        for item in a_list:
+            if ocns:
+                ocns += ", '" + str(item) + "'"
+            else:
+                ocns = "'" + str(item) + "'"
+    return ocns
 
 def test(ocn):
     print(".... testing OCN={}".format(ocn))
