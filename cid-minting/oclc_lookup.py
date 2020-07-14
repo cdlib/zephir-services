@@ -8,20 +8,24 @@ class OclcLookupResult:
         result_set_of_tuples = get_clusters_by_ocns(record_ocns, primarydb_path, clusterdb_path)
         result_list = convert_set_to_list(result_set_of_tuples)
 
+        # OCNs in record: list of integers
         self.record_ocns = record_ocns
+
+        # OCNs in matched OCLC clusters in String: comma separated, single quoted OCNs
         self.matched_ocns = lists_to_str(result_list)
+
+        # OCNs in matched OCLC clusters in List: list of OCNs lists in integers
         self.matched_ocns_clusters = result_list
+
+        # number of matched OCLC clusters
         self.num_of_matched_clusters = len(result_list)
 
-    # list of OCNs in integer
     def get_record_ocns(self):
         return self.record_ocns
 
-    # matched ocns in string: comma separated, single quoted OCNs 
     def get_matched_ocns(self):
         return self.matched_ocns
 
-    # matched ocns clusters in list of lists of integers
     def get_matched_ocns_clusters(self):
         return self.matched_ocns_clusters
 
