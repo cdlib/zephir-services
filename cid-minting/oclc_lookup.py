@@ -4,24 +4,21 @@ import msgpack
 import plyvel
 
 class OclcLookupResult: 
-    def __init__(self, record_ocns, primarydb_path="primary-lookup", clusterdb_path="cluster-lookupi"):
-        result_set_of_tuples = get_clusters_by_ocns(record_ocns, primarydb_path, clusterdb_path)
-        result_list = convert_set_to_list(result_set_of_tuples)
-
+    def __init__(self, inquiry_ocns, list_of_ocns):
         # OCNs in record: list of integers
-        self.record_ocns = record_ocns
+        self.inquiry_ocns = inquiry_ocns
 
         # OCNs in matched OCLC clusters in String: comma separated, single quoted OCNs
-        self.matched_ocns = lists_to_str(result_list)
+        self.matched_ocns = lists_to_str(list_of_ocns)
 
-        # OCNs in matched OCLC clusters in List: list of OCNs lists in integers
-        self.matched_ocns_clusters = result_list
+        # OCNs in matched OCLC clusters: list of OCNs lists in integers
+        self.matched_ocns_clusters = list_of_ocns
 
         # number of matched OCLC clusters
-        self.num_of_matched_clusters = len(result_list)
+        self.num_of_matched_clusters = len(list_of_ocns)
 
-    def get_record_ocns(self):
-        return self.record_ocns
+    def get_inquiry_ocns(self):
+        return self.inquiry_ocns
 
     def get_matched_ocns(self):
         return self.matched_ocns

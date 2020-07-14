@@ -43,7 +43,14 @@ def test_find_zephir_cluster_by_ocns(create_test_db):
     print("in test_find_query db_conn_str: {}".format(db_conn_str))
 
     ocns_str = "'6758168','15437990','5663662','33393343','28477569','8727632'"
-    expected_results = [('001693730', '6758168'), ('001693730', '15437990'), ('001693730', '5663662'), ('002492721', '8727632'), ('009547317', '33393343'), ('009547317', '28477569')]
+    expected_results = [
+            ('001693730', '15437990'), 
+            ('001693730', '5663662'),
+            ('001693730', '6758168'), 
+            ('002492721', '8727632'), 
+            ('009547317', '28477569'), 
+            ('009547317', '33393343'),
+        ]
 
     results = find_zephir_clusters_by_ocns(db_conn_str, ocns_str)
     print(results)
@@ -63,28 +70,57 @@ def test_formatting_cid_ocn_clusters():
     assert results == expected_results
 
 def test_case_1_b_i_1(create_test_db):
-    """ the 'create_test_db' argument here is matched to the name of the
-        fixture above
-        Test case 1.b.i.1):
+    """ Test case 1.b.i.1):
         1. Incoming record contains one OCN that matches a single Concordance Table primary record
         b. Record OCN + Concordance OCN(s) matches one CID
         i. Concordance primary record has one OCN (equals to Record OCN)
-        1). Matched Z.1 Cluster with one OCN
+        1). Matched Zephir cluster with one OCN
 
+        Test datasets:
+        Zephir cluster: CID: 002492721; OCN: 8727632
+        OCLC primary OCN: 8727632; other OCNs: None
     """
     db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    ocns_str = "'8727632'"
+    inquiry_ocns = "'8727632'"
     expected_zephir_clsuter = {
-        "cid": "002492721",
-        "ocn": "8727632",
+        "002492721": ['8727632'],
     }
-    results = ZephirClusterLookupResults(db_conn_str, ocns_str)
+    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, inquiry_ocns)
+    results = ZephirClusterLookupResults(cid_ocn_list, inquiry_ocns)
     print(results.cid_ocn_clusters)
     print(results.num_of_matched_clusters)
     print(results.inquiry_ocns)
     assert results.cid_ocn_clusters == {'002492721': ['8727632']}
     assert results.num_of_matched_clusters == 1
-    assert results.inquiry_ocns == ocns_str
+    assert results.inquiry_ocns == inquiry_ocns
+
+def test_case_1_b_ii_1(create_test_db):
+    """ Test case 1.b.i.1):
+        1. Incoming record contains one OCN that matches a single Concordance Table primary record
+        b. Record OCN + Concordance OCN(s) matches one CID
+        ii. Concordance primary record has more than one OCNs
+        1). Zephir cluster contains the Record OCN
+
+        Test datasets:
+        Zephir cluster:
+        CID: 009547317; OCNs: 33393343, 28477569
+
+        OCLC Primary OCN: 33393343
+        Others OCNs: 28477569, 44192417
+    """
+    db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
+    inquiry_ocns = "'33393343', '28477569', '44192417'"
+    expected_zephir_clsuter = {
+        "009547317": ['28477569', '33393343'],
+    }
+    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, inquiry_ocns)
+    results = ZephirClusterLookupResults(cid_ocn_list, inquiry_ocns)
+    print(results.cid_ocn_clusters)
+    print(results.num_of_matched_clusters)
+    print(results.inquiry_ocns)
+    assert results.cid_ocn_clusters == expected_zephir_clsuter
+    assert results.num_of_matched_clusters == 1 
+    assert results.inquiry_ocns == inquiry_ocns
 
 
 def test_valid_sql_in_clause_str_invalid():

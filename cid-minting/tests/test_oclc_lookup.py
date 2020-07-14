@@ -194,8 +194,10 @@ def test_oclclookupresult_class(setup):
     }
 
     for k, ocns in input_ocns.items():
-        result = OclcLookupResult(ocns, setup["primarydb_path"], setup["clusterdb_path"])
-        assert result.record_ocns == ocns
+        result_set_of_tuples = get_clusters_by_ocns(ocns, setup["primarydb_path"], setup["clusterdb_path"])
+        list_of_ocns = convert_set_to_list(result_set_of_tuples)
+        result = OclcLookupResult(ocns, list_of_ocns)
+        assert result.inquiry_ocns == ocns
         assert result.matched_ocns_clusters == expected[k]["matched_ocns_clusters"] 
         assert result.matched_ocns == expected[k]["matched_ocns"]
         assert result.num_of_matched_clusters == expected[k]["num_of_matched_clusters"] 

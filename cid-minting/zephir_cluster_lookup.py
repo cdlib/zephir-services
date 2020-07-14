@@ -16,7 +16,7 @@ SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid, i.identifier
     WHERE i.type = 'oclc'
 """
 AND_IDENTIFIER_IN = "AND i.identifier in"
-ORDER_BY = "ORDER BY z.cid, z.id"
+ORDER_BY = "ORDER BY z.cid, i.identifier"
 
 def construct_select_zephir_cluster_by_ocns(ocns):
     if invalid_sql_in_clause_str(ocns):
@@ -53,10 +53,9 @@ class ZephirDatabase:
             return results.fetchall()
 
 class ZephirClusterLookupResults:
-    def __init__(self, db_conn_str, ocns_str):
-        results_cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_str)
-
-        self.cid_ocn_clusters = formatting_cid_ocn_clusters(results_cid_ocn_list)
+    def __init__(self, cid_ocn_list, ocns_str):
+        self.cid_ocn_list = cid_ocn_list
+        self.cid_ocn_clusters = formatting_cid_ocn_clusters(cid_ocn_list)
         self.num_of_matched_clusters = len(self.cid_ocn_clusters)
         self.inquiry_ocns = ocns_str
 
@@ -141,8 +140,9 @@ def main():
 
     print(formatting_cid_ocn_clusters(results))
 
-    zephir = ZephirClusterLookupResults(DB_CONNECT_STR, ocns_str)
+    zephir = ZephirClusterLookupResults(results, ocns_str)
 
+    print(zephir.cid_ocn_list)
     print(zephir.cid_ocn_clusters)
     print(zephir.num_of_matched_clusters)
     print(zephir.inquiry_ocns)
