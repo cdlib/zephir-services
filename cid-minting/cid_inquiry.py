@@ -11,6 +11,7 @@ import lib.utils as utils
 
 from oclc_lookup import OclcLookupResult 
 from oclc_lookup import get_clusters_by_ocns
+from oclc_lookup import convert_set_to_list
 from zephir_cluster_lookup import ZephirClusterLookupResults
 from zephir_cluster_lookup import find_zephir_clusters_by_ocns
 
@@ -32,13 +33,39 @@ def get_config_by_key(config_dir_name, config_fname, key):
     return config
 
 def cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
-    ocn_clusters = get_clusters_by_ocns(ocns, primary_db_path, cluster_db_path)
-    oclc_lookup_result = OclcLookupResult(ocns, ocn_clusters)
+    """
+    Args:
+        ocns: list of intergers representing OCNs
+        db_conn_str: database connection string
+        primary_db_path: full path to the OCNs primary LevelDB
+        cluster_db_path: full path to the OCNs cluster LevelDB
+
+    Returns:
+
+    """
+
+    # oclc lookup by a list of OCNs
+    # returns: A Set of tuples containing OCNs of resolved OCN clusters
+    result_set_of_tuples = get_clusters_by_ocns(ocns, primary_db_path, cluster_db_path)
+
+    # convert to a list of OCNs lists
+    oclc_ocns_list = convert_set_to_list(result_set_of_tuples)
+
+    oclc_lookup_result = OclcLookupResult(ocns, oclc_ocns_list)
 
     # TO-DO: combine record ocns and OCLC ocns
-    zephir_clusters = find_zephir_clusters_by_ocns(db_conn_str, oclc_lookup_result.matched_ocns)
-    zephir_clusters_result = ZephirClusterLookupResults(zephir_clusters, oclc_lookup_result.matched_ocns) 
-    return ocn_clusters, oclc_lookup_result, zephir_clusters, zephir_clusters_result
+    combined_ocns = "" + oclc_lookup_result.matched_ocns
+
+    # Zephir lookup by OCNs in comma separated, single quoted string
+    # returns: list of cid and ocn returned from Zephir DB 
+    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, combined_ocns)
+
+    zephir_clusters_result = ZephirClusterLookupResults(cid_ocn_list, combined_ocns) 
+    return {
+            "oclc_ocns_list": oclc_ocns_list, 
+            "oclc_lookup_result": oclc_lookup_result, 
+            "cid_ocn_list": cid_ocn_list, 
+            "zephir_clusters_result": zephir_clusters_result}
 
 
 def main():

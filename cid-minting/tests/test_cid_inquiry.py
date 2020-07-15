@@ -21,19 +21,19 @@ def test_case_1_b_i_1(setup_leveldb, setup_sqlite):
     primarydb_path = setup_leveldb["primarydb_path"]
     clusterdb_path = setup_leveldb["clusterdb_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
-    print(db_conn_str)
 
-    # case: 
-    ocns = [8727632]
+    incoming_ocns = [8727632]
     expected_zephir_clsuter = {
         "002492721": ['8727632'],
     }
-    ocn_clusters, oclc_lookup_result, zephir_cluster, zephir_cluster_result = cid_inquiry(ocns, db_conn_str, primarydb_path, clusterdb_path)
-    print(ocn_clusters)
-    print(oclc_lookup_result)
-    print(zephir_cluster)
-    print(zephir_cluster_result)
+    results = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
 
+    print(results["oclc_ocns_list"])
+    print(results["oclc_lookup_result"])
+    print(results["cid_ocn_list"])
+    print(results["zephir_clusters_result"])
+
+    zephir_cluster_result = results["zephir_clusters_result"]
     assert zephir_cluster_result.cid_ocn_clusters == {'002492721': ['8727632']}
     assert zephir_cluster_result.num_of_matched_clusters == 1
     assert zephir_cluster_result.inquiry_ocns == "'8727632'"

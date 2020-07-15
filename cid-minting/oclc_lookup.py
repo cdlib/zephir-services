@@ -17,18 +17,6 @@ class OclcLookupResult:
         # number of matched OCLC clusters
         self.num_of_matched_clusters = len(list_of_ocns)
 
-    def get_inquiry_ocns(self):
-        return self.inquiry_ocns
-
-    def get_matched_ocns(self):
-        return self.matched_ocns
-
-    def get_matched_ocns_clusters(self):
-        return self.matched_ocns_clusters
-
-    def get_num_of_matched_clusters(self):
-        return self.num_of_matched_clusters
-
 # convenience methods for converting ints to and from bytes
 def int_to_bytes(inum):
     return inum.to_bytes((inum.bit_length() + 7) // 8, 'big')
@@ -139,7 +127,7 @@ def get_clusters_by_ocns(ocns, primarydb_path="primary-lookup", clusterdb_path="
     """Finds the OCN clusters for a list of OCNs.
 
     Finds the OCN cluster each given OCN belongs to.
-    Returns found clusters with duplications removed.
+    Returns clusters found with duplications removed.
 
     Args:
         ocns: A list of integers representing OCNs.
