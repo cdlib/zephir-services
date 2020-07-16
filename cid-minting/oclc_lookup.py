@@ -8,9 +8,6 @@ class OclcLookupResult:
         # OCNs in record: list of integers
         self.inquiry_ocns = inquiry_ocns
 
-        # OCNs in matched OCLC clusters in String: comma separated, single quoted OCNs
-        self.matched_ocns = lists_to_str(list_of_ocns)
-
         # OCNs in matched OCLC clusters: list of OCNs lists in integers
         self.matched_ocns_clusters = list_of_ocns
 
@@ -146,6 +143,7 @@ def get_clusters_by_ocns(ocns, primarydb_path="primary-lookup", clusterdb_path="
 
     When incoming ocns only contains an invalid OCN(s), an empty set() will be returned.
 
+    Note: Returning set of tuples makes unit tests easier.
     """
     clusters = []
     for ocn in ocns:
@@ -161,16 +159,6 @@ def convert_set_to_list(set_of_tuples):
     list_of_tuples = list(set_of_tuples)
     list_of_lists = [list(a_tuple) for a_tuple in list_of_tuples]
     return list_of_lists
-
-def lists_to_str(list_of_lists):
-    ocns = "" 
-    for a_list in list_of_lists:
-        for item in a_list:
-            if ocns:
-                ocns += ", '" + str(item) + "'"
-            else:
-                ocns = "'" + str(item) + "'"
-    return ocns
 
 def test(ocn):
     print(".... testing OCN={}".format(ocn))

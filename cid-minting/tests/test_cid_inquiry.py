@@ -5,6 +5,8 @@ import pytest
 import plyvel
 
 from cid_inquiry import cid_inquiry
+from cid_inquiry import convert_set_to_list
+from cid_inquiry import flat_and_dedup_sort_list
 
 # TESTS
 def test_case_1_b_i_1(setup_leveldb, setup_sqlite):
@@ -34,9 +36,9 @@ def test_case_1_b_i_1(setup_leveldb, setup_sqlite):
     print(results["zephir_clusters_result"])
 
     zephir_cluster_result = results["zephir_clusters_result"]
-    assert zephir_cluster_result.cid_ocn_clusters == {'002492721': ['8727632']}
+    assert zephir_cluster_result.cid_ocn_clusters == expected_zephir_clsuter
     assert zephir_cluster_result.num_of_matched_clusters == 1
-    assert zephir_cluster_result.inquiry_ocns == "'8727632'"
+    assert zephir_cluster_result.inquiry_ocns == incoming_ocns
 
 def case_1_b_ii_1(create_test_db):
     """ Test case 1.b.i.1):
@@ -66,6 +68,37 @@ def case_1_b_ii_1(create_test_db):
     assert results.num_of_matched_clusters == 1
     assert results.inquiry_ocns == inquiry_ocns
 
+def test_convert_set_to_list():
+    input_sets = {
+        "one_tuple_single_item": {(1000000000,)},
+        "one_tuple_multi_items": {(1, 6567842, 9987701, 53095235, 433981287)},
+        "two_tuples": {(1000000000,), (1, 6567842, 9987701, 53095235, 433981287)},
+        "empty_set": set(),
+    }
+    expected_lists = {
+        "one_tuple_single_item": [[1000000000]],
+        "one_tuple_multi_items": [[1, 6567842, 9987701, 53095235, 433981287]],
+        "two_tuples": [[1000000000], [1, 6567842, 9987701, 53095235, 433981287]],
+        "empty_set": []
+    }
+    for k, a_set in input_sets.items():
+        assert convert_set_to_list(a_set) == expected_lists[k]
+
+def test_flat_and_dedup_sort_list():
+    input_list = {
+        "1_signle_item_list": [[1]],
+        "2_signle_item_lists": [[234], [1], [234]],
+        "3_multi_items_lists": [[567, 123], [2], [1]],
+        "empty_list": [],
+    }
+    expected = {
+        "1_signle_item_list": [1],
+        "2_signle_item_lists": [1, 234],
+        "3_multi_items_lists": [1, 2, 123, 567],
+        "empty_list": [],
+    }
+    for k, val in input_list.items():
+        assert expected[k] == flat_and_dedup_sort_list(val)
 
 
 # FIXTURES
@@ -92,7 +125,6 @@ def setup_sqlite(data_dir, tmpdir, scope="session"):
     print(cmd)
     os.system(cmd)
 
-    #os.environ["OVERRIDE_DB_CONNECT_STR"] = 'sqlite:///{}'.format(database)
     return {
         "db_conn_str": 'sqlite:///{}'.format(database)
     }

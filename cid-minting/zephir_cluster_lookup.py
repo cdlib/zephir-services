@@ -53,14 +53,26 @@ class ZephirDatabase:
             return results.fetchall()
 
 class ZephirClusterLookupResults:
-    def __init__(self, cid_ocn_list, ocns_str):
+    def __init__(self, ocns_list, cid_ocn_list):
+        # list of cid and ocn tuples
         self.cid_ocn_list = cid_ocn_list
-        self.cid_ocn_clusters = formatting_cid_ocn_clusters(cid_ocn_list)
-        self.num_of_matched_clusters = len(self.cid_ocn_clusters)
-        self.inquiry_ocns = ocns_str
 
-def find_zephir_clusters_by_ocns(db_conn_str, ocns_str):
-    select_zephir = construct_select_zephir_cluster_by_ocns(ocns_str)
+        # dict with key="cid", value=list of ocns
+        self.cid_ocn_clusters = formatting_cid_ocn_clusters(cid_ocn_list)
+
+        # number of cid clusters
+        self.num_of_matched_clusters = len(self.cid_ocn_clusters)
+
+        # inquiry ocns
+        self.inquiry_ocns = ocns_list 
+
+def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
+    """
+    Args:
+        db_conn_str: database connection string
+        ocns_list: list of OCNs in integer 
+    """
+    select_zephir = construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
     if select_zephir:
         try:
             zephir = ZephirDatabase(db_conn_str)
@@ -69,12 +81,23 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_str):
             return None
     return None
 
+def list_to_str(a_list):
+    ocns = ""
+    for item in a_list:
+        if ocns:
+            ocns += ", '" + str(item) + "'"
+        else:
+            ocns = "'" + str(item) + "'"
+    return ocns
+
 def formatting_cid_ocn_clusters(cid_ocn_list):
     """
     Args:
-        cid_ocn_list: list of cid and ocn tuples .
+        cid_ocn_list: list of cid and ocn tuples.
+        [(cid1, ocn1), {cid1, ocn2), (cid3, ocn3)]
     Returns:
-        Number of unique cids in the input list 
+        A dict with key="cid", value=list of ocns 
+        {"cid1": [ocn1, ocn2], "cid3": [ocn3]}
     """
     # key=cid, val=[ocn1, ocn2]
     cid_ocns_dict = {}
@@ -133,14 +156,13 @@ def main():
     print(DB_CONNECT_STR)
 
     ocns_str = "'6758168','15437990','5663662','33393343','28477569','8727632'"
+    ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
 
     results = find_zephir_clusters_by_ocns(DB_CONNECT_STR, ocns_str)
     print(type(results))
     print(results)
 
-    print(formatting_cid_ocn_clusters(results))
-
-    zephir = ZephirClusterLookupResults(results, ocns_str)
+    zephir = ZephirClusterLookupResults(ocns_list, results)
 
     print(zephir.cid_ocn_list)
     print(zephir.cid_ocn_clusters)
