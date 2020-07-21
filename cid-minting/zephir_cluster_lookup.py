@@ -52,25 +52,37 @@ class ZephirDatabase:
             results = connection.execute(sql, params or ())
             return results.fetchall()
 
-class ZephirClusterLookupResults:
-    def __init__(self, ocns_list, cid_ocn_list):
-        # list of cid and ocn tuples
-        self.cid_ocn_list = cid_ocn_list
+def zephir_clusters_lookup(db_conn_str, ocns_list):
+    """
+    Finds Zephir clusters by OCNs and returns compiled results
+    Args:
+        db_conn_str: database connection string
+        ocns_list: list of OCNs in integers
+    Return: A dict with:
+        "inquiry_ocns_zephir": input ocns list,
+        "cid_ocn_list": list of cid and ocn tuples from DB query,
+        "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
+        "num_of_matched_zephir_clusters": number of matched clusters
+    """
 
-        # dict with key="cid", value=list of ocns
-        self.cid_ocn_clusters = formatting_cid_ocn_clusters(cid_ocn_list)
+    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    # dict with key="cid", value=list of ocns in the cid cluster
+    cid_ocn_clusters = formatting_cid_ocn_clusters(cid_ocn_list)
 
-        # number of cid clusters
-        self.num_of_matched_clusters = len(self.cid_ocn_clusters)
-
-        # inquiry ocns
-        self.inquiry_ocns = ocns_list 
+    return {
+        "inquiry_ocns_zephir": ocns_list,
+        "cid_ocn_list": cid_ocn_list,
+        "cid_ocn_clusters": cid_ocn_clusters,
+        "num_of_matched_zephir_clusters": len(cid_ocn_clusters),
+    }
 
 def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
     """
     Args:
         db_conn_str: database connection string
         ocns_list: list of OCNs in integer 
+    Returns:
+        list of cid and ocn tuples
     """
     select_zephir = construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
     if select_zephir:
@@ -139,7 +151,6 @@ def valid_sql_in_clause_str(input_str):
 
 def invalid_sql_in_clause_str(input_str):
     return not valid_sql_in_clause_str(input_str)
-
 
 def main():
     if (len(sys.argv) > 1):

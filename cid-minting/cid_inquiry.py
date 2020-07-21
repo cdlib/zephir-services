@@ -9,11 +9,8 @@ from sqlalchemy import text
 from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
-from oclc_lookup import OclcLookupResult 
-from oclc_lookup import get_clusters_by_ocns
-from oclc_lookup import convert_set_to_list
-from zephir_cluster_lookup import ZephirClusterLookupResults
-from zephir_cluster_lookup import find_zephir_clusters_by_ocns
+from oclc_lookup import lookup_ocns_from_oclc
+from zephir_cluster_lookup import zephir_clusters_lookup
 
 def get_config_by_key(config_dir_name, config_fname, key):
     """return config value by key from .yml config file
@@ -42,35 +39,27 @@ def cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
         db_conn_str: database connection string
         primary_db_path: full path to the OCNs primary LevelDB
         cluster_db_path: full path to the OCNs cluster LevelDB
-    Returns:
-
+    Returns: a dict combining both OCLC lookup and Zephir lookup results:
+       "inquiry_ocns": input ocns, list of integers.
+       "matched_oclc_clusters": OCNs in matched OCLC clusters, list of lists in integers.
+       "num_of_matched_oclc_clusters": number of matched OCLC clusters.
+       "inquiry_ocns_zephir": ocns list used to query Zephir DB.
+       "cid_ocn_list": list of cid and ocn tuples from DB query.
+       "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster
+       "num_of_matched_zephir_clusters": number of matched Zephir clusters.
     """
 
-    # oclc lookup by a list of OCNs in integer
-    # returns: A Set of tuples containing OCNs of resolved OCN clusters
-    set_of_tuples = get_clusters_by_ocns(ocns, primary_db_path, cluster_db_path)
+    # Lookups OCN clusters by a list of OCNs in integer
+    oclc_lookup_result = lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path)
 
-    # convert to a list of OCNs lists
-    oclc_ocns_list = convert_set_to_list(set_of_tuples)
-    print(oclc_ocns_list)
-
-    # create an object with the OCLC lookup result
-    oclc_lookup_result = OclcLookupResult(ocns, oclc_ocns_list)
-
-    # combine record ocns and OCLC ocns, and dedup
+    # combine incoming and OCLC ocns, and dedup
+    oclc_ocns_list = oclc_lookup_result["matched_oclc_clusters"]
     combined_ocns_list = flat_and_dedup_sort_list([ocns] + oclc_ocns_list)
 
-    # returns: list of cid and ocn returned from Zephir DB 
-    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, combined_ocns_list)
+    # Finds Zephir clusters by list of OCNs and returns compiled results
+    zephir_clusters_result = zephir_clusters_lookup(db_conn_str, combined_ocns_list)
 
-    # create an object with the Zephir cluster lookup result
-    zephir_clusters_result = ZephirClusterLookupResults(combined_ocns_list, cid_ocn_list) 
-
-    return {
-            "oclc_ocns_list": oclc_ocns_list, 
-            "oclc_lookup_result": oclc_lookup_result, 
-            "cid_ocn_list": cid_ocn_list, 
-            "zephir_clusters_result": zephir_clusters_result}
+    return {**oclc_lookup_result, **zephir_clusters_result}
 
 def flat_and_dedup_sort_list(list_of_lists):
     new_list = []

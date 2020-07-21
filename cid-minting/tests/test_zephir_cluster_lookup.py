@@ -7,8 +7,8 @@ from zephir_cluster_lookup import valid_sql_in_clause_str
 from zephir_cluster_lookup import invalid_sql_in_clause_str
 from zephir_cluster_lookup import list_to_str
 from zephir_cluster_lookup import formatting_cid_ocn_clusters
-from zephir_cluster_lookup import ZephirClusterLookupResults
 from zephir_cluster_lookup import find_zephir_clusters_by_ocns
+from zephir_cluster_lookup import zephir_clusters_lookup
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -39,13 +39,6 @@ def test_find_zephir_cluster_by_one_ocn(create_test_db):
     assert cid_ocn_list != None
     assert cid_ocn_list == expected_cid_ocn_list
 
-    results = ZephirClusterLookupResults(ocns_list, cid_ocn_list)
-    assert results.cid_ocn_list == cid_ocn_list
-    assert results.cid_ocn_clusters == expected_results
-    assert results.num_of_matched_clusters == 1
-    assert results.inquiry_ocns == ocns_list
-
-
 def test_find_zephir_cluster_by_ocns(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
@@ -71,11 +64,27 @@ def test_find_zephir_cluster_by_ocns(create_test_db):
     assert cid_ocn_list != None
     assert cid_ocn_list == expected_cid_ocn_list
 
-    results = ZephirClusterLookupResults(ocns_list, cid_ocn_list)
-    assert results.cid_ocn_list == cid_ocn_list
-    assert results.cid_ocn_clusters == expected_results
-    assert results.num_of_matched_clusters == 3
-    assert results.inquiry_ocns == ocns_list
+def test_zephir_cluster_lookup(create_test_db):
+    db_conn_str = create_test_db["db_conn_str"]
+    ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
+    expected_cid_ocn_list = [
+            ('001693730', '15437990'),
+            ('001693730', '5663662'),
+            ('001693730', '6758168'),
+            ('002492721', '8727632'),
+            ('009547317', '28477569'),
+            ('009547317', '33393343'),
+        ]
+    expected_clusters = {
+            '001693730': ['15437990', '5663662', '6758168'],
+            '002492721': [ '8727632'],
+            '009547317': ['28477569', '33393343'],
+        }
+    result = zephir_clusters_lookup(db_conn_str, ocns_list)
+    assert result["cid_ocn_list"] == expected_cid_ocn_list
+    assert result["cid_ocn_clusters"] == expected_clusters
+    assert result["num_of_matched_zephir_clusters"] == 3
+    assert result["inquiry_ocns_zephir"] == ocns_list
 
 
 def test_list_to_str():

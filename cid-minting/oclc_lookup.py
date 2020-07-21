@@ -3,17 +3,6 @@ import sys
 import msgpack
 import plyvel
 
-class OclcLookupResult: 
-    def __init__(self, inquiry_ocns, list_of_ocns):
-        # OCNs in record: list of integers
-        self.inquiry_ocns = inquiry_ocns
-
-        # OCNs in matched OCLC clusters: list of OCNs lists in integers
-        self.matched_ocns_clusters = list_of_ocns
-
-        # number of matched OCLC clusters
-        self.num_of_matched_clusters = len(list_of_ocns)
-
 # convenience methods for converting ints to and from bytes
 def int_to_bytes(inum):
     return inum.to_bytes((inum.bit_length() + 7) // 8, 'big')
@@ -175,7 +164,36 @@ def test_ocns(ocns):
     print("clusters by ocns ({}):".format(ocns))
     print("clusters: {}".format(clusters))
 
-def lookup_ocns_from_oclc():
+def lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path ):
+    """For a given list of OCNs find their associated OCN clusters from the OCLC Concordance Table
+    Args:
+        ocns: list of intergers representing OCNs
+        primary_db_path: full path to the OCNs primary LevelDB
+        cluster_db_path: full path to the OCNs cluster LevelDB
+    Returns:
+        A dict with:
+        'inquiry_ocns': input ocns, list of integers.
+        'matched_oclc_clusters': OCNs in matched OCLC clusters, list of integers lists
+        'num_of_matched_oclc_clusters': number of matched OCLC clusters
+    """
+
+    # oclc lookup by a list of OCNs in integer
+    # returns: A Set of tuples containing OCNs of resolved OCN clusters
+    set_of_tuples = get_clusters_by_ocns(ocns, primary_db_path, cluster_db_path)
+
+    # convert to a list of OCNs lists
+    oclc_ocns_list = convert_set_to_list(set_of_tuples)
+    print(oclc_ocns_list)
+
+    # create an object with the OCLC lookup result
+    oclc_lookup_result = {
+        "inquiry_ocns": ocns,
+        "matched_oclc_clusters": oclc_ocns_list,
+        "num_of_matched_oclc_clusters": len(oclc_ocns_list),
+    }
+    return oclc_lookup_result
+
+def main():
     """For a given oclc number, find all OCNs in the OCN cluster from the OCLC Concordance Table
     """
     if (len(sys.argv) > 1):
@@ -270,4 +288,4 @@ def lookup_ocns_from_oclc():
     assert get_clusters_by_ocns(ocns) == set()
 
 if __name__ == "__main__":
-    lookup_ocns_from_oclc()
+    main()

@@ -9,7 +9,7 @@ from oclc_lookup import get_ocns_cluster_by_primary_ocn
 from oclc_lookup import get_ocns_cluster_by_ocn
 from oclc_lookup import get_clusters_by_ocns
 from oclc_lookup import convert_set_to_list
-from oclc_lookup import OclcLookupResult
+from oclc_lookup import lookup_ocns_from_oclc
 
 # TESTS
 def test_get_primary_ocn(setup):
@@ -135,7 +135,8 @@ def test_convert_set_to_list():
     for k, a_set in input_sets.items():
         assert convert_set_to_list(a_set) == expected_lists[k]
 
-def test_oclclookupresult_class(setup):
+
+def test_lookup_ocns_from_oclc(setup):
     input_ocns = {
         "one_ocn_primary_single_cluster": [1000000000],
         "one_ocn_primary_multi_cluster": [1],
@@ -144,42 +145,45 @@ def test_oclclookupresult_class(setup):
         "one_invalid": [1234567890],
         "two_invalid": [1234567890, 12345678901],
     }
+
     expected = {
         "one_ocn_primary_single_cluster": {
-            "matched_ocns_clusters": [[1000000000]],
-            "num_of_matched_clusters": 1,
+            "inquiry_ocns": [1000000000],
+            "matched_oclc_clusters": [[1000000000]],
+            "num_of_matched_oclc_clusters": 1,
             },
         "one_ocn_primary_multi_cluster": {
-            "matched_ocns_clusters": [[1, 6567842, 9987701, 53095235, 433981287]],
-            "num_of_matched_clusters": 1,
+            "inquiry_ocns": [1],
+            "matched_oclc_clusters": [[1, 6567842, 9987701, 53095235, 433981287]],
+            "num_of_matched_oclc_clusters": 1,
             },
         "one_other_ocn": {
-            "matched_ocns_clusters": [[1, 6567842, 9987701, 53095235, 433981287]],
-            "num_of_matched_clusters": 1,
+            "inquiry_ocns": [6567842],
+            "matched_oclc_clusters": [[1, 6567842, 9987701, 53095235, 433981287]],
+            "num_of_matched_oclc_clusters": 1,
             },
         "two_ocns": {
-            "matched_ocns_clusters": [[1000000000], [1, 6567842, 9987701, 53095235, 433981287]],
-            "num_of_matched_clusters": 2,
+            "inquiry_ocns": [1000000000, 6567842],
+            "matched_oclc_clusters": [[1000000000], [1, 6567842, 9987701, 53095235, 433981287]],
+            "num_of_matched_oclc_clusters": 2,
             },
         "one_invalid": {
-            "matched_ocns_clusters": [],
-            "num_of_matched_clusters": 0,
+            "inquiry_ocns": [1234567890],
+            "matched_oclc_clusters": [],
+            "num_of_matched_oclc_clusters": 0,
             },
         "two_invalid": {
-            "matched_ocns_clusters": [],
-            "num_of_matched_clusters": 0,
+            "inquiry_ocns": [1234567890, 12345678901],
+            "matched_oclc_clusters": [],
+            "num_of_matched_oclc_clusters": 0,
             },
     }
 
     for k, ocns in input_ocns.items():
-        result_set_of_tuples = get_clusters_by_ocns(ocns, setup["primarydb_path"], setup["clusterdb_path"])
-        list_of_ocns = convert_set_to_list(result_set_of_tuples)
-        result = OclcLookupResult(ocns, list_of_ocns)
-        assert result.inquiry_ocns == ocns
-        assert result.matched_ocns_clusters == expected[k]["matched_ocns_clusters"] 
-        assert result.num_of_matched_clusters == expected[k]["num_of_matched_clusters"] 
-
-
+        result = lookup_ocns_from_oclc(ocns, setup["primarydb_path"], setup["clusterdb_path"])
+        assert result["inquiry_ocns"] == ocns
+        assert result["matched_oclc_clusters"] == expected[k]["matched_oclc_clusters"]
+        assert result["num_of_matched_oclc_clusters"] == expected[k]["num_of_matched_oclc_clusters"]
 
 
 # FIXTURES

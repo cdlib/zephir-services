@@ -5,7 +5,6 @@ import pytest
 import plyvel
 
 from cid_inquiry import cid_inquiry
-from cid_inquiry import convert_set_to_list
 from cid_inquiry import flat_and_dedup_sort_list
 
 # TESTS
@@ -19,33 +18,47 @@ def test_case_1_b_i_1(setup_leveldb, setup_sqlite):
         Test datasets:
         Zephir cluster: CID: 002492721; OCN: 8727632
         OCLC primary OCN: 8727632; other OCNs: None
+        Incoming ocn: 8727632
     """
     primarydb_path = setup_leveldb["primarydb_path"]
     clusterdb_path = setup_leveldb["clusterdb_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns = [8727632]
+    expected_oclc_cluster = [[8727632]]
+    expected_cid_ocn_list = [('002492721', '8727632')]
     expected_zephir_clsuter = {
         "002492721": ['8727632'],
     }
-    results = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+    result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
 
-    print(results["oclc_ocns_list"])
-    print(results["oclc_lookup_result"])
-    print(results["cid_ocn_list"])
-    print(results["zephir_clusters_result"])
+    #  "iquiry_ocns": input ocns, list of integers.
+    #  "matched_oclc_clusters": OCNs in matched OCLC clusters, list of lists in integers
+    #  "num_of_matched_oclc_clusters": number of matched OCLC clusters#
+    #  "inquiry_ocns_zephir": ocns used to quesry Zephir clusters
+    #  "cid_ocn_list": list of cid and ocn tuples from DB query
+    #  "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
+    #  "num_of_matched_zephir_clusters": num of matched Zephir clusters
 
-    zephir_cluster_result = results["zephir_clusters_result"]
-    assert zephir_cluster_result.cid_ocn_clusters == expected_zephir_clsuter
-    assert zephir_cluster_result.num_of_matched_clusters == 1
-    assert zephir_cluster_result.inquiry_ocns == incoming_ocns
+    print(result["matched_oclc_clusters"])
+    print(result["cid_ocn_clusters"])
+    print(result["inquiry_ocns_zephir"])
 
-def case_1_b_ii_1(create_test_db):
+    assert result["inquiry_ocns"] == incoming_ocns
+    assert result["matched_oclc_clusters"] == expected_oclc_cluster
+    assert result["num_of_matched_oclc_clusters"] == 1
+    assert result["inquiry_ocns_zephir"] == incoming_ocns
+    assert result["cid_ocn_list"] == expected_cid_ocn_list
+    assert result["cid_ocn_clusters"] == expected_zephir_clsuter
+    assert result["num_of_matched_zephir_clusters"] == 1
+
+def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
     """ Test case 1.b.i.1):
         1. Incoming record contains one OCN that matches a single Concordance Table primary record
         b. Record OCN + Concordance OCN(s) matches one CID
         ii. Concordance primary record has more than one OCNs
         1). Zephir cluster contains the Record OCN
+        2). Zephir cluster doesn't have the Record OCN
 
         Test datasets:
         Zephir cluster:
@@ -53,36 +66,85 @@ def case_1_b_ii_1(create_test_db):
 
         OCLC Primary OCN: 33393343
         Others OCNs: 28477569, 44192417
+
+        Incoming OCN for test case:
+          1) Zephir cluster contains the Record OCN - 33393343
+          2) Zephir cluster doesn't have the Record OCN - 44192417
     """
-    db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    inquiry_ocns = "'33393343', '28477569', '44192417'"
+    primarydb_path = setup_leveldb["primarydb_path"]
+    clusterdb_path = setup_leveldb["clusterdb_path"]
+    db_conn_str = setup_sqlite["db_conn_str"]
+
+    expected_oclc_cluster = [[28477569, 33393343, 44192417]]
+    inquiry_ocns_zephir = [28477569, 33393343, 44192417]
+    expected_cid_ocn_list = [('009547317','28477569'), ('009547317', '33393343')]
     expected_zephir_clsuter = {
         "009547317": ['28477569', '33393343'],
     }
-    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, inquiry_ocns)
-    results = ZephirClusterLookupResults(cid_ocn_list, inquiry_ocns)
-    print(results.cid_ocn_clusters)
-    print(results.num_of_matched_clusters)
-    print(results.inquiry_ocns)
-    assert results.cid_ocn_clusters == expected_zephir_clsuter
-    assert results.num_of_matched_clusters == 1
-    assert results.inquiry_ocns == inquiry_ocns
 
-def test_convert_set_to_list():
-    input_sets = {
-        "one_tuple_single_item": {(1000000000,)},
-        "one_tuple_multi_items": {(1, 6567842, 9987701, 53095235, 433981287)},
-        "two_tuples": {(1000000000,), (1, 6567842, 9987701, 53095235, 433981287)},
-        "empty_set": set(),
+    incoming_ocns_list = {
+        "case_1_zephir_has_record_ocn": [33393343], 
+        "case_2_zephir_does_not_have_record_ocn": [44192417],
     }
-    expected_lists = {
-        "one_tuple_single_item": [[1000000000]],
-        "one_tuple_multi_items": [[1, 6567842, 9987701, 53095235, 433981287]],
-        "two_tuples": [[1000000000], [1, 6567842, 9987701, 53095235, 433981287]],
-        "empty_set": []
+
+    for k, incoming_ocns in incoming_ocns_list.items():
+        result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+        assert result["inquiry_ocns"] == incoming_ocns
+        assert result["matched_oclc_clusters"] == expected_oclc_cluster
+        assert result["num_of_matched_oclc_clusters"] == 1
+        assert result["inquiry_ocns_zephir"] == inquiry_ocns_zephir
+        assert result["cid_ocn_list"] == expected_cid_ocn_list
+        assert result["cid_ocn_clusters"] == expected_zephir_clsuter
+        assert result["num_of_matched_zephir_clusters"] == 1
+
+def test_case_2_b(setup_leveldb, setup_sqlite):
+    """Test case 2.b:
+    2. Incoming record contains 2+ OCNs that resolve to a single master record in the Concordance Table.
+    b. Record OCNs + Concordance OCN(s) match one CID
+
+    Test datasets:
+    Zephir cluster:
+    CID: 009547317; OCNs: 33393343, 28477569
+
+    OCLC Primary OCN: 33393343
+    Others OCNs: 28477569, 44192417
+
+    Incoming OCNs:
+      1) primary + other: [33393343, 28477569]
+      2) two others: [44192417, 28477569]
+      3) primary + invalid: [33393343, 1234567890] 
+    """
+    primarydb_path = setup_leveldb["primarydb_path"]
+    clusterdb_path = setup_leveldb["clusterdb_path"]
+    db_conn_str = setup_sqlite["db_conn_str"]
+
+    expected_oclc_cluster = [[28477569, 33393343, 44192417]]
+    expected_cid_ocn_list = [('009547317','28477569'), ('009547317', '33393343')]
+    expected_zephir_clsuter = {
+        "009547317": ['28477569', '33393343'],
     }
-    for k, a_set in input_sets.items():
-        assert convert_set_to_list(a_set) == expected_lists[k]
+
+    incoming_ocns_list = {
+        "1_primary_and_other_ocn": [33393343, 28477569],
+        "2_two_other_ocns": [44192417, 28477569],
+        "3_primary_and_invalid": [33393343, 1234567890],
+    }
+
+    inquiry_ocns_zephir = {
+        "1_primary_and_other_ocn": [28477569, 33393343, 44192417],
+        "2_two_other_ocns": [28477569, 33393343, 44192417],
+        "3_primary_and_invalid": [28477569, 33393343, 44192417, 1234567890], 
+    }
+
+    for k, incoming_ocns in incoming_ocns_list.items():
+        result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+        assert result["inquiry_ocns"] == incoming_ocns
+        assert result["matched_oclc_clusters"] == expected_oclc_cluster
+        assert result["num_of_matched_oclc_clusters"] == 1
+        assert result["inquiry_ocns_zephir"] == inquiry_ocns_zephir[k]
+        assert result["cid_ocn_list"] == expected_cid_ocn_list
+        assert result["cid_ocn_clusters"] == expected_zephir_clsuter
+        assert result["num_of_matched_zephir_clusters"] == 1
 
 def test_flat_and_dedup_sort_list():
     input_list = {
