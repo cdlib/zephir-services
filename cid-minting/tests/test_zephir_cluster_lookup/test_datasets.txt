@@ -93,8 +93,8 @@ Note: the above each represents a different record with the same title in OCLC.
 009547317	28477569
 
 # cluster with 1 OCN
-002492721	8727632
-
+002492721	8727632 (but OCLC has 2 OCNs)
+000249880       999531 (OCLC only has this OCN)
 
 # export test datasets from zephir
 
@@ -106,7 +106,7 @@ Note: the above each represents a different record with the same title in OCLC.
  or autoid between 100000 and 100100;
 
  select autoid, cid,  contribsys, contribsys_id, id, source, source_collection, source_record_number, title from zephir_records where cid in (
- '001693730', '002492721', '009547317'
+ '001693730', '002492721', '009547317', '000249880'
  ) or autoid < 100
  or autoid between 10000 and 10100
  or autoid between 100000 and 100100;
@@ -115,18 +115,18 @@ Note: the above each represents a different record with the same title in OCLC.
  select * from zephir_identifier_records
  where record_autoid in (   
  select autoid from zephir_records where cid in (
- '001693730', '002492721', '009547317'
+ '001693730', '002492721', '009547317', '000249880'
  ) or autoid < 100
  or autoid between 10000 and 10100
  or autoid between 100000 and 100100
  );
 
-# zephir_identifier_records: 948 rows
+# zephir_identifiers: 948 rows
 select * from zephir_identifiers where autoid in (
  select identifier_autoid from zephir_identifier_records
  where record_autoid in (   
  select autoid from zephir_records where cid in (
- '001693730', '002492721', '009547317'
+ '001693730', '002492721', '009547317', '000249880'
  ) or autoid < 100
  or autoid between 10000 and 10100
  or autoid between 100000 and 100100

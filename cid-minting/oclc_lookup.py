@@ -226,6 +226,16 @@ def main():
 
     ocn = None
     assert get_primary_ocn(ocn) == None
+
+    ocn = 8727632
+    assert get_primary_ocn(ocn) == ocn
+
+    ocn = 24253253
+    assert get_primary_ocn(ocn) == 8727632
+
+    ocn = 20000
+    assert get_primary_ocn(ocn) == ocn
+
     print("**** finished testing get_primary_ocn")
 
     print("#### testing get_ocns_cluster_by_primary_ocn(primary_ocn)")

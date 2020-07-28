@@ -61,19 +61,19 @@ def test_case_1_b_i_1(setup_leveldb, setup_sqlite):
         1). Matched Zephir cluster with one OCN
 
         Test datasets:
-        Zephir cluster: CID: 002492721; OCN: 8727632
-        OCLC primary OCN: 8727632; other OCNs: None
-        Incoming ocn: 8727632
+        Zephir cluster: CID: 000249880; OCN: 999531
+        OCLC primary OCN: 999531; other OCNs: None
+        Incoming ocn: 999531
     """
     primarydb_path = setup_leveldb["primarydb_path"]
     clusterdb_path = setup_leveldb["clusterdb_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
-    incoming_ocns = [8727632]
-    expected_oclc_clusters = [[8727632]]
-    expected_cid_ocn_list = [('002492721', '8727632')]
+    incoming_ocns = [999531]
+    expected_oclc_clusters = [[999531]]
+    expected_cid_ocn_list = [('000249880', '999531')]
     expected_zephir_clsuters = {
-        "002492721": ['8727632'],
+        "000249880": ['999531'],
     }
     result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
 

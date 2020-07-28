@@ -1473,6 +1473,17 @@ VALUES
 	(100100, 283335),
 	(100100, 283336);
 
+INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(100010, 283072),
+	(100010, 283074),
+	(100010, 283075),
+	(100010, 283076),
+	(225133, 283072),
+	(225133, 283074),
+	(225133, 283076),
+	(225133, 629996);
+
 INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
 VALUES
 	(20351, 'lccn', '24021742'),
@@ -2427,6 +2438,14 @@ VALUES
 	(283335, 'contrib_sys_id', 'ucsc.b11301399'),
 	(283336, 'cid', '002044872');
 
+INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(283072, 'lccn', '14017921'),
+	(283074, 'oclc', '999531'),
+	(283075, 'contrib_sys_id', 'ia-nrlf.b12478852x'),
+	(283076, 'cid', '000249880'),
+	(629996, 'contrib_sys_id', 'ia-srlf334843');
+
 INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
 VALUES
 	(6949, '001693730', 'UNKNOWN', 'hvd001905373', 'hvd.32044009594938', 'HVD', 'HVD', '001905373'),
@@ -2736,4 +2755,10 @@ VALUES
 	(100098, '011372212', 'UNKNOWN', 'mdl.mhs10165', 'mdl.reflections.mhs10165', 'MDL', 'MDL', 'mhs10165'),
 	(100099, '000524529', 'III - MILLENIUM', 'ucsd.b1645327x', 'uc1.31822011309952', 'UC', 'UCSD', '.b1645327x'),
 	(100100, '002044872', 'III - MILLENIUM', 'ucsc.b11301399', 'uc1.32106008698265', 'UC', 'UCSC', '.b11301399');
+
+INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`, `title`)
+VALUES
+	(100010, '000249880', 'III - MILLENIUM', 'ia-nrlf.b12478852x', 'uc2.ark:/13960/t7hq3wc0f', 'UC', 'INRLF', '.b12478852x', 'The clarion, by Samuel Hopkins Adams; with illustrations by W. D. Stevens.'),
+	(225133, '000249880', 'EX LIBRIS - VOYAGER', 'ia-srlf334843', 'uc2.ark:/13960/t9q23rm56', 'UC', 'ISRLF', '334843', 'The clarion, by Samuel Hopkins Adams; with illustrations by W. D. Stevens.');
+
 
