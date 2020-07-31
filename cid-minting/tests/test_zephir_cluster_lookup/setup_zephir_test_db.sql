@@ -1113,10 +1113,6 @@ VALUES
 	(100008, 283067),
 	(100009, 283071),
 	(100009, 283073),
-	(100010, 283072),
-	(100010, 283074),
-	(100010, 283075),
-	(100010, 283076),
 	(100011, 283077),
 	(100011, 283078),
 	(100012, 279245),
@@ -1475,14 +1471,20 @@ VALUES
 
 INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
 VALUES
-	(100010, 283072),
-	(100010, 283074),
-	(100010, 283075),
-	(100010, 283076),
-	(225133, 283072),
-	(225133, 283074),
-	(225133, 283076),
-	(225133, 629996);
+	(120149, 335102),
+	(120149, 335104),
+	(120149, 335105),
+	(120149, 335106),
+	(120149, 335107),
+	(120149, 335108),
+	(144671, 394987),
+	(144671, 394988),
+	(144671, 394990),
+	(144671, 394991),
+	(144671, 394992),
+	(144671, 394993),
+	(144671, 394994);
+
 
 INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
 VALUES
@@ -2155,10 +2157,6 @@ VALUES
 	(283067, 'cid', '007107273'),
 	(283071, 'contrib_sys_id', 'mdl.mhs10155'),
 	(283073, 'cid', '011372202'),
-	(283072, 'lccn', '14017921'),
-	(283074, 'oclc', '999531'),
-	(283075, 'contrib_sys_id', 'ia-nrlf.b12478852x'),
-	(283076, 'cid', '000249880'),
 	(283077, 'contrib_sys_id', 'nrlf.b163607187'),
 	(283078, 'cid', '010031332'),
 	(283079, 'lccn', '27006745'),
@@ -2438,13 +2436,23 @@ VALUES
 	(283335, 'contrib_sys_id', 'ucsc.b11301399'),
 	(283336, 'cid', '002044872');
 
+
 INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
 VALUES
-	(283072, 'lccn', '14017921'),
-	(283074, 'oclc', '999531'),
-	(283075, 'contrib_sys_id', 'ia-nrlf.b12478852x'),
-	(283076, 'cid', '000249880'),
-	(629996, 'contrib_sys_id', 'ia-srlf334843');
+	(335102, 'lccn', '78076787'),
+	(335104, 'oclc', '47421'),
+	(335105, 'contrib_sys_id', 'miu000000446'),
+	(335106, 'cid', '000000446'),
+	(335107, 'lc_call_number', 'JC481'),
+	(335108, 'dewey_call_number', '321.9'),
+	(394987, 'lccn', '72133271'),
+	(394988, 'isbn', '0444000711'),
+	(394990, 'oclc', '140869'),
+	(394991, 'contrib_sys_id', 'miu000002076'),
+	(394992, 'cid', '000002076'),
+	(394993, 'lc_call_number', 'P123'),
+	(394994, 'dewey_call_number', '415/.01/51');
+
 
 INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
 VALUES
@@ -2664,7 +2672,6 @@ VALUES
 	(100007, '006738469', 'UNKNOWN', 'pur2677046', 'pur1.32754081262044', 'PUR', 'PUR', '2677046'),
 	(100008, '007107273', 'III - MILLENIUM', 'ucsc.b11299538', 'uc1.32106008387588', 'UC', 'UCSC', '.b11299538'),
 	(100009, '011372202', 'UNKNOWN', 'mdl.mhs10155', 'mdl.reflections.mhs10155', 'MDL', 'MDL', 'mhs10155'),
-	(100010, '000249880', 'III - MILLENIUM', 'ia-nrlf.b12478852x', 'uc2.ark:/13960/t7hq3wc0f', 'UC', 'INRLF', '.b12478852x'),
 	(100011, '010031332', 'III - MILLENIUM', 'nrlf.b163607187', 'uc1.b3116848', 'UC', 'NRLF', '.b163607187'),
 	(100012, '004164580', 'UNKNOWN', 'uva.u1065587', 'uva.x000027582', 'UVA', 'UVA', 'u1065587'),
 	(100013, '001505376', 'UNKNOWN', 'nyp.b130399978', 'nyp.33433010842494', 'NYP', 'NYP', '.b130399978'),
@@ -2756,9 +2763,91 @@ VALUES
 	(100099, '000524529', 'III - MILLENIUM', 'ucsd.b1645327x', 'uc1.31822011309952', 'UC', 'UCSD', '.b1645327x'),
 	(100100, '002044872', 'III - MILLENIUM', 'ucsc.b11301399', 'uc1.32106008698265', 'UC', 'UCSC', '.b11301399');
 
-INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`, `title`)
+
+INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
 VALUES
-	(100010, '000249880', 'III - MILLENIUM', 'ia-nrlf.b12478852x', 'uc2.ark:/13960/t7hq3wc0f', 'UC', 'INRLF', '.b12478852x', 'The clarion, by Samuel Hopkins Adams; with illustrations by W. D. Stevens.'),
-	(225133, '000249880', 'EX LIBRIS - VOYAGER', 'ia-srlf334843', 'uc2.ark:/13960/t9q23rm56', 'UC', 'ISRLF', '334843', 'The clarion, by Samuel Hopkins Adams; with illustrations by W. D. Stevens.');
+	(120149, '000000446', 'EX LIBRIS - ALEPH', 'miu000000446', 'mdp.39015007009171', 'MIU', 'MIU', '000000446' ),
+	(144671, '000002076', 'EX LIBRIS - ALEPH', 'miu000002076', 'mdp.39015008144340', 'MIU', 'MIU', '000002076' );
+
+INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
+VALUES
+	(505505, '000000280', 'LOCAL - GLADIS', 'nrlfGLAD100908680-B', 'uc1.b4051182', 'UC', 'NRLF', 'GLAD100908680-B');
+
+INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(505505, 1040455),
+	(505505, 1040456),
+	(505505, 1040457),
+	(505505, 1040458),
+	(505505, 1040459),
+	(505505, 1040460),
+	(505505, 1040461);
+
+INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(1040455, 'lccn', '70930066'),
+	(1040456, 'oclc', '217211158'),
+	(1040457, 'oclc', '25909'),
+	(1040458, 'contrib_sys_id', 'nrlfGLAD100908680-B'),
+	(1040459, 'cid', '000000280'),
+	(1040460, 'lc_call_number', 'BP170'),
+	(1040461, 'dewey_call_number', '297/.292');
+
+INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
+VALUES
+	(114679, '000000009', 'EX LIBRIS - ALEPH', 'miu000000009', 'mdp.39015015207742', 'MIU', 'MIU', '000000009'),
+	(505506, '000000009', 'LOCAL - GLADIS', 'nrlfGLAD151160146-B', 'uc1.b4174938', 'UC', 'NRLF', 'GLAD151160146-B');
+
+INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(114679, 13122),
+	(114679, 321779),
+	(114679, 321780),
+	(114679, 321781),
+	(114679, 321782),
+	(114679, 321783),
+	(505506, 321779),
+	(505506, 321780),
+	(505506, 321782),
+	(505506, 321783),
+	(505506, 1040462),
+	(505506, 1040463),
+	(505506, 1040464);
+
+INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(13122, 'lc_call_number', 'LAW'),
+	(321779, 'lccn', '67026627'),
+	(321780, 'oclc', '252'),
+	(321781, 'contrib_sys_id', 'miu000000009'),
+	(321782, 'cid', '000000009'),
+	(321783, 'dewey_call_number', '340/.096'),
+	(1040462, 'oclc', '217097625'),
+	(1040463, 'contrib_sys_id', 'nrlfGLAD151160146-B'),
+	(1040464, 'lc_call_number', 'KQC79');
+
+INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
+VALUES
+	(100010, '000249880', 'III - MILLENIUM', 'ia-nrlf.b12478852x', 'uc2.ark:/13960/t7hq3wc0f', 'UC', 'INRLF', '.b12478852x'),
+	(225133, '000249880', 'EX LIBRIS - VOYAGER', 'ia-srlf334843', 'uc2.ark:/13960/t9q23rm56', 'UC', 'ISRLF', '334843');
+
+INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(100010, 283072),
+	(100010, 283074),
+	(100010, 283075),
+	(100010, 283076),
+	(225133, 283072),
+	(225133, 283074),
+	(225133, 283076),
+	(225133, 629996);
+
+INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(283072, 'lccn', '14017921'),
+	(283074, 'oclc', '999531'),
+	(283075, 'contrib_sys_id', 'ia-nrlf.b12478852x'),
+	(283076, 'cid', '000249880'),
+	(629996, 'contrib_sys_id', 'ia-srlf334843');
 
 
