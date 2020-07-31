@@ -16,6 +16,7 @@ SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid, i.identifier
     WHERE i.type = 'oclc'
 """
 AND_IDENTIFIER_IN = "AND i.identifier in"
+AND_CID_IN = "AND z.cid in"
 ORDER_BY = "ORDER BY z.cid, i.identifier"
 
 def construct_select_zephir_cluster_by_ocns(ocns):
@@ -23,6 +24,12 @@ def construct_select_zephir_cluster_by_ocns(ocns):
         return None
 
     return SELECT_ZEPHIR_BY_OCLC + " " + AND_IDENTIFIER_IN + " (" + ocns + ") " + ORDER_BY
+
+def construct_select_zephir_cluster_by_cid(cids):
+    if invalid_sql_in_clause_str(cids):
+        return None
+
+    return SELECT_ZEPHIR_BY_OCLC + " " + AND_CID_IN + " (" + cids + ") " + ORDER_BY
 
 def get_db_conn_string_from_config_by_key(config_dir_name, config_fname, key):
     """return database connection string from db_config.yml file
@@ -54,7 +61,7 @@ class ZephirDatabase:
 
 def zephir_clusters_lookup(db_conn_str, ocns_list):
     """
-    Finds Zephir clusters by OCNs and returns compiled results
+    Finds Zephir clusters by OCNs and returns clusters info including cluster IDs and all OCNs in each cluster. 
     Args:
         db_conn_str: database connection string
         ocns_list: list of OCNs in integers
@@ -64,17 +71,33 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
         "num_of_matched_zephir_clusters": number of matched clusters
     """
+    zephir_cluster = {
+        "inquiry_ocns_zephir": ocns_list,
+        "cid_ocn_list": [],
+        "cid_ocn_clusters": {},
+        "num_of_matched_zephir_clusters": 0,
+    }
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    cid_ocn_list_by_ocns = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    if not cid_ocn_list_by_ocns:
+        return zephir_cluster
+
+    # find all OCNs in each cluster
+    cids_list = [cid_ocn[0] for cid_ocn in cid_ocn_list_by_ocns]
+    cid_ocn_list = find_zephir_clusters_by_cids(db_conn_str, cids_list)
+    if not cid_ocn_list:
+        return zephir_cluster
+
     # dict with key="cid", value=list of ocns in the cid cluster
     cid_ocn_clusters = formatting_cid_ocn_clusters(cid_ocn_list)
 
-    return {
+    zephir_cluster = {
         "inquiry_ocns_zephir": ocns_list,
         "cid_ocn_list": cid_ocn_list,
         "cid_ocn_clusters": cid_ocn_clusters,
         "num_of_matched_zephir_clusters": len(cid_ocn_clusters),
     }
+    return zephir_cluster
 
 def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
     """
@@ -82,7 +105,9 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
         db_conn_str: database connection string
         ocns_list: list of OCNs in integer 
     Returns:
-        list of cid and ocn tuples
+        list of cid and ocn tuples;
+        [] when there is no match
+        None: when there is an exception
     """
     select_zephir = construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
     if select_zephir:
@@ -93,7 +118,26 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
             return None
     return None
 
+def find_zephir_clusters_by_cids(db_conn_str, cid_list):
+    """
+    Args:
+        db_conn_str: database connection string
+        cid_list: list of CIDs in string
+    Returns:
+        list of cid and ocn tuples
+    """
+    select_zephir = construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
+    if select_zephir:
+        try:
+            zephir = ZephirDatabase(db_conn_str)
+            return zephir.findall(text(select_zephir))
+        except:
+            return None
+    return None
+
 def list_to_str(a_list):
+    """Convert list item to a single quoted string, concat with a comma and space 
+    """
     ocns = ""
     for item in a_list:
         if ocns:

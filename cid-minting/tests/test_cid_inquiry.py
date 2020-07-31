@@ -281,9 +281,11 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
         Test datasets:
         Zephir cluster:
         CID 1: 002492721, OCNs: [8727632];        
-        CID2 : 000000280, OCNs: [217211158, 25909]
+        CID 2: 000000280, OCNs: [217211158, 25909]
 
-        OCLC OCNs: [8727632, 24253253]
+        OCLC OCNs: 
+            [8727632, 24253253], 
+            [25909, 633478297, 976588742, 1063434341] - will not be matched.
 
         Incoming OCN for test case:
           [217211158 (invalid), 8727632]
