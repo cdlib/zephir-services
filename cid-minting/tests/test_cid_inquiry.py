@@ -260,6 +260,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {
         "009547317": ['28477569', '33393343'],
     }
+    expected_min_cid = "009547317"
 
     for k, incoming_ocns in incoming_ocns_list.items():
         result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
@@ -270,6 +271,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
         assert result["cid_ocn_list"] == expected_cid_ocn_list
         assert result["cid_ocn_clusters"] == expected_zephir_clsuters
         assert result["num_of_matched_zephir_clusters"] == 1
+        assert result["min_cid"] == expected_min_cid
 
 
 # test case c: incoming record matches 2+ CID
@@ -304,6 +306,7 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
         "000000280": ['217211158', '25909'],
         "002492721": ['8727632'],
     }
+    expected_min_cid = "000000280"
 
     result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
     print(result)
@@ -315,6 +318,7 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
     assert result["cid_ocn_list"] == expected_cid_ocn_list
     assert result["cid_ocn_clusters"] == expected_zephir_clsuters
     assert result["num_of_matched_zephir_clusters"] == 2 
+    assert result["min_cid"] ==  expected_min_cid
 
 def test_flat_and_dedup_sort_list():
     input_list = {

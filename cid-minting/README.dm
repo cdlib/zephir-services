@@ -1,68 +1,54 @@
+# CID Inquiry
 
-# CID Inquiry Workflow
+## Modules
+* oclc_lookup
+* zephir_cluster_lookup
+* cid_inquery
+* cid_minting_store
+ 
+### OCLC Lookup (oclc_lookup)
+Core functions to find OCNs relationships in the OCLC Concordance table:
+* get_primary_ocn(ocn, db_path="primary-lookup"):
+  Gets the primary oclc number for a given oclc number.
 
+* get_ocns_cluster_by_primary_ocn(primary_ocn, db_path="cluster-lookup"):
+  Gets all OCNs of an oclc cluster by a primary OCN.
 
-    # combine record ocns and OCLC ocns, and dedup
-    combined_ocns_list = flat_and_dedup_sort_list([ocns] + oclc_ocns_list)
+* get_ocns_cluster_by_ocn(ocn, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup"):
+  Gets all OCNs of an oclc cluster by an OCN.
 
-    # Zephir lookup by OCNs in comma separated, single quoted strings
-    # returns: list of cid and ocn returned from Zephir DB 
-    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, combined_ocns_list)
+* get_clusters_by_ocns(ocns, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup"):
+  Finds the OCN clusters for a list of OCNs.
 
-    # create an object with the Zephir cluster lookup result
-    zephir_clusters_result = ZephirClusterLookupResults(combined_ocns_list, cid_ocn_list) 
+### Zephir Cluster Lookup (zephir_cluster_lookup)
+Core functions to find Zephir clusters:
+* find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
+* find_zephir_clusters_by_cids(db_conn_str, cid_list):
+* zephir_clusters_lookup(db_conn_str, ocns_list):
+  Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
 
-1. Prepare input OCNs in list of integers
-   For example: [1, 6567842, 1000000000]
-
-2. Lookup for OCNs clusters in the OCLC Concordance Table
-
-   `get_clusters_by_ocns(ocns, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup")`
-
-    Input:
-      * ocns: list of OCNs in integers. For example: [1, 6567842, 1000000000]
-      * primarydb_path: full path to the OCN priamry LevelDB
-      * clusterdb_path: full path to the OCN cluster LevelDB
-
-    output: A set of OCN tuples, each representing a resolved OCLC OCNs cluster
-    For example: {(1000000000,), (1, 6567842, 9987701, 53095235, 433981287)}
-
-3. Compile the OCLC lookup results in the OclcLookupResult object with attributes of:
-
+### CID Inquiry (cid_inquiry)
+The cid_inquiry module has one core funciton which is to find matched Zephir Clusters by a list of OCNs :
+* cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
+** Returns: a dict combining both OCLC lookup and Zephir lookup results:
 <pre>
-        # OCNs in record: list of integers
-        OclcLookupResult.inquiry_ocns = inquiry_ocns
-
-        # OCNs in matched OCLC clusters: list of OCNs lists in integers
-        OclcLookupResult.matched_ocns_clusters = list_of_ocns
-
-        # number of matched OCLC clusters
-        OclcLookupResult.num_of_matched_clusters = len(list_of_ocns)
+       "inquiry_ocns": input ocns, list of integers.
+       "matched_oclc_clusters": OCNs in matched OCLC clusters, list of lists in integers.
+       "num_of_matched_oclc_clusters": number of matched OCLC clusters.
+       "inquiry_ocns_zephir": ocns list used to query Zephir DB.
+       "cid_ocn_list": list of cid and ocn tuples from DB query.
+       "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster
+       "num_of_matched_zephir_clusters": number of matched Zephir clusters.
+       "min_cid": lowest CID among matched Zephir clusters
 </pre>
-    While the list_of_ocns is a list converted from the set of OCN tuples from Step 2 output.
 
-4. Construct an OCNs list for Zephir clusters lookup
-   Combine the record ocns and OCLC ocns, and remove duplicates. 
+#### CID Inquiry Workflow
 
-5. Search Zephir clusters by ocns 
+* 1. Prepare input OCNs in list of integers. For example: [1, 6567842, 1000000000]
+* 2. Lookup for OCNs clusters in the OCLC Concordance Table
+* 3. Combine the input ocns and OCLC ocns, and remove duplicates. 
+* 4. Search Zephir clusters by the combined ocns 
+* 5. Return compiled OCLC and Zephir lookup results
 
-    `find_zephir_clusters_by_ocns(db_conn_str, combined_ocns_list)`
-    Input:
-      * db_conn_str: database connection string 
-      * combined_ocns_list: list of OCNs in integer
-    Returns: a list of cid and ocn tuples
+### CID Minting Store (cid_minting_store)
 
-6. Compile the Zephir lookup results in the ZephirClusterLookupResults object with attributes of:
-<pre>
-        # list of cid and ocn tuples
-        ZephirClusterLookupResults.cid_ocn_list = cid_ocn_list
-
-        # dict with key="cid", value=list of ocns
-        ZephirClusterLookupResults.cid_ocn_clusters
-
-        # number of cid clusters
-        ZephirClusterLookupResults.num_of_matched_clusters
-
-        # inquiry ocns
-        ZephirClusterLookupResults.inquiry_ocns
-</pre>

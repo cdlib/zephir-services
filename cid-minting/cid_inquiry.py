@@ -47,12 +47,13 @@ def cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
        "cid_ocn_list": list of cid and ocn tuples from DB query.
        "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster
        "num_of_matched_zephir_clusters": number of matched Zephir clusters.
+       "min_cid": lowest CID among matched Zephir clusters
     """
 
     # Lookups OCN clusters by a list of OCNs in integer
     oclc_lookup_result = lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path)
 
-    # combine incoming and OCLC ocns, and dedup
+    # combine incoming OCNs with and matched OCLC ocns, and dedup
     oclc_ocns_list = oclc_lookup_result["matched_oclc_clusters"]
     combined_ocns_list = flat_and_dedup_sort_list([ocns] + oclc_ocns_list)
 

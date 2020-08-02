@@ -116,6 +116,7 @@ def test_zephir_cluster_lookup_no_matched_cluster(create_test_db):
         assert result["cid_ocn_clusters"] == {}
         assert result["num_of_matched_zephir_clusters"] == 0 
         assert result["inquiry_ocns_zephir"] == ocns_list
+        assert result["min_cid"] == None
 
 def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
     db_conn_str = create_test_db["db_conn_str"]
@@ -137,12 +138,20 @@ def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
         "two_ocns_3_ocns_cluster": {'001693730': ['15437990', '5663662', '6758168']},
         "with_ocn_not_in_zephir": {'000000280': ['217211158', '25909']},
     }
+    expected_min_cid = {
+        "one_ocn_1_ocn_cluster": '002492721',
+        "one_ocn_2_ocns_cluster": '009547317',
+        "two_ocns_3_ocns_cluster": '001693730',
+        "with_ocn_not_in_zephir": '000000280',
+    }
+
     for k, ocns_list in ocns_lists.items():
         result = zephir_clusters_lookup(db_conn_str, ocns_list)
         assert result["cid_ocn_list"] == expected_cid_ocn_list[k]
         assert result["cid_ocn_clusters"] == expected_clusters[k]
         assert result["num_of_matched_zephir_clusters"] == 1 
         assert result["inquiry_ocns_zephir"] == ocns_list
+        assert result["min_cid"] == expected_min_cid[k]
 
 def test_zephir_cluster_lookup_matched_more_than_one_clusters(create_test_db):
     db_conn_str = create_test_db["db_conn_str"]
@@ -168,6 +177,7 @@ def test_zephir_cluster_lookup_matched_more_than_one_clusters(create_test_db):
     assert result["cid_ocn_clusters"] == expected_clusters
     assert result["num_of_matched_zephir_clusters"] == 4
     assert result["inquiry_ocns_zephir"] == ocns_list
+    assert result["min_cid"] == '000000280'
 
 def test_list_to_str():
     input_list = {

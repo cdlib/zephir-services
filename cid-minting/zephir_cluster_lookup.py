@@ -61,7 +61,7 @@ class ZephirDatabase:
 
 def zephir_clusters_lookup(db_conn_str, ocns_list):
     """
-    Finds Zephir clusters by OCNs and returns clusters info including cluster IDs and all OCNs in each cluster. 
+    Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
     Args:
         db_conn_str: database connection string
         ocns_list: list of OCNs in integers
@@ -70,12 +70,14 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         "cid_ocn_list": list of cid and ocn tuples from DB query,
         "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
         "num_of_matched_zephir_clusters": number of matched clusters
+        "min_cid": lowest CID 
     """
     zephir_cluster = {
         "inquiry_ocns_zephir": ocns_list,
         "cid_ocn_list": [],
         "cid_ocn_clusters": {},
         "num_of_matched_zephir_clusters": 0,
+        "min_cid": None,
     }
 
     cid_ocn_list_by_ocns = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
@@ -96,6 +98,7 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         "cid_ocn_list": cid_ocn_list,
         "cid_ocn_clusters": cid_ocn_clusters,
         "num_of_matched_zephir_clusters": len(cid_ocn_clusters),
+        "min_cid": min([cid_ocn[0] for cid_ocn in cid_ocn_list])
     }
     return zephir_cluster
 
