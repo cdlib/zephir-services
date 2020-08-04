@@ -1469,22 +1469,6 @@ VALUES
 	(100100, 283335),
 	(100100, 283336);
 
-INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
-VALUES
-	(120149, 335102),
-	(120149, 335104),
-	(120149, 335105),
-	(120149, 335106),
-	(120149, 335107),
-	(120149, 335108),
-	(144671, 394987),
-	(144671, 394988),
-	(144671, 394990),
-	(144671, 394991),
-	(144671, 394992),
-	(144671, 394993),
-	(144671, 394994);
-
 
 INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
 VALUES
@@ -2437,23 +2421,6 @@ VALUES
 	(283336, 'cid', '002044872');
 
 
-INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
-VALUES
-	(335102, 'lccn', '78076787'),
-	(335104, 'oclc', '47421'),
-	(335105, 'contrib_sys_id', 'miu000000446'),
-	(335106, 'cid', '000000446'),
-	(335107, 'lc_call_number', 'JC481'),
-	(335108, 'dewey_call_number', '321.9'),
-	(394987, 'lccn', '72133271'),
-	(394988, 'isbn', '0444000711'),
-	(394990, 'oclc', '140869'),
-	(394991, 'contrib_sys_id', 'miu000002076'),
-	(394992, 'cid', '000002076'),
-	(394993, 'lc_call_number', 'P123'),
-	(394994, 'dewey_call_number', '415/.01/51');
-
-
 INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
 VALUES
 	(6949, '001693730', 'UNKNOWN', 'hvd001905373', 'hvd.32044009594938', 'HVD', 'HVD', '001905373'),
@@ -2766,11 +2733,6 @@ VALUES
 
 INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
 VALUES
-	(120149, '000000446', 'EX LIBRIS - ALEPH', 'miu000000446', 'mdp.39015007009171', 'MIU', 'MIU', '000000446' ),
-	(144671, '000002076', 'EX LIBRIS - ALEPH', 'miu000002076', 'mdp.39015008144340', 'MIU', 'MIU', '000002076' );
-
-INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
-VALUES
 	(505505, '000000280', 'LOCAL - GLADIS', 'nrlfGLAD100908680-B', 'uc1.b4051182', 'UC', 'NRLF', 'GLAD100908680-B');
 
 INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
@@ -2850,4 +2812,132 @@ VALUES
 	(283076, 'cid', '000249880'),
 	(629996, 'contrib_sys_id', 'ia-srlf334843');
 
+
+INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
+VALUES
+	(3345, '008648991', 'UNKNOWN', 'hvd001104166', 'hvd.32044014455380', 'HVD', 'HVD', '001104166');
+
+INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(3345, 10505),
+	(3345, 10506),
+	(3345, 10507),
+	(3345, 10508),
+	(3345, 10509),
+	(3345, 10510);
+
+INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(10505, 'lccn', '01020792'),
+	(10506, 'oclc', '4912741'),
+	(10507, 'oclc', '5066412'),
+	(10508, 'oclc', '23012053'),
+	(10509, 'contrib_sys_id', 'hvd001104166'),
+	(10510, 'cid', '008648991');
+
+
+	INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
+VALUES
+	(144671, '000002076', 'EX LIBRIS - ALEPH', 'miu000002076', 'mdp.39015008144340', 'MIU', 'MIU', '000002076'),
+	(505507, '000002076', 'UNKNOWN', 'wu2636603', 'wu.89048451579', 'WU', 'WU', '2636603'),
+	(505508, '000002076', 'III - MILLENIUM', 'ucsc.b17197375', 'uc1.32106001517462', 'UC', 'UCSC', '.b17197375'),
+	(505509, '000002076', 'EX LIBRIS - ALMA', 'ia-cmalg9927511750001551', 'gri.ark:/13960/t9g48bh3b', 'CMALG', 'GRI', '9927511750001551'),
+	(505510, '000002076', 'INNOVATIVE INTERFACES', 'unc.b2477231', 'nc01.ark:/13960/t9q31fm4k', 'UNC', 'IUNC', 'b2477231');
+
+	INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(144671, 394987),
+	(144671, 394988),
+	(144671, 394990),
+	(144671, 394991),
+	(144671, 394992),
+	(144671, 394993),
+	(144671, 394994),
+	(505507, 394987),
+	(505507, 394988),
+	(505507, 394990),
+	(505507, 394992),
+	(505507, 394993),
+	(505507, 394994),
+	(505507, 1040465),
+	(505508, 394987),
+	(505508, 394990),
+	(505508, 394992),
+	(505508, 1040466),
+	(505509, 270544),
+	(505509, 394990),
+	(505509, 394992),
+	(505509, 1040467),
+	(505509, 1040468),
+	(505509, 1040469),
+	(505509, 1040470),
+	(505510, 270544),
+	(505510, 394992),
+	(505510, 1040467),
+	(505510, 1040468),
+	(505510, 1040471);
+
+	INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(394987, 'lccn', '72133271'),
+	(394988, 'isbn', '0444000711'),
+	(394990, 'oclc', '140869'),
+	(394991, 'contrib_sys_id', 'miu000002076'),
+	(394992, 'cid', '000002076'),
+	(394993, 'lc_call_number', 'P123'),
+	(394994, 'dewey_call_number', '415/.01/51'),
+	(1040465, 'contrib_sys_id', 'wu2636603'),
+	(1040466, 'contrib_sys_id', 'ucsc.b17197375'),
+	(270544, 'lc_call_number', 'DA650'),
+	(1040467, 'lccn', '03005367'),
+	(1040468, 'oclc', '2094039'),
+	(1040469, 'oclc', '241092814'),
+	(1040470, 'contrib_sys_id', 'ia-cmalg9927511750001551'),
+	(1040471, 'contrib_sys_id', 'unc.b2477231');
+
+	INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
+VALUES
+	(505512, '102337772', 'UNKNOWN', 'wu5324962_test', 'wu.2234567890', 'WU', 'WU', '5324962_test');
+
+	INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(505512, 1040473),
+	(505512, 1040475),
+	(505512, 1040476);
+
+	INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(1040473, 'oclc', '1008263420'),
+	(1040475, 'contrib_sys_id', 'wu5324962_test'),
+	(1040476, 'cid', '102337772');
+
+	INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
+VALUES
+	(505514, '102337774', 'UNKNOWN', 'wutest_2_5324962', 'wu.1234567890_102', 'WU', 'WU', 'test_2_5324962'),
+	(505515, '102337775', 'UNKNOWN', 'wutest_1_5324962', 'wu.1234567890_101', 'WU', 'WU', 'test_1_5324962'),
+	(505516, '102337776', 'UNKNOWN', 'wutest_3_5324962', 'wu.1234567890_103', 'WU', 'WU', 'test_3_5324962');
+
+	INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(505514, 1040481),
+	(505514, 1040482),
+	(505514, 1040483),
+	(505515, 1040484),
+	(505515, 1040485),
+	(505515, 1040486),
+	(505516, 1040487),
+	(505516, 1040488),
+	(505516, 1040489);
+
+	INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(1040481, 'oclc', '1234567890102'),
+	(1040482, 'contrib_sys_id', 'wutest_2_5324962'),
+	(1040483, 'cid', '102337774'),
+	(1040484, 'oclc', '1234567890101'),
+	(1040485, 'contrib_sys_id', 'wutest_1_5324962'),
+	(1040486, 'cid', '102337775'),
+	(1040487, 'oclc', '1234567890103'),
+	(1040488, 'contrib_sys_id', 'wutest_3_5324962'),
+	(1040489, 'cid', '102337776');
 
