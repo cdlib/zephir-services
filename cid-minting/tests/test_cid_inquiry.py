@@ -15,6 +15,7 @@ from cid_inquiry import flat_and_dedup_sort_list
   "cid_ocn_list": list of cid and ocn tuples from DB query
   "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
   "num_of_matched_zephir_clusters": num of matched Zephir clusters
+  "min_cid": the lowest CID among the clusters
 """
 
 # Test case 1 & 2: Incoming record matches a single primary record in the Concordance Table.
