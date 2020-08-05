@@ -41,29 +41,29 @@ def get_ocns_cluster_by_primary_ocn(primary_ocn, db_path="cluster-lookup"):
 
     Retrieves the OCNs of an OCLC cluster from the LevelDB cluster-lookup with key and value defined as:
         key: an integer representing a primary OCN.
-        value: list of integers containig the primary and previous OCNs of the OCLC cluster.
+        value: list of integers containing all previous OCNs of the OCLC cluster.
 
     Note:
     The cluster-lookup database only contains key/value pairs for OCLC clusters with previous OCN(s).
-    This means the value fields are lists with 2 or more items containing the primary OCN and one or more previous OCNs.
+    Single OCLC clusters that do not have previous OCNs are not presented in the cluster-lookup DB.
     For example:
-        key=1 (primary ocn), value=[1, 433981287, 6567842, 53095235, 9987701]
-        key=4 (primary ocn), value=[4, 518119215]
-
+        key=1 (primary ocn), value=[433981287, 6567842, 53095235, 9987701]
+        key=4 (primary ocn), value=[518119215]
+        There is no key/value pair for ocn=1000000000 as there is no other ocns in this cluster.
     Args:
         primary_ocn: An integer representing a primary OCN.
 
     Returns:
-        A list of integers representing an OCLC cluster with the primary and previous OCNs;
-        None if the given OCN is None or is missing from the key/primary OCN of the cluster-lookup database.
+        A list of integers representing an OCLC cluster with the primary and previous OCNs if there are any;
+        None if the given OCN is None or 
+        None if given OCN is not a primary OCN.
 
         For exampe:
-            when primary_ocn=1, return: [1, 433981287, 6567842, 53095235, 9987701]
-            when primary_ocn=4, return: [4, 518119215]
-            when primary_ocn=1000000000, return: None
-                (1000000000 is a primary ocn for an OCN cluster without previous OCNs. It is not in the cluster-lookup db)
+            when primary_ocn=1000000000, return None
+            when primary_ocn=1, return: [433981287, 6567842, 53095235, 9987701]
+            when primary_ocn=4, return: [518119215]
+            when primary_ocn=518119215, return: None
             when primary_ocn=1234567890, return: None
-                (1234567890 is an invalid ocn and is not in the key/value cluster-looup db)
     """
     cluster = None
     if primary_ocn:
@@ -94,6 +94,7 @@ def get_ocns_cluster_by_ocn(ocn, primarydb_path="primary-lookup", clusterdb_path
 
         For example:
         when ocn=1, return: [1, 433981287, 6567842, 53095235, 9987701]
+        when ocn=433981287, return: [1, 433981287, 6567842, 53095235, 9987701]
         when ocn=4, return: [4, 518119215]
         when ocn=1000000000, return: [1000000000] (a cluster without previous OCNs)
         when ocn=1234567890, return: None (for an invalid ocn)
@@ -196,17 +197,20 @@ def lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path ):
 def main():
     """For a given oclc number, find all OCNs in the OCN cluster from the OCLC Concordance Table
     """
-    if (len(sys.argv) > 1):
-        ocn = int(sys.argv[1])
-    else:
-        ocn = None
+
+    clusters_raw = {'1': [6567842, 9987701, 53095235, 433981287],
+            '1000000000': None,
+            '2': [9772597, 35597370, 60494959, 813305061, 823937796, 1087342349],
+            '4': [518119215],
+            '17216714': [535434196],
+            }
 
     clusters = {'1': [6567842, 9987701, 53095235, 433981287, 1],
             '1000000000': [1000000000],
             '2': [2, 9772597, 35597370, 60494959, 813305061, 823937796, 1087342349],
+            '4': [4, 518119215],
             '17216714': [17216714, 535434196],
             }
-
     set_1 = set([tuple(sorted(clusters['1']))])
     set_10 = set([tuple(sorted(clusters['1000000000']))])
     set_2 = set([tuple(sorted(clusters['2']))])
@@ -226,27 +230,32 @@ def main():
 
     ocn = None
     assert get_primary_ocn(ocn) == None
-
-    ocn = 8727632
-    assert get_primary_ocn(ocn) == ocn
-
-    ocn = 24253253
-    assert get_primary_ocn(ocn) == 8727632
-
-    ocn = 20000
-    assert get_primary_ocn(ocn) == ocn
-
     print("**** finished testing get_primary_ocn")
 
     print("#### testing get_ocns_cluster_by_primary_ocn(primary_ocn)")
-
+    print("should return raw clusters without primary ocn in the cluster-db")
+    '''     when primary_ocn=1000000000, return None
+            when primary_ocn=1, return: [433981287, 6567842, 53095235, 9987701]
+            when primary_ocn=4, return: [518119215]
+            when primary_ocn=518119215, return: None
+            when primary_ocn=1234567890, return: None
+    '''
     primary_ocn = 1000000000
     assert get_ocns_cluster_by_primary_ocn(primary_ocn) == None
 
     primary_ocn = 1
-    assert get_ocns_cluster_by_primary_ocn(primary_ocn).sort() == clusters['1'].sort()
+    cluster = get_ocns_cluster_by_primary_ocn(primary_ocn)
+    print("cluster: {}".format(cluster))
+    print("sorted:  {}".format(sorted(cluster)))
+    assert sorted(cluster) == sorted(clusters_raw['1'])
 
-    primary_ocn = 6567842     # a previous ocn
+    primary_ocn = 4 
+    cluster = get_ocns_cluster_by_primary_ocn(primary_ocn)
+    print("cluster: {}".format(cluster))
+    print("sorted:  {}".format(sorted(cluster)))
+    assert sorted(cluster) == sorted(clusters_raw['4'])
+
+    primary_ocn = 518119215     # a previous ocn
     assert get_ocns_cluster_by_primary_ocn(primary_ocn) == None
 
     primary_ocn = 1234567890  # an invalid ocn
@@ -257,14 +266,27 @@ def main():
     print("**** finished testing get_ocns_cluster_by_primary_ocn(primary_ocn)")
 
     print("#### testing get_ocns_cluster_by_ocn: returning list of integers")
-    ocn = 1000000000
-    assert get_ocns_cluster_by_ocn(ocn) == clusters['1000000000']
-
+    print("should return clusters with the primary ocn")
+    '''
+        when ocn=1, return: [1, 433981287, 6567842, 53095235, 9987701]
+        when ocn=6567842, return: [1, 433981287, 6567842, 53095235, 9987701]
+        when ocn=4, return: [4, 518119215]
+        when ocn=1000000000, return: [1000000000] (a cluster without previous OCNs)
+        when ocn=1234567890, return: None (for an invalid ocn)
+    '''
     ocn = 1
-    assert get_ocns_cluster_by_ocn(ocn).sort() == clusters['1'].sort()
+    cluster = get_ocns_cluster_by_ocn(ocn)
+    print(cluster)
+    assert sorted(get_ocns_cluster_by_ocn(ocn)) == sorted(clusters['1'])
 
     ocn = 6567842    # previous ocn
-    assert get_ocns_cluster_by_ocn(ocn).sort() == clusters['1'].sort()
+    assert sorted(get_ocns_cluster_by_ocn(ocn)) == sorted(clusters['1'])
+
+    ocn = 4 
+    assert sorted(get_ocns_cluster_by_ocn(ocn)) == sorted(clusters['4'])
+
+    ocn = 1000000000
+    assert get_ocns_cluster_by_ocn(ocn) == [1000000000]
 
     ocn = 1234567890 # invalid ocn
     assert get_ocns_cluster_by_ocn(ocn) == None
@@ -275,18 +297,30 @@ def main():
 
     print("#### testing  get_clusters_by_ocns(ocns)")
     ocns=[1]    # resolve to cluster[1]
-    assert get_clusters_by_ocns(ocns) ^ set_1 == set()
-    print(get_clusters_by_ocns([1]))
+    clusters = get_clusters_by_ocns(ocns)
+    print(clusters)
+    print(set_1)
+    assert clusters ^ set_1 == set()
 
     ocns=[1000000000, 1000000000]    #  resolve to cluster[1000000000]
-    assert get_clusters_by_ocns(ocns) ^ set_10 == set()
+    clusters = get_clusters_by_ocns(ocns)
+    print(clusters)
+    print(set_10)
+    assert clusters ^ set_10 == set()
 
     ocns=[1, 1000000000]    #    resolve to 2 ocn clusters
     clusters = get_clusters_by_ocns(ocns)
-    assert get_clusters_by_ocns(ocns) ^ (set_1 | set_10) == set()
+    print(clusters)
+    print(set_1)
+    print(set_10)
+    assert clusters ^ (set_1 | set_10) == set()
 
     ocns=[1, 1, 53095235, 2, 12345678901, 1000000000]
-    assert get_clusters_by_ocns(ocns) ^ (set_1 | set_2 | set_10) == set()
+    clusters = get_clusters_by_ocns(ocns)
+    print(clusters)
+    print(set_1)
+    print(set_2)
+    assert clusters ^ (set_1 | set_2 | set_10) == set()
 
     ocns=[1234567890]
     assert get_clusters_by_ocns(ocns) == set()
