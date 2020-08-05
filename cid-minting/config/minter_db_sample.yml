@@ -1,0 +1,10 @@
+dev:
+    host: rds-d2d-htmm-dev.cmcguhglinoa.us-west-2.rds.amazonaws.com
+    port: 3306
+    username: htmmrw 
+    password: xxxxxx
+    database: htmm
+    drivername: mysql+mysqlconnector
+test:
+    database: database/test_sqlite.db
+    drivername: sqlite

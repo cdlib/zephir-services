@@ -1,0 +1,7 @@
+.env
+!tests/.env
+.pytest_cache
+config/*.yml
+*.db
+cluster-lookup
+primary-lookup

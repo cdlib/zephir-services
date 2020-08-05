@@ -20,6 +20,9 @@ selenium = "*"
 freezegun = "*"
 setuptools = "*"
 zed-event = {git = "https://github.com/cdlib/zephir-services.git",ref = "amz2_branch",subdirectory = "zed-event"}
+msgpack = "*"
+plyvel = "*"
+pandas = "*"
 
 [dev-packages]
 
