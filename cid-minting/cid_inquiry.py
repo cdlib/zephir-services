@@ -23,7 +23,6 @@ def get_config_by_key(config_dir_name, config_fname, key):
 
     # load all configuration files in directory
     configs = utils.load_config(CONFIG_PATH)
-    print(configs)
 
     # get config value by filename and key
     config = configs.get(config_fname, {}).get(key)
@@ -71,41 +70,41 @@ def flat_and_dedup_sort_list(list_of_lists):
     return sorted(new_list)
 
 def main():
-    if (len(sys.argv) > 1):
-        env = sys.argv[1]
-    else:
-        env = "test"
+    """ Retrieves Zephir clusters by OCNs.
+        Command line arguments:
+        argv[1]: Server environemnt (Required). Can be dev, stg, or prd.
+        argv[2]: List of OCNs (Required).
+                 Comma separated strings without spaces in between any two values.
+                 For example: 1,6567842
+    """
+    if (len(sys.argv) != 3):
+        print("Parmater error.")
+        print("Usage: {} env[dev|stg|prd] comma_separated_ocns".format(sys.argv[0]))
+        print("{} dev 1,6567842".format(sys.argv[0]))
+        exit(1)
+
+    env = sys.argv[1]
+    ocns = sys.argv[2].split(",")
+
+    ocns_list = [int(i) for i in ocns]
 
     # get environment variable in .env file
     ENV = os.environ.get("MINTER_ENV") or env
-    print("env: {}".format(ENV))
 
-    minter_db_config = get_config_by_key('config','minter_db', ENV)
+    zephir_db_config = get_config_by_key('config','zephir_db', ENV)
     leveldb_config = get_config_by_key('config','ocns_leveldb', ENV)
 
-    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or str(utils.db_connect_url(minter_db_config))
-    print(DB_CONNECT_STR)
-
+    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or str(utils.db_connect_url(zephir_db_config))
     PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMAR_DB_PATH") or leveldb_config["primary_db_path"]
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTERDB_PATH") or leveldb_config["cluster_db_path"]
 
-    print(PRIMARY_DB_PATH)
-    print(CLUSTER_DB_PATH)
+    #print(DB_CONNECT_STR)
+    #print(PRIMARY_DB_PATH)
+    #print(CLUSTER_DB_PATH)
 
-    #clusters = get_clusters_by_ocns(ocns)
-
-    ocns_str = "'6758168','15437990','5663662','33393343','28477569','8727632'"
-    ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
-
-    results = find_zephir_clusters_by_ocns(DB_CONNECT_STR, ocns_str)
+    results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
     print(results)
-
-    zephir = ZephirClusterLookupResults(ocns_list, results)
-
-    print(zephir.cid_ocn_list)
-    print(zephir.cid_ocn_clusters)
-    print(zephir.num_of_matched_clusters)
-    print(zephir.inquiry_ocns)
+    exit(0)
 
 if __name__ == '__main__':
     main()
