@@ -150,21 +150,6 @@ def convert_set_to_list(set_of_tuples):
     list_of_lists = [list(a_tuple) for a_tuple in list_of_tuples]
     return list_of_lists
 
-def test(ocn):
-    print(".... testing OCN={}".format(ocn))
-    primary = get_primary_ocn(ocn)
-    print("primary OCN: {}".format(primary))
-    cluster = get_ocns_cluster_by_primary_ocn(primary)
-    print("cluster by primary ({}): {}".format(primary, cluster))
-    cluster = get_ocns_cluster_by_ocn(ocn)
-    print("cluster by ocn ({}): {}".format(ocn, cluster))
-
-def test_ocns(ocns):
-    print(".... testing OCN={}".format(ocns))
-    clusters = get_clusters_by_ocns(ocns)
-    print("clusters by ocns ({}):".format(ocns))
-    print("clusters: {}".format(clusters))
-
 def lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path ):
     """For a given list of OCNs find their associated OCN clusters from the OCLC Concordance Table
     Args:
@@ -184,7 +169,6 @@ def lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path ):
 
     # convert to a list of OCNs lists
     oclc_ocns_list = convert_set_to_list(set_of_tuples)
-    print(oclc_ocns_list)
 
     # create an object with the OCLC lookup result
     oclc_lookup_result = {

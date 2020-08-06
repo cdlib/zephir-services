@@ -59,7 +59,6 @@ def load_config(path, config={}):
     for entry in os.scandir(path):
         if entry.is_file() and entry.name.endswith(".yml"):
             section = os.path.splitext(entry.name)[0]
-            print("section:" + section)
             with open(entry, "r") as ymlfile:
                 config[section] = {}
                 config[section].update(yaml.safe_load(ymlfile))
