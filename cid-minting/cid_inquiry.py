@@ -75,12 +75,12 @@ def main():
         argv[1]: Server environemnt (Required). Can be dev, stg, or prd.
         argv[2]: List of OCNs (Required).
                  Comma separated strings without spaces in between any two values.
-                 For example: 1,6567842
+                 For example: 1,6567842,6758168,8727632
     """
     if (len(sys.argv) != 3):
-        print("Parmater error.")
+        print("Parmeter error.")
         print("Usage: {} env[dev|stg|prd] comma_separated_ocns".format(sys.argv[0]))
-        print("{} dev 1,6567842".format(sys.argv[0]))
+        print("{} dev 1,6567842,6758168,8727632".format(sys.argv[0]))
         exit(1)
 
     env = sys.argv[1]
@@ -88,19 +88,15 @@ def main():
 
     ocns_list = [int(i) for i in ocns]
 
-    # get environment variable in .env file
-    ENV = os.environ.get("MINTER_ENV") or env
+    zephir_db_config = get_config_by_key('config', 'zephir_db', env)
+    db_connect_url = str(utils.db_connect_url(zephir_db_config))
 
-    zephir_db_config = get_config_by_key('config','zephir_db', ENV)
-    leveldb_config = get_config_by_key('config','ocns_leveldb', ENV)
+    primary_db_path = get_config_by_key('config', 'ocns_leveldb', "primary_db_path")
+    cluster_db_path = get_config_by_key('config', 'ocns_leveldb', "cluster_db_path")
 
-    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or str(utils.db_connect_url(zephir_db_config))
-    PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMAR_DB_PATH") or leveldb_config["primary_db_path"]
-    CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTERDB_PATH") or leveldb_config["cluster_db_path"]
-
-    #print(DB_CONNECT_STR)
-    #print(PRIMARY_DB_PATH)
-    #print(CLUSTER_DB_PATH)
+    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_url
+    PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
+    CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
     results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
     print(results)

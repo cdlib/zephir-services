@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS cid_minting_store;
+#DROP TABLE IF EXISTS cid_minting_store;
 
 CREATE TABLE IF NOT EXISTS cid_minting_store (
         id integer PRIMARY KEY AUTOINCREMENT,

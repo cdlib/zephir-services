@@ -1,4 +1,5 @@
 import os
+import sys
 
 import msgpack
 import pytest
@@ -6,6 +7,7 @@ import plyvel
 
 from cid_inquiry import cid_inquiry
 from cid_inquiry import flat_and_dedup_sort_list
+from cid_inquiry import main
 
 """Test cid_inquiry() function which returns a dict with: 
   "iquiry_ocns": input ocns, list of integers.
@@ -34,8 +36,8 @@ def test_case_1_a_i_ii(setup_leveldb, setup_sqlite):
            for i: 1000000000
            for ii: 18329830
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns_list = {
@@ -55,7 +57,7 @@ def test_case_1_a_i_ii(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+        result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters[k]
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -79,8 +81,8 @@ def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
            for i: [100000001, 1234567890]
            for ii: [976940347, 12345678902, 12345678901] (1 other ocn + 2 invalid ocns)
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns_list = {
@@ -100,7 +102,7 @@ def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+        result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters[k]
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -123,8 +125,8 @@ def test_case_1_b_i(setup_leveldb, setup_sqlite):
         OCLC primary OCN: 999531; other OCNs: None
         Incoming ocn: 999531
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns = [999531]
@@ -133,7 +135,7 @@ def test_case_1_b_i(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {
         "000249880": ['999531'],
     }
-    result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+    result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
 
     print(result["matched_oclc_clusters"])
     print(result["cid_ocn_clusters"])
@@ -166,8 +168,8 @@ def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
           1) 33393343 - Zephir cluster contains the Record OCN
           2) 44192417 - Zephir cluster doesn't have the Record OCN
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns_list = {
@@ -183,7 +185,7 @@ def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
     }
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+        result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -204,8 +206,8 @@ def test_case_2_b_i(setup_leveldb, setup_sqlite):
         OCLC primary OCN: 999531; other OCNs: None
         Incoming ocn: 999531, 12345678903
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns = [999531, 12345678903]
@@ -214,7 +216,7 @@ def test_case_2_b_i(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {
         "000249880": ['999531'],
     }
-    result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+    result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
 
     assert result["inquiry_ocns"] == incoming_ocns
     assert result["matched_oclc_clusters"] == expected_oclc_clusters
@@ -243,8 +245,8 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
           1) 33393343, 28477569 - Zephir cluster contains the Record OCN
           2) 44192417, 12345678904 - Zephir cluster doesn't have the Record OCN
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns_list = {
@@ -264,7 +266,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
     expected_min_cid = "009547317"
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+        result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -293,8 +295,8 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
         Incoming OCN for test case:
           [217211158 (invalid), 8727632]
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns = [217211158, 8727632] 
@@ -309,7 +311,7 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
     }
     expected_min_cid = "000000280"
 
-    result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+    result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -339,8 +341,8 @@ def test_case_3_a(setup_leveldb, setup_sqlite):
         Incoming OCN for test case:
           [100, 300]
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns = [100, 300] 
@@ -352,7 +354,7 @@ def test_case_3_a(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
     expected_min_cid = None
 
-    result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+    result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -382,8 +384,8 @@ def test_case_3_b(setup_leveldb, setup_sqlite):
         Incoming OCN for test case:
           [200, 228676186]
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns = [200, 228676186]
@@ -395,7 +397,7 @@ def test_case_3_b(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {"008648991": ['23012053', '4912741', '5066412']}
     expected_min_cid =  "008648991"
 
-    result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+    result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -425,8 +427,8 @@ def test_case_3_c(setup_leveldb, setup_sqlite):
         Incoming OCN for test case:
         [140869, 2094039 (matches 2 CIDs)] 
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns = [140869, 2094039]
@@ -446,7 +448,7 @@ def test_case_3_c(setup_leveldb, setup_sqlite):
             }
     expected_min_cid =  "000002076"
 
-    result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+    result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -479,8 +481,8 @@ def test_case_4_abc(setup_leveldb, setup_sqlite):
         matches 1 zephir CID: [1234567890101]
         mathces 2 Zephir CIDs: [1234567890102, 1234567890103]
     """
-    primarydb_path = setup_leveldb["primarydb_path"]
-    clusterdb_path = setup_leveldb["clusterdb_path"]
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
     db_conn_str = setup_sqlite["db_conn_str"]
 
     incoming_ocns_list = {
@@ -519,7 +521,7 @@ def test_case_4_abc(setup_leveldb, setup_sqlite):
             "2_cids": '102337774',
     }
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, db_conn_str, primarydb_path, clusterdb_path)
+        result = cid_inquiry(incoming_ocns, db_conn_str, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 0 
@@ -528,6 +530,56 @@ def test_case_4_abc(setup_leveldb, setup_sqlite):
         assert result["cid_ocn_clusters"] == expected_zephir_clsuters[k]
         assert result["num_of_matched_zephir_clusters"] == expected_num_of_zephir_clsuters[k] 
         assert result["min_cid"] ==  expected_min_cid[k]
+
+def test_main_param_err_0(capsys, setup_leveldb, setup_sqlite):
+    with pytest.raises(SystemExit) as pytest_e:
+        main()
+    out, err = capsys.readouterr()
+    assert "Parmeter error" in out
+    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 1]
+
+def test_main_param_err_1(capsys, setup_leveldb, setup_sqlite):
+    with pytest.raises(SystemExit) as pytest_e:
+        sys.argv = ['dev']
+        main()
+    out, err = capsys.readouterr()
+    print(out)
+    assert "Parmeter error" in out
+    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 1]
+
+def test_main_param_err_2(capsys, setup_leveldb, setup_sqlite):
+    with pytest.raises(SystemExit) as pytest_e:
+        sys.argv = ['dev', '1']
+        main()
+    out, err = capsys.readouterr()
+    print(out)
+    assert "Parmeter error" in out
+    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 1]
+
+# OCN: 77872343 (in dev db but not in test db) 
+def test_main_not_in_test_db(capsys, setup_leveldb, setup_sqlite):
+    with pytest.raises(SystemExit) as pytest_e:
+        # env will be override by environment varaiable
+        sys.argv = ['', 'test', '77872343']
+        main()
+    out, err = capsys.readouterr()
+    print(out)
+    expected = "{'inquiry_ocns': [77872343], 'matched_oclc_clusters': [], 'num_of_matched_oclc_clusters': 0, 'inquiry_ocns_zephir': [77872343], 'cid_ocn_list': [], 'cid_ocn_clusters': {}, 'num_of_matched_zephir_clusters': 0, 'min_cid': None}"
+    assert expected in out
+    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
+
+# OCNs: 6758168,8727632
+def test_main_in_test_db_2_clusters(capsys, setup_leveldb, setup_sqlite):
+    with pytest.raises(SystemExit) as pytest_e:
+        # env will be override by environment varaiable
+        sys.argv = ['', 'test', '6758168,8727632']
+        main()
+    out, err = capsys.readouterr()
+    print(out)
+    expected = "{'inquiry_ocns': [6758168, 8727632], 'matched_oclc_clusters': [[8727632, 24253253]], 'num_of_matched_oclc_clusters': 1, 'inquiry_ocns_zephir': [6758168, 8727632, 24253253], 'cid_ocn_list': [('001693730', '15437990'), ('001693730', '5663662'), ('001693730', '6758168'), ('002492721', '8727632')], 'cid_ocn_clusters': {'001693730': ['15437990', '5663662', '6758168'], '002492721': ['8727632']}, 'num_of_matched_zephir_clusters': 2, 'min_cid': '001693730'}"
+    assert expected in out
+    assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
+
 
 def test_flat_and_dedup_sort_list():
     input_list = {
@@ -550,13 +602,16 @@ def test_flat_and_dedup_sort_list():
 @pytest.fixture
 def setup_leveldb(tmpdatadir, csv_to_df_loader):
     dfs = csv_to_df_loader
-    primarydb_path = create_primary_db(tmpdatadir, dfs["primary.csv"])
-    clusterdb_path = create_cluster_db(tmpdatadir, dfs["primary.csv"])
+    primary_db_path = create_primary_db(tmpdatadir, dfs["primary.csv"])
+    cluster_db_path = create_cluster_db(tmpdatadir, dfs["primary.csv"])
+    os.environ["OVERRIDE_PRIMARY_DB_PATH"] = primary_db_path
+    os.environ["OVERRIDE_CLUSTER_DB_PATH"] = cluster_db_path
+
     return {
         "tmpdatadir": tmpdatadir,
         "dfs": dfs,
-        "primarydb_path": primarydb_path,
-        "clusterdb_path": clusterdb_path
+        "primary_db_path": primary_db_path,
+        "cluster_db_path": cluster_db_path
     }
 
 @pytest.fixture
@@ -570,8 +625,11 @@ def setup_sqlite(data_dir, tmpdir, scope="session"):
     print(cmd)
     os.system(cmd)
 
+    db_conn_str = 'sqlite:///{}'.format(database)
+    os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
+
     return {
-        "db_conn_str": 'sqlite:///{}'.format(database)
+        "db_conn_str": db_conn_str
     }
 
 # HELPERS

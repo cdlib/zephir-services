@@ -4,11 +4,13 @@
 # Arguments:
 #   arg1: Comma separated OCNs in integer without spaces in between any two values
 # Usage: run_cid_inquiry.sh comma_separated_ocns
+# For example: run_cid_inquiry.sh 1,6567842,6758168,8727632
 # Created: 8/6/2020. 
 
 function usage_error {
     echo $1
     echo "Usage: run_cid_inquiry.sh comma_separated_ocns"
+    echo "For example: run_cid_inquiry.sh 1,6567842,6758168,8727632"
     exit 1
 }
 

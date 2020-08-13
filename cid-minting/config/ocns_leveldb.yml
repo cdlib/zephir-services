@@ -1,7 +1,3 @@
-dev:
-    primary_db_path: /apps/htmm/leveldb/primary-lookup 
-    cluster_db_path: /apps/htmm/leveldb/cluster-lookup
-test:
-    primary_db_path: /apps/htmm/leveldb/primary-lookup 
-    cluster_db_path: /apps/htmm/leveldb/cluster-lookup
+primary_db_path: /apps/htmm/leveldb/primary-lookup 
+cluster_db_path: /apps/htmm/leveldb/cluster-lookup
 
