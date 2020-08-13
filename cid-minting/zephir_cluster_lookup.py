@@ -203,18 +203,13 @@ def main():
     else:
         env = "test"
 
-    # get environment variable in .env file
-    ENV = os.environ.get("ZEPHIR_ENV") or env
-    #print("env: {}".format(ENV))
-
-    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or get_db_conn_string_from_config_by_key('config','zephir_db', ENV)
+    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or get_db_conn_string_from_config_by_key('config','zephir_db', env)
 
     #print(DB_CONNECT_STR)
 
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
 
     results = zephir_clusters_lookup(DB_CONNECT_STR, ocns_list)
-    print(type(results))
     print(results)
 
 if __name__ == '__main__':
