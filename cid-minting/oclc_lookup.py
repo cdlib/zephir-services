@@ -1,7 +1,12 @@
 import sys
+import os
 
+import environs
 import msgpack
 import plyvel
+import click
+
+from config import get_config_by_key
 
 # convenience methods for converting ints to and from bytes
 def int_to_bytes(inum):
@@ -150,21 +155,6 @@ def convert_set_to_list(set_of_tuples):
     list_of_lists = [list(a_tuple) for a_tuple in list_of_tuples]
     return list_of_lists
 
-def test(ocn):
-    print(".... testing OCN={}".format(ocn))
-    primary = get_primary_ocn(ocn)
-    print("primary OCN: {}".format(primary))
-    cluster = get_ocns_cluster_by_primary_ocn(primary)
-    print("cluster by primary ({}): {}".format(primary, cluster))
-    cluster = get_ocns_cluster_by_ocn(ocn)
-    print("cluster by ocn ({}): {}".format(ocn, cluster))
-
-def test_ocns(ocns):
-    print(".... testing OCN={}".format(ocns))
-    clusters = get_clusters_by_ocns(ocns)
-    print("clusters by ocns ({}):".format(ocns))
-    print("clusters: {}".format(clusters))
-
 def lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path ):
     """For a given list of OCNs find their associated OCN clusters from the OCLC Concordance Table
     Args:
@@ -184,7 +174,6 @@ def lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path ):
 
     # convert to a list of OCNs lists
     oclc_ocns_list = convert_set_to_list(set_of_tuples)
-    print(oclc_ocns_list)
 
     # create an object with the OCLC lookup result
     oclc_lookup_result = {
@@ -194,10 +183,7 @@ def lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path ):
     }
     return oclc_lookup_result
 
-def main():
-    """For a given oclc number, find all OCNs in the OCN cluster from the OCLC Concordance Table
-    """
-
+def tests():
     clusters_raw = {'1': [6567842, 9987701, 53095235, 433981287],
             '1000000000': None,
             '2': [9772597, 35597370, 60494959, 813305061, 823937796, 1087342349],
@@ -330,6 +316,39 @@ def main():
 
     ocns=[]
     assert get_clusters_by_ocns(ocns) == set()
+
+@click.command()
+@click.option('-t', '--test', is_flag=True, help="Will run a set of tests.")
+@click.argument('ocns', nargs=-1)
+def main(test, ocns):
+    """For a given list of OCNs, find all resolved OCNs clusters from the OCLC Concordance Table.
+
+    Provide the OCNs list in space separated integers, for example: 1 123.
+
+    cmd: pipenv run python oclc_lookup.py 1 123
+
+    returns: {(123, 18329830, 67524283), (1, 6567842, 9987701, 53095235, 433981287)}
+    """
+    if test:
+        click.echo("Running tests ...")
+        tests()
+        exit(0)
+
+    primary_db_path = get_config_by_key('config', 'ocns_leveldb', "primary_db_path")
+    cluster_db_path = get_config_by_key('config', 'ocns_leveldb', "cluster_db_path")
+
+    PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
+    CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
+
+    ocns_list = list(int(ocn) for ocn in ocns)
+    if ocns_list:
+        clusters = get_clusters_by_ocns(ocns_list, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+        click.echo(clusters)
+        exit(0)
+    else:
+        ctx = click.get_current_context()
+        click.echo(ctx.get_help())
+        exit(1)
 
 if __name__ == "__main__":
     main()

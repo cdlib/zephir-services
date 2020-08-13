@@ -1,0 +1,24 @@
+'inquiry_ocns': [6758168,8727632]
+'inquiry_ocns': [6758168,15437990,5663662,33393343,28477569,8727632]
+
+SELECT distinct z.cid, i.identifier
+    FROM zephir_records as z
+    INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
+    INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
+    WHERE i.type = 'oclc'
+    AND i.identifier in ('6758168', '8727632');
+
+001693730	6758168
+002492721	8727632
+
+SELECT distinct z.cid, i.identifier
+    FROM zephir_records as z
+    INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
+    INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
+    WHERE i.type = 'oclc'
+    AND z.cid in ('001693730', '002492721');
+
+001693730	6758168
+001693730	15437990
+001693730	5663662
+002492721	8727632
