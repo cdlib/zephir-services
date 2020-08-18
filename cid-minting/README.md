@@ -1,6 +1,6 @@
 # CID Minting 
 
-CID Minting includes a set to modules and functions to retrieve Zephir clusters based on the OCNs in the incoming record and any other OCNs that are in the OCLC record clusters.
+CID Minting includes a set of modules and functions to retrieve Zephir clusters based on the OCNs in the incoming record and any other OCNs in the OCLC record clusters.
 
 ## Modules
 
@@ -10,7 +10,7 @@ CID Minting includes a set to modules and functions to retrieve Zephir clusters 
 * cid_minting_store
  
 ### OCLC Lookup (oclc_lookup)
-This module contains core functions to find OCNs relationships in the OCLC Concordance table:
+This module contains core functions to find the OCNs relationships in the OCLC Concordance table:
 
 * get_primary_ocn(ocn, db_path="primary-lookup"):
   Gets the primary oclc number for a given oclc number.
