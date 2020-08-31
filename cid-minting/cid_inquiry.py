@@ -2,6 +2,7 @@ import os
 import sys
 import environs
 import re
+import json
 
 from sqlalchemy import create_engine
 from sqlalchemy import text
@@ -78,7 +79,7 @@ def main():
                  For example: 1,6567842,6758168,8727632
     """
     if (len(sys.argv) != 3):
-        print("Parmeter error.")
+        print("Parameter error.")
         print("Usage: {} env[dev|stg|prd] comma_separated_ocns".format(sys.argv[0]))
         print("{} dev 1,6567842,6758168,8727632".format(sys.argv[0]))
         exit(1)
@@ -99,7 +100,7 @@ def main():
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
     results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
-    print(results)
+    print(json.dumps(results))
     exit(0)
 
 if __name__ == '__main__':
