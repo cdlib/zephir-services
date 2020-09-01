@@ -100,6 +100,7 @@ def main():
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
     results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+    #print(results)
     print(json.dumps(results))
     exit(0)
 
