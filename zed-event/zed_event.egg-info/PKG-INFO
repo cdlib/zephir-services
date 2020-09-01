@@ -9,6 +9,6 @@ License: UNKNOWN
 Description: UNKNOWN
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
+Classifier: License :: OSI Approved :: BSD 3-Clause License
 Classifier: Operating System :: OS Independent
 Description-Content-Type: text/markdown

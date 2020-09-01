@@ -6,7 +6,8 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="zed-event",
     version="0.1",
-    scripts=["zed_event.py"],
+    #scripts=["zed_event.py"],
+    packages=['zed'],
     author="California Digital Library",
     author_email="charlie.collett@ucop.edu",
     description="A package for creating and validating Zed events.",
@@ -14,10 +15,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/cdlib/zephir-services",
     zip_safe=False,
-    packages=setuptools.find_packages(),
+    # packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: BSD 3-Clause License",
         "Operating System :: OS Independent",
     ],
     install_requires=["jsonschema"],

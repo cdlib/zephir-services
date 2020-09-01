@@ -1,9 +1,11 @@
 README.md
 setup.py
-zed_event.py
 tests/__init__.py
 tests/conftest.py
 tests/test_zed_event.py
+zed/__init__.py
+zed/event.py
+zed/table.py
 zed_event.egg-info/PKG-INFO
 zed_event.egg-info/SOURCES.txt
 zed_event.egg-info/dependency_links.txt

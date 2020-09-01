@@ -1,47 +1,51 @@
-# import json
-# import re
-#
-# import numpy as np
-# import pandas as pd
-#
-# from zed_event import ZedEvent
-#
-# class ZedTable:
-#     def __init__(self, dataframe):
-#         self.table = dataframe.values
-#         self.header = list(dataframe.columns)
-#         #self.header = "status_msg_code","status_msg_name","status_zed_code","status_msg","topic","type","action","subject","object"
-#
-#
-#     def create_event(self, code, data={}, init=["event", "process", "timestamp"], validate=None):
-#         coded_list = self.table[self.table[:,1]==code][0]
-#         coded_defaults = self.flat_to_dict(dict(zip(self.header, coded_list))) #dict(zip(self.header, coded_list))
-#         coded_event = ZedEvent({**coded_defaults, **data}, init, validate)
-#         print(dict(zip(self.header, coded_list)))
-#         print(coded_event)
-#         return coded_event
-#
-#     def flat_to_dict(self, event_csv):
-#         event_dict = {
-#             "event": event_csv.get("event"),
-#             "object": event_csv.get("object"),
-#             "process": event_csv.get("process"),
-#             "report": event_csv.get("report"),
-#             "status": {
-#                 "msg": event_csv.get("status_msg"),
-#                 "msg_code": event_csv.get("status_msg_code"),
-#                 "type": event_csv.get("status_type"),
-#                 "zed_code": event_csv.get("status_zed_code")
-#                 },
-#             "subject": event_csv.get("subject"),
-#             "timestamp": event_csv.get("timestamp"),
-#             "topic": event_csv.get("topics"),
-#             "type": event_csv.get("topic"),
-#             }
-#         return event_dict
-#
-# import re
-#
+import json
+import re
+
+import numpy as np
+import pandas as pd
+
+from zed.event import ZedEvent
+
+class ZedTable:
+    def __init__(self, file, delimiter=","):
+        self._table_df = pd.read_csv(file, delimiter=delimiter, dtype=str)
+        self.table = self._table_df.values
+        self.headers = list(self._table_df.columns)
+
+    def create_event(self, code, data={}, init=["event", "process", "timestamp"], validate=None):
+        coded_list = self.table[self.table[:,1]==code][0]
+        coded_defaults = self.flat_to_dict(dict(zip(self.header, coded_list))) #dict(zip(self.header, coded_list))
+        coded_event = ZedEvent({**coded_defaults, **data}, init, validate)
+        return coded_event
+
+    def get(self, key):
+        events = self._table_df.loc[self._table_df["status_msg_code"] == key]
+        if events.empty and "status_shorthand" in self.headers:
+            # check shortand if not found by status_msg_code
+            events = self._table_df.loc[self._table_df["status_shorthand"] == key]
+        if not events.empty:
+            return self._unflatten(events.iloc[0].to_dict())
+
+    def _unflatten(self, flat_event):
+        event_dict = {
+            "event": flat_event.get("event"),
+            "object": flat_event.get("object"),
+            "process": flat_event.get("process"),
+            "report": flat_event.get("report"),
+            "status": {
+                "msg": flat_event.get("status_msg"),
+                "msg_code": flat_event.get("status_msg_code"),
+                "type": flat_event.get("status_type"),
+                "zed_code": flat_event.get("status_zed_code")
+                },
+            "subject": flat_event.get("subject"),
+            "timestamp": flat_event.get("timestamp"),
+            "topic": flat_event.get("topics"),
+            "type": flat_event.get("topic"),
+            }
+        return event_dict
+
+
 #
 # def nest_prefix(data, prefixes=[]):
 #     new_dict = {}
