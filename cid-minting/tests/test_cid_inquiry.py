@@ -4,6 +4,7 @@ import sys
 import msgpack
 import pytest
 import plyvel
+import json
 
 from cid_inquiry import cid_inquiry
 from cid_inquiry import flat_and_dedup_sort_list
@@ -131,7 +132,7 @@ def test_case_1_b_i(setup_leveldb, setup_sqlite):
 
     incoming_ocns = [999531]
     expected_oclc_clusters = [[999531]]
-    expected_cid_ocn_list = [('000249880', '999531')]
+    expected_cid_ocn_list = [{"cid": '000249880', "ocn": '999531'}]
     expected_zephir_clsuters = {
         "000249880": ['999531'],
     }
@@ -179,7 +180,7 @@ def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
 
     expected_oclc_clusters = [[28477569, 33393343, 44192417]]
     inquiry_ocns_zephir = [28477569, 33393343, 44192417]
-    expected_cid_ocn_list = [('009547317','28477569'), ('009547317', '33393343')]
+    expected_cid_ocn_list = [{"cid": '009547317', "ocn": '28477569'}, {"cid": '009547317', "ocn": '33393343'}]
     expected_zephir_clsuters = {
         "009547317": ['28477569', '33393343'],
     }
@@ -212,7 +213,7 @@ def test_case_2_b_i(setup_leveldb, setup_sqlite):
 
     incoming_ocns = [999531, 12345678903]
     expected_oclc_clusters = [[999531]]
-    expected_cid_ocn_list = [('000249880', '999531')]
+    expected_cid_ocn_list = [{"cid": '000249880', "ocn": '999531'}]
     expected_zephir_clsuters = {
         "000249880": ['999531'],
     }
@@ -259,7 +260,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
         "case_1_zephir_has_record_ocn": [28477569, 33393343, 44192417],
         "case_2_zephir_does_not_have_record_ocn": [28477569, 33393343, 44192417, 12345678904],
     }
-    expected_cid_ocn_list = [('009547317','28477569'), ('009547317', '33393343')]
+    expected_cid_ocn_list = [{"cid": '009547317', "ocn": '28477569'}, {"cid": '009547317', "ocn": '33393343'}]
     expected_zephir_clsuters = {
         "009547317": ['28477569', '33393343'],
     }
@@ -304,7 +305,10 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
     expected_oclc_clusters = [[8727632, 24253253]]
     inquiry_ocns_zephir = [8727632, 24253253, 217211158] 
 
-    expected_cid_ocn_list = [('000000280','217211158'), ('000000280','25909'), ('002492721','8727632')]
+    expected_cid_ocn_list = [
+            {"cid": '000000280', "ocn": '217211158'}, 
+            {"cid": '000000280', "ocn": '25909'}, 
+            {"cid": '002492721', "ocn":'8727632'}]
     expected_zephir_clsuters = {
         "000000280": ['217211158', '25909'],
         "002492721": ['8727632'],
@@ -393,7 +397,10 @@ def test_case_3_b(setup_leveldb, setup_sqlite):
     expected_oclc_clusters = [[4912741, 5066412, 23012053, 228676186, 315449541], [200, 1078101879, 1102728950]]
     inquiry_ocns_zephir = [200, 4912741, 5066412, 23012053, 228676186, 315449541, 1078101879, 1102728950]
 
-    expected_cid_ocn_list = [('008648991', '23012053'), ('008648991', '4912741'), ('008648991', '5066412')]
+    expected_cid_ocn_list = [
+            {"cid": '008648991', "ocn": '23012053'}, 
+            {"cid": '008648991', "ocn": '4912741'}, 
+            {"cid": '008648991', "ocn": '5066412'}]
     expected_zephir_clsuters = {"008648991": ['23012053', '4912741', '5066412']}
     expected_min_cid =  "008648991"
 
@@ -437,10 +444,10 @@ def test_case_3_c(setup_leveldb, setup_sqlite):
     inquiry_ocns_zephir = [140869,  2094039,  1008263420, 1150810243]
 
     expected_cid_ocn_list = [
-            ('000002076', '140869'), 
-            ('000002076', '2094039'), 
-            ('000002076', '241092814'),
-            ('102337772', '1008263420')
+            {"cid": '000002076', "ocn": '140869'}, 
+            {"cid": '000002076', "ocn": '2094039'}, 
+            {"cid": '000002076', "ocn": '241092814'},
+            {"cid": '102337772', "ocn": '1008263420'}
             ]
     expected_zephir_clsuters = {
             "000002076": ['140869', '2094039', '241092814'],
@@ -499,8 +506,8 @@ def test_case_4_abc(setup_leveldb, setup_sqlite):
      }
     expected_cid_ocn_list = {
         "no_cid": [],
-        "1_cid": [('102337775', '1234567890101')],
-        "2_cids": [('102337774', '1234567890102'), ('102337776', '1234567890103')],
+        "1_cid": [{"cid": '102337775', "ocn": '1234567890101'}],
+        "2_cids": [{"cid": '102337774', "ocn": '1234567890102'}, {"cid": '102337776', "ocn": '1234567890103'}],
     }
     expected_zephir_clsuters = {
         "no_cid": {},
@@ -531,52 +538,54 @@ def test_case_4_abc(setup_leveldb, setup_sqlite):
         assert result["num_of_matched_zephir_clusters"] == expected_num_of_zephir_clsuters[k] 
         assert result["min_cid"] ==  expected_min_cid[k]
 
+# no argument
 def test_main_param_err_0(capsys, setup_leveldb, setup_sqlite):
     with pytest.raises(SystemExit) as pytest_e:
         main()
     out, err = capsys.readouterr()
-    assert "Parmeter error" in out
+    assert "Parameter error" in out
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 1]
 
+# one argument
 def test_main_param_err_1(capsys, setup_leveldb, setup_sqlite):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ['dev']
         main()
     out, err = capsys.readouterr()
-    print(out)
-    assert "Parmeter error" in out
+    assert "Parameter error" in out
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 1]
 
+# two arguments
 def test_main_param_err_2(capsys, setup_leveldb, setup_sqlite):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ['dev', '1']
         main()
     out, err = capsys.readouterr()
-    print(out)
-    assert "Parmeter error" in out
+    assert "Parameter error" in out
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 1]
 
-# OCN: 77872343 (in dev db but not in test db) 
+# OCN: 300 (not in test db) 
 def test_main_not_in_test_db(capsys, setup_leveldb, setup_sqlite):
     with pytest.raises(SystemExit) as pytest_e:
         # env will be override by environment varaiable
-        sys.argv = ['', 'test', '77872343']
+        sys.argv = ['', 'test', '300']
         main()
     out, err = capsys.readouterr()
-    print(out)
-    expected = "{'inquiry_ocns': [77872343], 'matched_oclc_clusters': [], 'num_of_matched_oclc_clusters': 0, 'inquiry_ocns_zephir': [77872343], 'cid_ocn_list': [], 'cid_ocn_clusters': {}, 'num_of_matched_zephir_clusters': 0, 'min_cid': None}"
-    assert expected in out
+    expected = '{"inquiry_ocns": [300], "matched_oclc_clusters": [[300, 39867290, 39867383]], "num_of_matched_oclc_clusters": 1, "inquiry_ocns_zephir": [300, 39867290, 39867383], "cid_ocn_list": [], "cid_ocn_clusters": {}, "num_of_matched_zephir_clusters": 0, "min_cid": null}'
+
+    assert  expected in out 
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
-# OCNs: 6758168,8727632
+# OCNs: 217211158, 8727632 (test case 1&2 c)
 def test_main_in_test_db_2_clusters(capsys, setup_leveldb, setup_sqlite):
     with pytest.raises(SystemExit) as pytest_e:
         # env will be override by environment varaiable
-        sys.argv = ['', 'test', '6758168,8727632']
+        sys.argv = ['', 'test', '217211158,8727632']
         main()
     out, err = capsys.readouterr()
-    print(out)
-    expected = "{'inquiry_ocns': [6758168, 8727632], 'matched_oclc_clusters': [[8727632, 24253253]], 'num_of_matched_oclc_clusters': 1, 'inquiry_ocns_zephir': [6758168, 8727632, 24253253], 'cid_ocn_list': [('001693730', '15437990'), ('001693730', '5663662'), ('001693730', '6758168'), ('002492721', '8727632')], 'cid_ocn_clusters': {'001693730': ['15437990', '5663662', '6758168'], '002492721': ['8727632']}, 'num_of_matched_zephir_clusters': 2, 'min_cid': '001693730'}"
+
+    expected = '{"inquiry_ocns": [217211158, 8727632], "matched_oclc_clusters": [[8727632, 24253253]], "num_of_matched_oclc_clusters": 1, "inquiry_ocns_zephir": [8727632, 24253253, 217211158], "cid_ocn_list": [{"cid": "000000280", "ocn": "217211158"}, {"cid": "000000280", "ocn": "25909"}, {"cid": "002492721", "ocn": "8727632"}], "cid_ocn_clusters": {"000000280": ["217211158", "25909"], "002492721": ["8727632"]}, "num_of_matched_zephir_clusters": 2, "min_cid": "000000280"}'
+
     assert expected in out
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
@@ -622,7 +631,6 @@ def setup_sqlite(data_dir, tmpdir, scope="session"):
     setup_sql = os.path.join(data_dir, "setup_zephir_test_db.sql")
 
     cmd = "sqlite3 {} < {}".format(database, setup_sql)
-    print(cmd)
     os.system(cmd)
 
     db_conn_str = 'sqlite:///{}'.format(database)
