@@ -9,7 +9,7 @@ from sqlalchemy import text
 from lib.utils import ConsoleMessenger
 import lib.utils as utils
 
-SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid, i.identifier
+SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
     FROM zephir_records as z
     INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
     INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
@@ -55,7 +55,8 @@ class ZephirDatabase:
     def findall(self, sql, params=None):
         with self.engine.connect() as connection:
             results = connection.execute(sql, params or ())
-            return results.fetchall()
+            results_dict = [dict(row) for row in results.fetchall()]
+            return results_dict
 
 def zephir_clusters_lookup(db_conn_str, ocns_list):
     """
@@ -65,7 +66,7 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         ocns_list: list of OCNs in integers
     Return: A dict with:
         "inquiry_ocns_zephir": input ocns list,
-        "cid_ocn_list": list of cid and ocn tuples from DB query,
+        "cid_ocn_list": list of dict with keys of "cid" and "ocn",
         "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
         "num_of_matched_zephir_clusters": number of matched clusters
         "min_cid": lowest CID 
@@ -83,12 +84,13 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         return zephir_cluster
 
     # find all OCNs in each cluster
-    cids_list = [cid_ocn[0] for cid_ocn in cid_ocn_list_by_ocns]
-    cid_ocn_list = find_zephir_clusters_by_cids(db_conn_str, cids_list)
+    cids_list = [cid_ocn.get("cid") for cid_ocn in cid_ocn_list_by_ocns]
+    unique_cids_list = list(set(cids_list))
+    cid_ocn_list = find_zephir_clusters_by_cids(db_conn_str, unique_cids_list)
     if not cid_ocn_list:
         return zephir_cluster
 
-    # dict with key="cid", value=list of ocns in the cid cluster
+    # convert to a dict with key=cid, value=list of ocns
     cid_ocn_clusters = formatting_cid_ocn_clusters(cid_ocn_list)
 
     zephir_cluster = {
@@ -96,7 +98,7 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         "cid_ocn_list": cid_ocn_list,
         "cid_ocn_clusters": cid_ocn_clusters,
         "num_of_matched_zephir_clusters": len(cid_ocn_clusters),
-        "min_cid": min([cid_ocn[0] for cid_ocn in cid_ocn_list])
+        "min_cid": min([cid_ocn.get("cid") for cid_ocn in cid_ocn_list])
     }
     return zephir_cluster
 
@@ -106,7 +108,7 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
         db_conn_str: database connection string
         ocns_list: list of OCNs in integer 
     Returns:
-        list of cid and ocn tuples;
+        list of dict with keys "cid" and "ocn"
         [] when there is no match
         None: when there is an exception
     """
@@ -125,7 +127,7 @@ def find_zephir_clusters_by_cids(db_conn_str, cid_list):
         db_conn_str: database connection string
         cid_list: list of CIDs in string
     Returns:
-        list of cid and ocn tuples
+        list of dict with keys "cid" and "ocn"
     """
     select_zephir = construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
     if select_zephir:
@@ -148,20 +150,22 @@ def list_to_str(a_list):
     return ocns
 
 def formatting_cid_ocn_clusters(cid_ocn_list):
-    """
+    """Put cid and ocn pairs into clusters by unique cids. 
     Args:
-        cid_ocn_list: list of cid and ocn tuples.
-        [(cid1, ocn1), {cid1, ocn2), (cid3, ocn3)]
+        cid_ocn_list: list of dict with keys of "cid" and "ocn".
+        [{"cid": cid1, "ocn": ocn1}, {"cid": cid1, "ocn": ocn2}, {"cid": cid3, "ocn": ocn3}]
     Returns:
-        A dict with key="cid", value=list of ocns 
-        {"cid1": [ocn1, ocn2], "cid3": [ocn3]}
+        A dict with key=unique cid, value=list of ocns with the same cid.
+        {"cid1": [ocn1, ocn2],
+         "cid3", [ocn3]}
     """
-    # key=cid, val=[ocn1, ocn2]
+    # key: cid, value: list of ocns [ocn1, ocn2]
     cid_ocns_dict = {}
 
     if cid_ocn_list:
         for cid_ocn in cid_ocn_list:
-            cid, ocn = cid_ocn
+            cid = cid_ocn.get("cid")
+            ocn = cid_ocn.get("ocn")
             if cid in cid_ocns_dict:
                 cid_ocns_dict[cid].append(ocn)
             else:

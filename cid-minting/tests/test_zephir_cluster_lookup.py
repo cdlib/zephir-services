@@ -52,8 +52,7 @@ def test_find_zephir_cluster_by_one_ocn(create_test_db):
     """
     db_conn_str = create_test_db["db_conn_str"]
     ocns_list = [8727632]
-    expected_cid_ocn_list = [('002492721', '8727632')]
-    expected_results = {'002492721': ['8727632']}
+    expected_cid_ocn_list = [{"cid": '002492721', "ocn": '8727632'}]
 
     cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
     print(cid_ocn_list)
@@ -67,12 +66,12 @@ def test_find_zephir_cluster_by_ocns(create_test_db):
     db_conn_str = create_test_db["db_conn_str"]
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
     expected_cid_ocn_list = [
-            ('001693730', '15437990'), 
-            ('001693730', '5663662'),
-            ('001693730', '6758168'), 
-            ('002492721', '8727632'), 
-            ('009547317', '28477569'), 
-            ('009547317', '33393343'),
+            {"cid": '001693730', "ocn": '15437990'}, 
+            {"cid": '001693730', "ocn": '5663662'},
+            {"cid": '001693730', "ocn": '6758168'}, 
+            {"cid": '002492721', "ocn": '8727632'}, 
+            {"cid": '009547317', "ocn": '28477569'}, 
+            {"cid": '009547317', "ocn": '33393343'}
         ]
 
     cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
@@ -92,8 +91,14 @@ def test_find_zephir_cluster_by_cids(create_test_db):
         "not_used_cid": ['123456789'],
     }
     expected_cid_ocn_list = {
-        "one_cid": [('001693730', '15437990'), ('001693730', '5663662'), ('001693730', '6758168')],
-        "two_cids": [('002492721', '8727632'), ('009547317', '28477569'), ('009547317', '33393343')],
+        "one_cid": [
+                {"cid": '001693730', "ocn": '15437990'}, 
+                {"cid": '001693730', "ocn": '5663662'}, 
+                {"cid": '001693730', "ocn": '6758168'}],
+        "two_cids": [
+                {"cid": '002492721', "ocn": '8727632'}, 
+                {"cid": '009547317', "ocn": '28477569'}, 
+                {"cid": '009547317', "ocn": '33393343'}],
         "no_cid": None,
         "not_used_cid": [],
     }
@@ -127,10 +132,17 @@ def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
         "with_ocn_not_in_zephir": [25909, 12345678901], 
     }
     expected_cid_ocn_list = {
-        "one_ocn_1_ocn_cluster": [('002492721', '8727632')],
-        "one_ocn_2_ocns_cluster": [('009547317', '28477569'), ('009547317', '33393343')],
-        "two_ocns_3_ocns_cluster": [('001693730', '15437990'), ('001693730', '5663662'), ('001693730', '6758168')],
-        "with_ocn_not_in_zephir": [('000000280', '217211158'), ('000000280', '25909')],
+        "one_ocn_1_ocn_cluster": [{"cid": '002492721', "ocn": '8727632'}],
+        "one_ocn_2_ocns_cluster": [
+            {"cid": '009547317', "ocn": '28477569'}, 
+            {"cid": '009547317', "ocn": '33393343'}],
+        "two_ocns_3_ocns_cluster": [
+            {"cid": '001693730', "ocn": '15437990'}, 
+            {"cid": '001693730', "ocn": '5663662'},
+            {"cid": '001693730', "ocn": '6758168'}],
+        "with_ocn_not_in_zephir": [
+            {"cid": '000000280', "ocn": '217211158'}, 
+            {"cid": '000000280', "ocn": '25909'}],
     }
     expected_clusters = {
         "one_ocn_1_ocn_cluster": {'002492721': [ '8727632']},
@@ -157,14 +169,14 @@ def test_zephir_cluster_lookup_matched_more_than_one_clusters(create_test_db):
     db_conn_str = create_test_db["db_conn_str"]
     ocns_list = [12345678901, 6758168, 28477569, 8727632, 217211158]
     expected_cid_ocn_list = [
-            ('000000280', '217211158'),
-            ('000000280', '25909'),
-            ('001693730', '15437990'),
-            ('001693730', '5663662'),
-            ('001693730', '6758168'),
-            ('002492721', '8727632'),
-            ('009547317', '28477569'),
-            ('009547317', '33393343'),
+            {"cid": '000000280', "ocn": '217211158'},
+            {"cid": '000000280', "ocn": '25909'},
+            {"cid": '001693730', "ocn": '15437990'},
+            {"cid": '001693730', "ocn": '5663662'},
+            {"cid": '001693730', "ocn": '6758168'},
+            {"cid": '002492721', "ocn": '8727632'},
+            {"cid": '009547317', "ocn": '28477569'},
+            {"cid": '009547317', "ocn": '33393343'},
         ]
     expected_clusters = {
             '000000280': ['217211158', '25909'],
@@ -198,14 +210,19 @@ def test_list_to_str():
         assert expected[k] == list_to_str(val)
 
 def test_formatting_cid_ocn_clusters():
-    list_of_tuples = [('001693730', '6758168'), ('001693730', '15437990'), ('001693730', '5663662'), ('002492721', '8727632'), ('009547317', '33393343'), ('009547317', '28477569')]
-    formatting_cid_ocn_clusters(list_of_tuples)
+    list_of_cid_ocn = [
+            {"cid": '001693730', "ocn": '6758168'}, 
+            {"cid": '001693730', "ocn": '15437990'},
+            {"cid": '001693730', "ocn": '5663662'},
+            {"cid": '002492721', "ocn": '8727632'},
+            {"cid": '009547317', "ocn": '33393343'},
+            {"cid": '009547317', "ocn": '28477569'}]
     expected_results = {
             '001693730': ['6758168', '15437990', '5663662'], 
             '002492721': ['8727632'],
             '009547317': ['33393343', '28477569'],
             }
-    results = formatting_cid_ocn_clusters(list_of_tuples)
+    results = formatting_cid_ocn_clusters(list_of_cid_ocn)
     assert results != None
     assert results == expected_results
 
