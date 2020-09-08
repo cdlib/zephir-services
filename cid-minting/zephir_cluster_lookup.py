@@ -13,7 +13,7 @@ SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
     FROM zephir_records as z
     INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
     INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
-    WHERE i.type = 'oclc'
+    WHERE z.cid != '0' AND i.type = 'oclc'
 """
 AND_IDENTIFIER_IN = "AND i.identifier in"
 AND_CID_IN = "AND z.cid in"
