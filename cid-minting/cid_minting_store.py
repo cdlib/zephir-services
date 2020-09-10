@@ -21,11 +21,9 @@ def get_db_conn_string_from_config_by_key(config_dir_name, config_fname, key):
 
     # load all configuration files in directory
     configs = utils.load_config(CONFIG_PATH)
-    print(configs)
 
     # get config value by filename and key 
     config = configs.get(config_fname, {}).get(key)
-    print(config)
 
     return str(utils.db_connect_url(config))
 
@@ -64,25 +62,16 @@ def find_query(engine, sql):
 def insert_a_record(log, session, record):
 
     try:
-    #    log_info(log, "Inserting to cid_minting_store table ")
         session.add(record)
-        # throws()
     except Exception as e:
         session.rollback()
-     #   log_error(
-     #       log,
-     #       "Insert to the events table failed. Rolling back transaction. " + str(e),
-     #   )
         raise
     else:
-    #    log_info(log, "Committing transaction")
         session.commit()
-
     return
 
 def main():
     #engine = db.create_engine('dialect+driver://user:pass@host:port/db')
-
     #db_conn_str = "sqlite:///database/test_sqlite.db"
     #db_conn_str = "mysql+mysqlconnector://{}:{}@{}:{}/{}".format(user, passwd, host, port, db)
 
@@ -115,6 +104,7 @@ def main():
     record = CidMintingStore(type='oclc', identifier='30461866', cid='011323406')
     insert_a_record('log', session, record)
     result = find_by_ocn(CidMintingStore, session, '30461866')
+    print(result)
 
 if __name__ == "__main__":
     main()
