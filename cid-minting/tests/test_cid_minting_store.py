@@ -9,10 +9,12 @@ def create_test_db(data_dir, tmpdir, scope="session"):
     db_name = "test_minter_sqlite.db"
     #database = os.path.join(tmpdir, db_name)
     database = os.path.join(data_dir, db_name)
-    setup_sql = os.path.join(data_dir, "setup_cid_minter_db.sql")
+    create_table = os.path.join(data_dir, "create_cid_minting_store_table.sql")
+    insert_data = os.path.join(data_dir, "prepare_cid_minter_datasets.sql")
     
-    cmd = "sqlite3 {} < {}".format(database, setup_sql)
-    print(cmd)
+    cmd = "sqlite3 {} < {}".format(database, create_table)
+    os.system(cmd)
+    cmd = "sqlite3 {} < {}".format(database, insert_data)
     os.system(cmd)
 
     os.environ["OVERRIDE_DB_CONNECT_STR"] = 'sqlite:///{}'.format(database)

@@ -9,4 +9,3 @@ CREATE TABLE IF NOT EXISTS cid_minting_store (
         UNIQUE (type,identifier,cid)
 );  
 
-CREATE UNIQUE INDEX index_cid_minting_store_cid ON cid_minting_store(cid);
