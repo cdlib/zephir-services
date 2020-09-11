@@ -28,21 +28,33 @@ def test_find_query(create_test_db):
     print("in test_find_query db_conn_str: {}".format(db_conn_str))
     select_sql = "select * from cid_minting_store"
 
-    engine, session, CidMintingStore = prepare_database(db_conn_str)
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
+
     results = find_query(engine, select_sql)
     print(results)
     assert len(results) == 5
 
 def test_find_by_ocn():
     db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    engine, session, CidMintingStore = prepare_database(db_conn_str)
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
+
     record = find_by_ocn(CidMintingStore, session, '8727632')
     print(record)
     assert [record.type, record.identifier, record.cid] == ['oclc', '8727632', '002492721']
 
 def test_find_all():
     db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    engine, session, CidMintingStore = prepare_database(db_conn_str)
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
+
     results = find_all(CidMintingStore, session)
     print(type(results))
     assert len(results) == 5
@@ -53,7 +65,10 @@ def test_find_all():
 
 def test_insert_a_record():
     db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    engine, session, CidMintingStore = prepare_database(db_conn_str)
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
     # before insert a record
     results = find_all(CidMintingStore, session)
     assert len(results) == 5
