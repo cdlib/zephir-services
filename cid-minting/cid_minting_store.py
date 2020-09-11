@@ -34,24 +34,21 @@ def prepare_database(db_connect_str):
     Base = automap_base()
     # reflect the tables
     Base.prepare(engine, reflect=True)
-    # map class to table by table name
+    # map table to class
     CidMintingStore = Base.classes.cid_minting_store
-    return engine, session, CidMintingStore
-
+    return {
+        "engine": engine, 
+        "session": session, 
+        "table": CidMintingStore}
 
 def find_all(CidMintingStore, session):
     query = session.query(CidMintingStore)
-
-    for rd in query.all():
-        print("type: {}, value: {}, cid {} ".format(rd.type, rd.identifier, rd.cid))
     return query.all()
 
-def find_by_ocn(CidMintingStore, session, ocn):
-    query = session.query(CidMintingStore).filter(CidMintingStore.type=='oclc').filter(CidMintingStore.identifier==ocn)
+def find_by_identifier(CidMintingStore, session, data_type, value):
+    query = session.query(CidMintingStore).filter(CidMintingStore.type==data_type).filter(CidMintingStore.identifier==value)
 
     record = query.first()
-    if record:
-        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
     return record
 
 def find_query(engine, sql):
@@ -88,23 +85,39 @@ def main():
     DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or get_db_conn_string_from_config_by_key('config', 'minter_db', ENV)
     print("db_connect_str {}".format(DB_CONNECT_STR))
 
-    engine, session, CidMintingStore = prepare_database(DB_CONNECT_STR)
+    db = prepare_database(DB_CONNECT_STR)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
 
     sql = "select * from cid_minting_store"
-    result = find_query(engine, sql)
+    print(sql)
+    results = find_query(engine, sql)
     print("find by sql: {}".format(sql))
-    print(result)
+    for record in results:
+        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
 
     print("find all")
-    find_all(CidMintingStore, session)
-    print("find one")
-    find_by_ocn(CidMintingStore, session, '8727632')
+    results = find_all(CidMintingStore, session)
+    for record in results:
+        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
+
+    print("find one by ocn")
+    record = find_by_identifier(CidMintingStore, session, 'oclc', '8727632')
+    if record:
+        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
+
+    print("find one by sys_id")
+    record = find_by_identifier(CidMintingStore, session, 'contrib_sys_id', 'pur215476')
+    if record:
+        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
 
     print("add oclc=30461866")
     record = CidMintingStore(type='oclc', identifier='30461866', cid='011323406')
-    insert_a_record('log', session, record)
-    result = find_by_ocn(CidMintingStore, session, '30461866')
-    print(result)
+    #insert_a_record('log', session, record)
+    record = find_by_identifier(CidMintingStore, session, 'oclc', '30461866')
+    if record:
+        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
 
 if __name__ == "__main__":
     main()

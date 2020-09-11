@@ -2,7 +2,7 @@ import os
 
 import pytest
 import environs
-from cid_minting_store import prepare_database, find_all, find_by_ocn, find_query, insert_a_record
+from cid_minting_store import prepare_database, find_all, find_by_identifier, find_query, insert_a_record
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -37,16 +37,20 @@ def test_find_query(create_test_db):
     print(results)
     assert len(results) == 5
 
-def test_find_by_ocn():
+def test_find_by_identifier():
     db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
     db = prepare_database(db_conn_str)
     engine = db["engine"]
     session = db["session"]
     CidMintingStore = db["table"]
 
-    record = find_by_ocn(CidMintingStore, session, '8727632')
+    record = find_by_identifier(CidMintingStore, session, 'oclc', '8727632')
     print(record)
     assert [record.type, record.identifier, record.cid] == ['oclc', '8727632', '002492721']
+
+    record = find_by_identifier(CidMintingStore, session, 'contrib_sys_id', 'pur215476')
+    print(record)
+    assert [record.type, record.identifier, record.cid] == ['contrib_sys_id', 'pur215476', '002492721']
 
 def test_find_all():
     db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
