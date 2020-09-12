@@ -2,6 +2,8 @@ import os
 
 import pytest
 import environs
+import logging
+
 from cid_minting_store import prepare_database, find_all, find_by_identifier, find_query, insert_a_record
 
 @pytest.fixture
@@ -67,20 +69,29 @@ def test_find_all():
     assert any([record.type, record.identifier, record.cid] == ['oclc', '8727632', '002492721'] for record in results)
     assert any([record.type, record.identifier, record.cid] == ['contrib_sys_id', 'pur864352', '011323405'] for record in results)
 
-def test_insert_a_record():
+def test_insert_a_record(caplog):
+    caplog.set_level(logging.DEBUG)
+
     db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
     db = prepare_database(db_conn_str)
     engine = db["engine"]
     session = db["session"]
     CidMintingStore = db["table"]
+
     # before insert a record
     results = find_all(CidMintingStore, session)
     assert len(results) == 5
 
     record = CidMintingStore(type='oclc', identifier='30461866', cid='011323406')
-    insert_a_record('log', session, record)
+    insert_a_record(session, record)
     # after insert a record
     results = find_all(CidMintingStore, session)
     assert len(results) == 6
-
     assert any([record.type, record.identifier, record.cid] == ['oclc', '30461866', '011323406'] for record in results)
+    
+    # insert the same record
+    record = CidMintingStore(type='oclc', identifier='30461866', cid='011323406')
+    insert_a_record(session, record)
+    assert "IntegrityError adding record" in caplog.text
+    results = find_all(CidMintingStore, session)
+    assert len(results) == 6
