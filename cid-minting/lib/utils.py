@@ -65,37 +65,3 @@ def load_config(path, config={}):
     return config
 
 
-class ConsoleMessenger:
-    """ConsoleMessenger Class provides utility functions for outputing
-    messages to the console, which can be configured for both
-    quiet and verbose flags. This eliminates having to track these
-    flags and use conditional logic to know when to print specific
-    messages.
-
-    Args:
-        quiet: A flag to suppress all output except errors
-        verbose: A flag to print diagnostic messages
-        """
-
-    def __init__(self, quiet=False, verbose=False):
-        self.quiet = quiet
-        self.verbose = verbose
-
-    # verbose diagnostic messages only
-    def diagnostic(self, message):
-        if self.verbose:
-            print(message, file=sys.stderr)
-
-    # concise operational reporting
-    def report(self, message):
-        if not self.quiet:
-            print(message, file=sys.stderr)
-
-    # concise error handling messages
-    def error(self, message):
-        print(message, file=sys.stderr)
-
-    # standard output for use by chained applications
-    def out(self, message):
-        if not self.quiet:
-            print(message, file=sys.stdout)
