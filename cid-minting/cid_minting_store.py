@@ -12,6 +12,10 @@ import logging
 
 import lib.utils as utils
 from config import get_configs_by_filename
+from zephir_cluster_lookup import list_to_str
+from zephir_cluster_lookup import valid_sql_in_clause_str
+from zephir_cluster_lookup import invalid_sql_in_clause_str
+
 
 def prepare_database(db_connect_str):
     engine = create_engine(db_connect_str)
@@ -37,10 +41,38 @@ def find_by_identifier(CidMintingStore, session, data_type, value):
     record = query.first()
     return record
 
-def find_query(engine, sql):
+def find_query(engine, sql, params=None):
     with engine.connect() as connection:
-        results = connection.execute(sql)
-        return results.fetchall()
+        results = connection.execute(sql, params or ())
+        results_dict = [dict(row) for row in results.fetchall()]
+        return results_dict
+
+def find_cids_by_ocns(engine, ocns_list):
+    """Find matched CIDs by ocns
+    Return: a dict with the following keys:
+      'inquiry_ocns': list of inquiry ocns
+      'matched_cids': list of cids
+      'min_cid': the lowest cid in the matched list
+      'num_of_cids': number of matched cids
+    """
+    matched_cids = {
+        'inquiry_ocns': ocns_list,
+        'matched_cids': [],
+        'min_cid': None,
+        'num_of_cids': 0
+    }
+
+    # Convert list item to a single quoted string, concat with a comma and space
+    ocns = list_to_str(ocns_list)
+    if valid_sql_in_clause_str(ocns):
+        sql = "SELECT cid FROM cid_minting_store WHERE type='oclc' AND identifier IN (" + ocns + ")"
+        results = find_query(engine, sql)
+        if results:
+            matched_cids['matched_cids'] = results
+            matched_cids['min_cid'] = min([cid.get("cid") for cid in results])
+            matched_cids['num_of_cids'] = len(results)
+
+    return matched_cids
 
 def insert_a_record(session, record):
     try:

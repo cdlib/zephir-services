@@ -4,7 +4,7 @@ import pytest
 import environs
 import logging
 
-from cid_minting_store import prepare_database, find_all, find_by_identifier, find_query, insert_a_record
+from cid_minting_store import prepare_database, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -19,32 +19,38 @@ def create_test_db(data_dir, tmpdir, scope="session"):
     cmd = "sqlite3 {} < {}".format(database, insert_data)
     os.system(cmd)
 
-    os.environ["OVERRIDE_DB_CONNECT_STR"] = 'sqlite:///{}'.format(database)
-    print("set env: {}".format(os.environ.get("OVERRIDE_DB_CONNECT_STR")))
+    db_conn_str = 'sqlite:///{}'.format(database)
+    return prepare_database(db_conn_str)
 
 def test_find_query(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
     """
-    db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    print("in test_find_query db_conn_str: {}".format(db_conn_str))
-    select_sql = "select * from cid_minting_store"
+    engine = create_test_db["engine"]
+    session = create_test_db["session"]
+    CidMintingStore = create_test_db["table"]
 
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
-
+    select_sql = "select type, identifier, cid from cid_minting_store"
     results = find_query(engine, select_sql)
     print(results)
     assert len(results) == 5
 
-def test_find_by_identifier():
-    db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    # expected results:
+    expected_results = [
+            {'type': 'oclc', 'identifier': '8727632', 'cid': '002492721'}, 
+            {'type': 'contrib_sys_id', 'identifier': 'pur215476', 'cid': '002492721'}, 
+            {'type': 'oclc', 'identifier': '32882115', 'cid': '011323405'}, 
+            {'type': 'contrib_sys_id', 'identifier': 'pur864352', 'cid': '011323405'}, 
+            {'type': 'contrib_sys_id', 'identifier': 'uc1234567', 'cid': '011323405'}]
+
+    for record in results:
+        assert any(expected_result == record for expected_result in expected_results)
+
+
+def test_find_by_identifier(create_test_db):
+    engine = create_test_db["engine"]
+    session = create_test_db["session"]
+    CidMintingStore = create_test_db["table"]
 
     record = find_by_identifier(CidMintingStore, session, 'oclc', '8727632')
     print(record)
@@ -54,29 +60,23 @@ def test_find_by_identifier():
     print(record)
     assert [record.type, record.identifier, record.cid] == ['contrib_sys_id', 'pur215476', '002492721']
 
-def test_find_all():
-    db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+def test_find_all(create_test_db):
+    engine = create_test_db["engine"]
+    session = create_test_db["session"]
+    CidMintingStore = create_test_db["table"]
 
     results = find_all(CidMintingStore, session)
     print(type(results))
     assert len(results) == 5
-    record = CidMintingStore(type='oclc', identifier='8727632', cid='002492721')
-    print(record)
     assert any([record.type, record.identifier, record.cid] == ['oclc', '8727632', '002492721'] for record in results)
     assert any([record.type, record.identifier, record.cid] == ['contrib_sys_id', 'pur864352', '011323405'] for record in results)
 
-def test_insert_a_record(caplog):
+def test_insert_a_record(caplog, create_test_db):
     caplog.set_level(logging.DEBUG)
 
-    db_conn_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    engine = create_test_db['engine']
+    session = create_test_db['session']
+    CidMintingStore = create_test_db['table']
 
     # before insert a record
     results = find_all(CidMintingStore, session)
@@ -95,3 +95,52 @@ def test_insert_a_record(caplog):
     assert "IntegrityError adding record" in caplog.text
     results = find_all(CidMintingStore, session)
     assert len(results) == 6
+
+def test_find_cids_by_ocns(create_test_db):
+    engine = create_test_db["engine"]
+    session = create_test_db["session"]
+    CidMintingStore = create_test_db["table"]
+
+    ocns_list = ['8727632', '32882115']
+    expected_results = { 
+        'inquiry_ocns': ['8727632', '32882115'],
+        'matched_cids': [{'cid': '002492721'}, {'cid': '011323405'}],
+        'min_cid': '002492721',
+        'num_of_cids': 2,
+    }
+
+    results = find_cids_by_ocns(engine, ocns_list)
+    print(results)
+
+    assert results['min_cid'] == expected_results['min_cid']
+    assert results['num_of_cids'] == expected_results['num_of_cids']
+    
+    for result in results['inquiry_ocns']:
+        assert any(expected_result == result for expected_result in expected_results['inquiry_ocns'])
+    for result in results['matched_cids']:
+        assert any(expected_result == result for expected_result in expected_results['matched_cids'])
+
+def test_find_cids_by_ocns_none(create_test_db):
+    engine = create_test_db["engine"]
+    session = create_test_db["session"]
+    CidMintingStore = create_test_db["table"]
+
+    ocns_list = []
+    expected = {
+        'inquiry_ocns': [], 
+        'matched_cids': [], 
+        'min_cid': None, 
+        'num_of_cids': 0
+    }
+    results = find_cids_by_ocns(engine, ocns_list)
+    assert results ==expected
+
+    ocns_list = ['1234567890']
+    expected = {
+        'inquiry_ocns': ['1234567890'], 
+        'matched_cids': [], 
+        'min_cid': None, 
+        'num_of_cids': 0
+    }
+    results = find_cids_by_ocns(engine, ocns_list)
+    assert results == expected
