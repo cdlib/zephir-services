@@ -21,21 +21,16 @@ def db_connect_url(config):
         A database connection string compatable with sqlalchemy.
 
         """
-    drivername = os.environ.get("ZED_DB_DRIVERNAME") or config.get("drivername")
-    username = os.environ.get("ZED_DB_USERNAME") or config.get("username")
-    password = os.environ.get("ZED_DB_PASSWORD") or config.get("password")
-    host = os.environ.get("ZED_DB_HOST") or config.get("host")
-    port = os.environ.get("ZED_DB_PORT") or config.get("port")
-    database = os.environ.get("ZED_DB_DATABASE") or config.get("database")
-    socket = os.environ.get("ZED_DB_SOCKET") or config.get("socket")
+    drivername = config.get("drivername")
+    username = config.get("username")
+    password = config.get("password")
+    host = config.get("host")
+    port = config.get("port")
+    database = config.get("database")
 
     url = str(
         sqlalchemy.engine.url.URL(drivername, username, password, host, port, database)
     )
-
-    # if using mysql, add the socket to the URL
-    if drivername == "mysql+mysqlconnector" and socket is not None:
-        url = url + "?unix_socket=" + socket
 
     return url
 

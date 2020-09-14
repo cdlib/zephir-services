@@ -4,7 +4,7 @@ import pytest
 import environs
 import logging
 
-from cid_minting_store import prepare_database, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns
+from cid_minting_store import prepare_database, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns, find_cid_by_sysid
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -20,12 +20,16 @@ def create_test_db(data_dir, tmpdir, scope="session"):
     os.system(cmd)
 
     db_conn_str = 'sqlite:///{}'.format(database)
+    os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
+
     return prepare_database(db_conn_str)
 
 def test_find_query(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
     """
+    print("os.env:" + os.environ.get("OVERRIDE_DB_CONNECT_STR"))
+
     engine = create_test_db["engine"]
     session = create_test_db["session"]
     CidMintingStore = create_test_db["table"]
@@ -56,9 +60,21 @@ def test_find_by_identifier(create_test_db):
     print(record)
     assert [record.type, record.identifier, record.cid] == ['oclc', '8727632', '002492721']
 
+    record = find_by_identifier(CidMintingStore, session, 'oclc', '1234567890')
+    assert record == None 
+
+    record = find_by_identifier(CidMintingStore, session, 'oclc', '')
+    assert record == None
+
     record = find_by_identifier(CidMintingStore, session, 'contrib_sys_id', 'pur215476')
     print(record)
     assert [record.type, record.identifier, record.cid] == ['contrib_sys_id', 'pur215476', '002492721']
+
+    record = find_by_identifier(CidMintingStore, session, 'contrib_sys_id', 'xyz12345')
+    assert record == None 
+
+    record = find_by_identifier(CidMintingStore, session, 'contrib_sys_id', '')
+    assert record == None
 
 def test_find_all(create_test_db):
     engine = create_test_db["engine"]
@@ -144,3 +160,28 @@ def test_find_cids_by_ocns_none(create_test_db):
     }
     results = find_cids_by_ocns(engine, ocns_list)
     assert results == expected
+
+def test_find_cid_by_sysid(create_test_db):
+    engine = create_test_db["engine"]
+    session = create_test_db["session"]
+    CidMintingStore = create_test_db["table"]
+
+    sysid = ""
+    expected = {}
+    result = find_cid_by_sysid(CidMintingStore, session, sysid)
+    print(result)
+    assert result == expected
+
+    sysid = "xyz123"
+    expected = {}
+    result = find_cid_by_sysid(CidMintingStore, session, sysid)
+    print(result)
+    assert result == expected
+
+    sysid = "uc1234567"
+    expected = {
+        'inquiry_sys_id': 'uc1234567',
+        'matched_cid': '011323405'}
+    result = find_cid_by_sysid(CidMintingStore, session, sysid)
+    print(result)
+    assert result == expected

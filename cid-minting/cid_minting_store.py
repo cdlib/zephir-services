@@ -74,6 +74,14 @@ def find_cids_by_ocns(engine, ocns_list):
 
     return matched_cids
 
+def find_cid_by_sysid(CidMintingStore, session, sysid):
+    results = {}
+    record = find_by_identifier(CidMintingStore, session, 'contrib_sys_id', sysid)
+    if record:
+        results['inquiry_sys_id'] = sysid 
+        results['matched_cid'] = record.cid
+    return results 
+
 def insert_a_record(session, record):
     try:
         session.add(record)
@@ -83,17 +91,58 @@ def insert_a_record(session, record):
         print(e)
         logging.error("IntegrityError adding record")
         logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
+        return 0
     else:
         session.commit()
+        return 1
+
+def ussage(script_name):
+        print("Usage: {} env[dev|stg|prd] action[read|write] type[ocn|sysid] data[comma_separated_ocns|sys_id] cid".format(script_name))
+        print("{} dev read ocn 8727632,32882115".format(script_name))
+        print("{} dev read sysid uc1234567".format(script_name))
+        print("{} dev write ocn 30461866 011323406".format(script_name))
+        print("{} dev write sysid uc1234567".format(script_name))
+
 
 def main():
-    if (len(sys.argv) > 1):
-        env = sys.argv[1]
-    else:
-        env = "test"
+    """ Performs read and write actions to the cid_minting_store table which stores the identifier and CID in pairs.
+        Command line arguments:
+        argv[1]: Server environemnt (Required). Can be test, dev, stg, or prd.
+        argv[2]: Action. Can only be 'read' or 'write'
+        argv[3]: Data type. Can only be 'ocn' and 'sysid'
+        argv[4]: Data. OCNs or a local system ID.
+                 OCNs format:
+                   Comma separated strings without spaces in between any two values.
+                   For example: 8727632,32882115
+                 Local system ID: a string.
+        argv[5]: A CID. Only required when Action='write'
+    """
+
+    if (len(sys.argv) != 5 and len(sys.argv) != 6):
+        print("Parameter error.")
+        ussage(sys.argv[0])
+        exit(1)
+
+    env = sys.argv[1]
+    action = sys.argv[2]
+    data_type = sys.argv[3]
+    data = sys.argv[4]
+    if len(sys.argv) == 6:
+        cid = sys.argv[5]
+
+    if env not in ['test', 'dev', 'stg', 'prd']:
+        ussage(sys.argv[0])
+        exit(1)
+
+    if action not in ['read', 'write']:
+        ussage(sys.argv[0])
+        exit(1)
+
+    if data_type not in ['ocn', 'sysid']:
+        ussage(sys.argv[0])
+        exit(1)
 
     configs= get_configs_by_filename('config', 'cid_minting')
-    print(configs)
     
     logfile = configs[env]['logpath']
     db_config = str(utils.db_connect_url(configs[env]['minter_db']))
@@ -106,41 +155,30 @@ def main():
     logging.info("Start " + os.path.basename(__file__))
 
     DB_CONNECT_STR = os.environ.get('OVERRIDE_DB_CONNECT_STR') or db_config
-    print("db_connect_str {}".format(DB_CONNECT_STR))
 
     db = prepare_database(DB_CONNECT_STR)
     engine = db['engine']
     session = db['session']
     CidMintingStore = db['table']
 
-    sql = "select * from cid_minting_store"
-    print(sql)
-    results = find_query(engine, sql)
-    print("find by sql: {}".format(sql))
-    for record in results:
-        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
+    results = {} 
+    if action == "read":
+        if data_type == "ocn":
+            results = find_cids_by_ocns(engine, data.split(","))
 
-    print("find all")
-    results = find_all(CidMintingStore, session)
-    for record in results:
-        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
+        if data_type == "sysid":
+            results = find_cid_by_sysid(CidMintingStore, session, data)
+        
+        print(json.dumps(results))
+        exit(0)
 
-    print("find one by ocn")
-    record = find_by_identifier(CidMintingStore, session, 'oclc', '8727632')
-    if record:
-        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
-
-    print("find one by sys_id")
-    record = find_by_identifier(CidMintingStore, session, 'contrib_sys_id', 'pur215476')
-    if record:
-        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
-
-    print("add oclc=30461866")
-    record = CidMintingStore(type='oclc', identifier='30461866', cid='011323406')
-    insert_a_record(session, record)
-    record = find_by_identifier(CidMintingStore, session, 'oclc', '30461866')
-    if record:
-        print("type: {}, value: {}, cid {} ".format(record.type, record.identifier, record.cid))
+    # oclc='30461866', cid='011323406'
+    if action == "write":
+        record = CidMintingStore(type=data_type, identifier=data, cid=cid)
+        if insert_a_record(session, record):
+            exit(0)
+        else:
+            exit(1)
 
 if __name__ == "__main__":
     main()
