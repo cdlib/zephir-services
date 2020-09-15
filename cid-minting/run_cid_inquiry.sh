@@ -28,7 +28,6 @@ fi
 ENV=`uname -n| cut -d '-' -f3`
 
 LOG="/apps/htmm/log/cid_inquiry/cid_inquiry_run.log"
-SCRIPT="/apps/htmm/zephir-reports/submission_email_notice/check_events_status.py"
 
 PIPFILE="/apps/htmm/zephir-services/Pipfile"
 SCRIPT="/apps/htmm/zephir-services/cid-minting/cid_inquiry.py"

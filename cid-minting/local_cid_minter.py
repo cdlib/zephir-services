@@ -1,4 +1,5 @@
 import os
+from os.path import join, dirname
 import sys
 
 from sqlalchemy.ext.automap import automap_base
@@ -8,7 +9,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import IntegrityError
 
 import environs
+from dotenv import load_dotenv
 import logging
+import json
 
 import lib.utils as utils
 from config import get_configs_by_filename
@@ -96,12 +99,12 @@ def insert_a_record(session, record):
         session.commit()
         return 1
 
-def ussage(script_name):
+def usage(script_name):
         print("Usage: {} env[dev|stg|prd] action[read|write] type[ocn|sysid] data[comma_separated_ocns|sys_id] cid".format(script_name))
         print("{} dev read ocn 8727632,32882115".format(script_name))
         print("{} dev read sysid uc1234567".format(script_name))
         print("{} dev write ocn 30461866 011323406".format(script_name))
-        print("{} dev write sysid uc1234567".format(script_name))
+        print("{} dev write sysid uc1234567 011323407".format(script_name))
 
 
 def main():
@@ -120,7 +123,7 @@ def main():
 
     if (len(sys.argv) != 5 and len(sys.argv) != 6):
         print("Parameter error.")
-        ussage(sys.argv[0])
+        usage(sys.argv[0])
         exit(1)
 
     env = sys.argv[1]
@@ -130,22 +133,27 @@ def main():
     if len(sys.argv) == 6:
         cid = sys.argv[5]
 
-    if env not in ['test', 'dev', 'stg', 'prd']:
-        ussage(sys.argv[0])
+    dotenv_path = join(dirname(__file__), '.env')
+    load_dotenv(dotenv_path)
+
+    ENV = os.environ.get("MINTER_ENV") or env
+
+    if ENV not in ['test', 'dev', 'stg', 'prd']:
+        usage(sys.argv[0])
         exit(1)
 
     if action not in ['read', 'write']:
-        ussage(sys.argv[0])
+        usage(sys.argv[0])
         exit(1)
 
     if data_type not in ['ocn', 'sysid']:
-        ussage(sys.argv[0])
+        usage(sys.argv[0])
         exit(1)
 
     configs= get_configs_by_filename('config', 'cid_minting')
     
-    logfile = configs[env]['logpath']
-    db_config = str(utils.db_connect_url(configs[env]['minter_db']))
+    logfile = configs[ENV]['logpath']
+    db_config = str(utils.db_connect_url(configs[ENV]['minter_db']))
 
     logging.basicConfig(
             level=logging.DEBUG,

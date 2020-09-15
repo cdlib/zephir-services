@@ -4,7 +4,7 @@ import pytest
 import environs
 import logging
 
-from cid_minting_store import prepare_database, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns, find_cid_by_sysid
+from local_cid_minter import prepare_database, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns, find_cid_by_sysid
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -22,17 +22,17 @@ def create_test_db(data_dir, tmpdir, scope="session"):
     db_conn_str = 'sqlite:///{}'.format(database)
     os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
 
-    return prepare_database(db_conn_str)
+    return {'db_conn_str': db_conn_str}
 
 def test_find_query(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
     """
-    print("os.env:" + os.environ.get("OVERRIDE_DB_CONNECT_STR"))
-
-    engine = create_test_db["engine"]
-    session = create_test_db["session"]
-    CidMintingStore = create_test_db["table"]
+    db_conn_str = create_test_db['db_conn_str']
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
 
     select_sql = "select type, identifier, cid from cid_minting_store"
     results = find_query(engine, select_sql)
@@ -52,9 +52,11 @@ def test_find_query(create_test_db):
 
 
 def test_find_by_identifier(create_test_db):
-    engine = create_test_db["engine"]
-    session = create_test_db["session"]
-    CidMintingStore = create_test_db["table"]
+    db_conn_str = create_test_db['db_conn_str']
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
 
     record = find_by_identifier(CidMintingStore, session, 'oclc', '8727632')
     print(record)
@@ -77,9 +79,11 @@ def test_find_by_identifier(create_test_db):
     assert record == None
 
 def test_find_all(create_test_db):
-    engine = create_test_db["engine"]
-    session = create_test_db["session"]
-    CidMintingStore = create_test_db["table"]
+    db_conn_str = create_test_db['db_conn_str']
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
 
     results = find_all(CidMintingStore, session)
     print(type(results))
@@ -90,9 +94,11 @@ def test_find_all(create_test_db):
 def test_insert_a_record(caplog, create_test_db):
     caplog.set_level(logging.DEBUG)
 
-    engine = create_test_db['engine']
-    session = create_test_db['session']
-    CidMintingStore = create_test_db['table']
+    db_conn_str = create_test_db['db_conn_str']
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
 
     # before insert a record
     results = find_all(CidMintingStore, session)
@@ -113,9 +119,11 @@ def test_insert_a_record(caplog, create_test_db):
     assert len(results) == 6
 
 def test_find_cids_by_ocns(create_test_db):
-    engine = create_test_db["engine"]
-    session = create_test_db["session"]
-    CidMintingStore = create_test_db["table"]
+    db_conn_str = create_test_db['db_conn_str']
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
 
     ocns_list = ['8727632', '32882115']
     expected_results = { 
@@ -137,9 +145,11 @@ def test_find_cids_by_ocns(create_test_db):
         assert any(expected_result == result for expected_result in expected_results['matched_cids'])
 
 def test_find_cids_by_ocns_none(create_test_db):
-    engine = create_test_db["engine"]
-    session = create_test_db["session"]
-    CidMintingStore = create_test_db["table"]
+    db_conn_str = create_test_db['db_conn_str']
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
 
     ocns_list = []
     expected = {
@@ -162,9 +172,11 @@ def test_find_cids_by_ocns_none(create_test_db):
     assert results == expected
 
 def test_find_cid_by_sysid(create_test_db):
-    engine = create_test_db["engine"]
-    session = create_test_db["session"]
-    CidMintingStore = create_test_db["table"]
+    db_conn_str = create_test_db['db_conn_str']
+    db = prepare_database(db_conn_str)
+    engine = db["engine"]
+    session = db["session"]
+    CidMintingStore = db["table"]
 
     sysid = ""
     expected = {}
