@@ -5,96 +5,75 @@ import numpy as np
 import pandas as pd
 
 from zed.event import ZedEvent
+from zed.error import *
 
 class ZedTable:
-    def __init__(self, file, delimiter=","):
-        self._table_df = pd.read_csv(file, delimiter=delimiter, dtype=str)
-        self.table = self._table_df.values
+    """
+        Create ZedTable to lookup ZedEvent data by status_msg_code or status_shorthand.
+
+        Usage examples:
+
+        table = ZedTable(file_path)
+
+        zed_event = table.get("ZEDEVENT_CODE")
+    """
+    def __init__(self, file_path=None, delimiter=","):
+        """
+            New Zed Table for lookup of Zed Event values
+            Args:
+                file_path (str): Path to CSV data
+                delimiter (str): Delimitr for CSV data
+        """
+        if file_path:
+            self._table_df = pd.read_csv(file_path, delimiter=delimiter, dtype=str)
+        else:
+            self._table_df = pd.DataFrame()
+        self.table = self._table_df
         self.headers = list(self._table_df.columns)
 
-    def create_event(self, code, data={}, init=["event", "process", "timestamp"], validate=None):
-        coded_list = self.table[self.table[:,1]==code][0]
-        coded_defaults = self.flat_to_dict(dict(zip(self.header, coded_list))) #dict(zip(self.header, coded_list))
-        coded_event = ZedEvent({**coded_defaults, **data}, init, validate)
-        return coded_event
-
     def get(self, key):
-        events = self._table_df.loc[self._table_df["status_msg_code"] == key]
+        """
+            Get Zed Event data given key
+            Args:
+                key (str): Zed status msg_code or shorthand of Zed Event
+            Returns: Zed Data (dict)
+        """
+        events = pd.DataFrame()
+        if "status_msg_code" in self.headers:
+            events = self._table_df.loc[self._table_df["status_msg_code"] == key]
         if events.empty and "status_shorthand" in self.headers:
             # check shortand if not found by status_msg_code
             events = self._table_df.loc[self._table_df["status_shorthand"] == key]
         if not events.empty:
             return self._unflatten(events.iloc[0].to_dict())
+        else:
+            raise ZedEventNotFoundError(key, "Event '{}' not found in Zed Table".format(key))
 
     def _unflatten(self, flat_event):
-        event_dict = {
-            "event": flat_event.get("event"),
-            "object": flat_event.get("object"),
-            "process": flat_event.get("process"),
-            "report": flat_event.get("report"),
-            "status": {
-                "msg": flat_event.get("status_msg"),
-                "msg_code": flat_event.get("status_msg_code"),
-                "type": flat_event.get("status_type"),
-                "zed_code": flat_event.get("status_zed_code")
-                },
-            "subject": flat_event.get("subject"),
-            "timestamp": flat_event.get("timestamp"),
-            "topic": flat_event.get("topics"),
-            "type": flat_event.get("topic"),
-            }
+        """
+            Convert flat Zed Event data to multidemensional Zed Event data
+            Args:
+                flat_event (dict): Flat data representing ZedEvent
+            Returns: Multidemensional Zed Data (dict)
+        """
+        event_dict = {}
+        if flat_event.get("action"):
+            event_dict["action"] = flat_event.get("action")
+        if flat_event.get("object"):
+            event_dict["object"] = flat_event.get("object")
+        event_dict["status"] = {}
+        if flat_event.get("status_msg"):
+            event_dict["status"]["msg"] = flat_event.get("status_msg")
+        if flat_event.get("status_msg_code"):
+            event_dict["status"]["msg_code"] = flat_event.get("status_msg_code")
+        if flat_event.get("status_type"):
+            event_dict["status"]["type"] = flat_event.get("status_type")
+        if flat_event.get("status_msg"):
+            event_dict["status"]["zed_code"] = flat_event.get("status_zed_code")
+        if flat_event.get("subject"):
+            event_dict["subject"] = flat_event.get("subject")
+        if flat_event.get("topic"):
+            event_dict["topic"] = flat_event.get("topic")
+        if flat_event.get("type"):
+            event_dict["type"] = flat_event.get("type")
         return event_dict
-
-
-#
-# def nest_prefix(data, prefixes=[]):
-#     new_dict = {}
-#     for k, v in data.items():
-#         for prefix in prefixes:
-#             if re.match("^"+prefix+"_", k):
-#                 result = nest_prefix({k.split(prefix+"_")[1]:v},prefixes)
-#                 if prefix in new_dict:
-#                     for k, v in result.items():
-#                         new_dict[prefix][k] = v
-#                 else:
-#                     new_dict[prefix] = result
-#             else:
-#                 new_dict[k]=v
-#     return new_dict
-#
-# def nest_dict(data, prefixes=[]):
-#     new_dict = {}
-#     for key in data:
-#         for prefix in prefixes:
-#             if re.match("^"+prefix+"_", key):
-#                 result = nest_dict({key.split(prefix+"_")[1]:data[key]},prefixes)
-#                 if prefix in new_dict:
-#                     for key in result:
-#                         new_dict[prefix][key] = result[key]
-#                 else:
-#                     new_dict[prefix] = result
-#             else:
-#                 new_dict[key]=data[key]
-#     return new_dict
-#
-#     def nest_dict_compact(data, prefixes=[]):
-#     new_dict = {}
-#     for key in data:
-#         match = re.match("^(\w+?)_", key)
-#         if match:
-#             prefix = match.group(1)
-#             if prefix in prefixes:
-#                 result = nest_dict_compact({key.split(prefix+"_")[1]:data[key]},prefixes)
-#                 if prefix in new_dict:
-#                     for key in result:
-#                         new_dict[prefix][key] = result[key]
-#                 else:
-#                     new_dict[prefix] = result
-#             else:
-#                 new_dict[key]=data[key]
-#     return new_dict
-#
-# {"event": "30be6cd1-02ba-47e9-be0d-988561aeafea", "object": "test",
-# "process": "2073aee2-ad38-4602-a9bb-1517ee9bbc28", "status_msg": "This is a test, it should be successful", "status_msg_code": "ze0001", "status_type": "INFO", "status_zed_code": "200", "subject": "test",
-# "timestamp": "2020-01-08T21:37:17.424278Z", "type": "Test"}
-# # nest_prefix(event_dict,prefixes=["status"])

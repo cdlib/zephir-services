@@ -32,66 +32,126 @@ class ZedEvent:
 
     @classmethod
     def schemas(cls,):
-        """Return a dictionary of available json schemas.
-
-            Returns: dict of schemas
+        """
+            Returns: JSOM Schemas (dict)
         """
         return cls.__schemas
 
     @classmethod
     def validate(cls, data, schema="ZED"):
-        """Validate Zed Event data against a json schema."""
+        """
+            Validate Zed Event data against a json schema
+            Args:
+                data: ZED Data (dict)
+                schema: JSON Schema (jsonschema)
+                Returns: Validation success/failure (bool)
+        """
         jsonschema.validate(data, ZedEvent.schemas()[schema])
         return True
 
     @classmethod
-    def generate_key(cls):
-        """Generate a UUID version 4 key."""
+    def generate_id(cls):
+        """
+            Returns: Generate a UUID version 4 ID
+        """
         return str(uuid.uuid4())
 
     @classmethod
     def generate_timestamp(cls):
-        """Generate a UTC ISO 8601 formatted timestamp"""
+        """
+            Generate a UTC ISO 8601 formatted timestamp
+        """
         return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
     # INSTANCE-LEVEL BLOCK
-    def __init__(self, data={}, override={}):
-        """ZedEvent instance for creating ZedEvent objects for logging.
-
-        Args:
-            data (dict): The Zed Event properties as a dictionary.
-            init (:list:`str`, optional): Zed Event properties to be initialized
-                on object creation if they are not passed in the data. Default:
-                event, process, and timestamp.
+    def __init__(self, data={}, object=None, process=None, subject=None, report=None):
         """
-        self._data = {**data, **override}
-        if "event" not in self._data or not self._data["event"]:
-            self._data["event"] = ZedEvent.generate_key()
-        if "process" not in self._data or not self._data["process"]:
-            self._data["process"] = ZedEvent.generate_key()
-        if "timestamp" not in self._data or not self._data["timestamp"]:
-            self._data["timestamp"] = ZedEvent.generate_timestamp()
+            Zed Event instance for creating ZedEvent objects for logging.
+
+            Args:
+                data (dict): The Zed Event data as a dictionary.
+        """
+        self.__data = data
+
+        # set common event-instance values by argument
+        if object:
+            self.object = object
+        if process:
+            self.process = process
+        if report:
+            self.report = report
+        if subject:
+            self.subject = subject
+
+        # generate values if not supplied
+        if "event" not in self.__data or not self.__data["event"]:
+            self.__data["event"] = ZedEvent.generate_id()
+        if "process" not in self.__data or not self.__data["process"]:
+            self.__data["process"] = process or ZedEvent.generate_id()
+        if "timestamp" not in self.__data or not self.__data["timestamp"]:
+            self.__data["timestamp"] = ZedEvent.generate_timestamp()
 
 
     @property
     def data(self):
-        """dict: The Zed Event data for the object"""
-        return self._data
+        """
+            Returns: Zed Event data (dict)
+        """
+        return self.__data
 
     @property
-    def event(self):
-        return self._data["event"]
+    def id(self):
+        """
+            Returns: Event GUID (str)
+        """
+        return self.__data["event"]
 
     @property
     def process(self):
-        return self._data["process"]
+        """
+            Returns: Process GUID (str)
+        """
+        return self.__data["process"]
 
-    def isvalidated(self):
-        """Return whether or not an object has been validated against a schema
-        Returns:
-        True if object has been validated, False otherwise"""
-        return self._validated
+    @process.setter
+    def process(self, value):
+        self.__data["process"]=value
+
+    @property
+    def subject(self):
+        """
+            Returns: ZED Event's Subject (str)
+        """
+        return self.__data["subject"]
+
+    @subject.setter
+    def subject(self, value):
+        self.__data["subject"]=value
+
+    @property
+    def object(self):
+        """
+            Returns: ZED Event's Object (str)
+        """
+        return self.__data["object"]
+
+    @object.setter
+    def object(self, value):
+        self.__data["object"]=value
+
+    @property
+    def report(self):
+        """
+            Returns: ZED Event's Report (str)
+        """
+        return self.__data["report"]
+
+    @report.setter
+    def report(self, value):
+        self.__data["report"]=value
 
     def __str__(self):
-        """Print object represented as Zed Event data in json"""
-        return json.dumps(self._data)
+        """
+            Returns: ZED Event data in JSON (str)
+        """
+        return json.dumps(self.__data, sort_keys=True)
