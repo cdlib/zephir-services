@@ -566,6 +566,14 @@ def test_main_param_err_2(capsys, setup_leveldb, setup_sqlite):
 
 # OCN: 300 (not in test db) 
 def test_main_not_in_test_db(capsys, setup_leveldb, setup_sqlite):
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
+    db_conn_str = setup_sqlite["db_conn_str"]
+
+    os.environ["OVERRIDE_PRIMARY_DB_PATH"] = primary_db_path
+    os.environ["OVERRIDE_CLUSTER_DB_PATH"] = cluster_db_path
+    os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
+
     with pytest.raises(SystemExit) as pytest_e:
         # env will be override by environment varaiable
         sys.argv = ['', 'test', '300']
@@ -578,6 +586,14 @@ def test_main_not_in_test_db(capsys, setup_leveldb, setup_sqlite):
 
 # OCNs: 217211158, 8727632 (test case 1&2 c)
 def test_main_in_test_db_2_clusters(capsys, setup_leveldb, setup_sqlite):
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
+    db_conn_str = setup_sqlite["db_conn_str"]
+
+    os.environ["OVERRIDE_PRIMARY_DB_PATH"] = primary_db_path
+    os.environ["OVERRIDE_CLUSTER_DB_PATH"] = cluster_db_path
+    os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
+
     with pytest.raises(SystemExit) as pytest_e:
         # env will be override by environment varaiable
         sys.argv = ['', 'test', '217211158,8727632']
@@ -613,8 +629,6 @@ def setup_leveldb(tmpdatadir, csv_to_df_loader):
     dfs = csv_to_df_loader
     primary_db_path = create_primary_db(tmpdatadir, dfs["primary.csv"])
     cluster_db_path = create_cluster_db(tmpdatadir, dfs["primary.csv"])
-    os.environ["OVERRIDE_PRIMARY_DB_PATH"] = primary_db_path
-    os.environ["OVERRIDE_CLUSTER_DB_PATH"] = cluster_db_path
 
     return {
         "tmpdatadir": tmpdatadir,
@@ -634,7 +648,6 @@ def setup_sqlite(data_dir, tmpdir, scope="session"):
     os.system(cmd)
 
     db_conn_str = 'sqlite:///{}'.format(database)
-    os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
 
     return {
         "db_conn_str": db_conn_str

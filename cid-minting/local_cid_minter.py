@@ -68,7 +68,7 @@ def find_cids_by_ocns(engine, ocns_list):
     # Convert list item to a single quoted string, concat with a comma and space
     ocns = list_to_str(ocns_list)
     if valid_sql_in_clause_str(ocns):
-        sql = "SELECT cid FROM cid_minting_store WHERE type='oclc' AND identifier IN (" + ocns + ")"
+        sql = "SELECT cid FROM cid_minting_store WHERE type='ocn' AND identifier IN (" + ocns + ")"
         results = find_query(engine, sql)
         if results:
             matched_cids['matched_cids'] = results
@@ -79,7 +79,7 @@ def find_cids_by_ocns(engine, ocns_list):
 
 def find_cid_by_sysid(CidMintingStore, session, sysid):
     results = {}
-    record = find_by_identifier(CidMintingStore, session, 'contrib_sys_id', sysid)
+    record = find_by_identifier(CidMintingStore, session, 'sysid', sysid)
     if record:
         results['inquiry_sys_id'] = sysid 
         results['matched_cid'] = record.cid
@@ -91,13 +91,12 @@ def insert_a_record(session, record):
         session.flush()
     except IntegrityError as e:
         session.rollback()
-        print(e)
         logging.error("IntegrityError adding record")
         logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
-        return 0
+        return "IntegrityError"
     else:
         session.commit()
-        return 1
+        return "Success"
 
 def usage(script_name):
         print("Usage: {} env[dev|stg|prd] action[read|write] type[ocn|sysid] data[comma_separated_ocns|sys_id] cid".format(script_name))
@@ -180,13 +179,13 @@ def main():
         print(json.dumps(results))
         exit(0)
 
-    # oclc='30461866', cid='011323406'
     if action == "write":
         record = CidMintingStore(type=data_type, identifier=data, cid=cid)
-        if insert_a_record(session, record):
-            exit(0)
-        else:
+        inserted = insert_a_record(session, record)
+        if inserted != "Success":
             exit(1)
+        else:
+            exit(0)
 
 if __name__ == "__main__":
     main()

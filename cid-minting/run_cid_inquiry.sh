@@ -27,7 +27,7 @@ fi
 # environment: dev, stg, or prd
 ENV=`uname -n| cut -d '-' -f3`
 
-LOG="/apps/htmm/log/cid_inquiry/cid_inquiry_run.log"
+LOG="/apps/htmm/log/cid_minting/cid_minting_run.log"
 
 PIPFILE="/apps/htmm/zephir-services/Pipfile"
 SCRIPT="/apps/htmm/zephir-services/cid-minting/cid_inquiry.py"
