@@ -1,8 +1,9 @@
 import os
 import sys
+
 import environs
-import re
 import json
+import logging
 
 import lib.utils as utils
 from config import get_configs_by_filename
@@ -51,6 +52,11 @@ def flat_and_dedup_sort_list(list_of_lists):
                 new_list.append(item)
     return sorted(new_list)
 
+def usage(script_name):
+    print("Parameter error.")
+    print("Usage: {} env[dev|stg|prd] comma_separated_ocns".format(script_name))
+    print("{} dev 1,6567842,6758168,8727632".format(script_name))
+
 def main():
     """ Retrieves Zephir clusters by OCNs.
         Command line arguments:
@@ -68,21 +74,33 @@ def main():
     env = sys.argv[1]
     ocns = sys.argv[2].split(",")
 
+    if env not in ["test", "dev", "stg", "prd"]:
+        usage(sys.argv[0])
+        exit(1)
+
     ocns_list = [int(i) for i in ocns]
 
     zephir_db_config = get_configs_by_filename("config", "zephir_db")
     db_connect_url = str(utils.db_connect_url(zephir_db_config[env]))
 
-    level_db_config = get_configs_by_filename("config", "cid_minting")
-    primary_db_path = level_db_config["primary_db_path"]
-    cluster_db_path = level_db_config["cluster_db_path"]
+    cid_minting_config = get_configs_by_filename("config", "cid_minting")
+    primary_db_path = cid_minting_config["primary_db_path"]
+    cluster_db_path = cid_minting_config["cluster_db_path"]
+    logfile = cid_minting_config['logpath']
+
+    logging.basicConfig(
+            level=logging.DEBUG,
+            filename=logfile,
+            format="%(asctime)s %(levelname)-4s %(message)s",
+        )
+    logging.info("Start " + os.path.basename(__file__))
+    logging.info("cmd option: {} {}".format(env, ocns))
 
     DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_url
     PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
     results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
-    #print(results)
     print(json.dumps(results))
     exit(0)
 

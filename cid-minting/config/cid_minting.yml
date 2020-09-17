@@ -1,14 +1,14 @@
 dev:
-  logpath: /apps/htmm/log/cid_minting/cid_minting.log
   minter_db:
     database:  /apps/htmm/minterdb/cid_minting_store.sqlite
     drivername: sqlite
 
 test:
-  logpath: /apps/htmm/log/cid_minting/cid_minting.log
   minter_db:
     database: database/zephir_test.db
     drivername: sqlite
 
 primary_db_path: /apps/htmm/leveldb/primary-lookup 
 cluster_db_path: /apps/htmm/leveldb/cluster-lookup
+
+logpath: /apps/htmm/log/cid_minting/cid_minting.log

@@ -62,8 +62,6 @@ fi
 # environment: dev, stg, or prd
 ENV=`uname -n| cut -d '-' -f3`
 
-LOG="/apps/htmm/log/cid_minting/cid_minting_run.log"
-
 PIPFILE="/apps/htmm/zephir-services/Pipfile"
 SCRIPT="/apps/htmm/zephir-services/cid-minting/local_cid_minter.py"
 
@@ -71,12 +69,7 @@ if [ ! -e $SCRIPT ]; then
   usage_error "Script $SCRIPT does not exist."
 fi
 
-echo `/bin/date` >>  $LOG
-
-run_date=`/bin/date +%Y-%m-%d`
-
 cmd="pipenv run python $SCRIPT $ENV $action $type $data $cid"
-echo "cmd: $cmd" >> $LOG
 
 PIPENV_PIPFILE=$PIPFILE $cmd
 

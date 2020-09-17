@@ -9,7 +9,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import IntegrityError
 
 import environs
-from dotenv import load_dotenv
 import logging
 import json
 
@@ -133,12 +132,7 @@ def main():
     if len(sys.argv) == 6:
         cid = sys.argv[5]
 
-    dotenv_path = join(dirname(__file__), '.env')
-    load_dotenv(dotenv_path)
-
-    ENV = os.environ.get("MINTER_ENV") or env
-
-    if ENV not in ["test", "dev", "stg", "prd"]:
+    if env not in ["test", "dev", "stg", "prd"]:
         usage(sys.argv[0])
         exit(1)
 
@@ -154,13 +148,13 @@ def main():
         usage(sys.argv[0])
         exit(1)
 
-    cmd_options = "cmd options: {} {} {} {}".format(ENV, action, data_type, data)
+    cmd_options = "cmd options: {} {} {} {}".format(env, action, data_type, data)
     if cid:
         cmd_options += " " + cid
 
     configs= get_configs_by_filename('config', 'cid_minting')
-    logfile = configs[ENV]['logpath']
-    db_config = str(utils.db_connect_url(configs[ENV]['minter_db']))
+    logfile = configs['logpath']
+    db_config = str(utils.db_connect_url(configs[env]['minter_db']))
 
     logging.basicConfig(
             level=logging.DEBUG,
