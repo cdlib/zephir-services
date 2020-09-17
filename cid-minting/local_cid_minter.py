@@ -129,6 +129,7 @@ def main():
     action = sys.argv[2]
     data_type = sys.argv[3]
     data = sys.argv[4]
+    cid = None
     if len(sys.argv) == 6:
         cid = sys.argv[5]
 
@@ -137,20 +138,27 @@ def main():
 
     ENV = os.environ.get("MINTER_ENV") or env
 
-    if ENV not in ['test', 'dev', 'stg', 'prd']:
+    if ENV not in ["test", "dev", "stg", "prd"]:
         usage(sys.argv[0])
         exit(1)
 
-    if action not in ['read', 'write']:
+    if action not in ["read", "write"]:
         usage(sys.argv[0])
         exit(1)
 
-    if data_type not in ['ocn', 'sysid']:
+    if data_type not in ["ocn", "sysid"]:
         usage(sys.argv[0])
         exit(1)
+
+    if action == "write" and cid == None:
+        usage(sys.argv[0])
+        exit(1)
+
+    cmd_options = "cmd options: {} {} {} {}".format(ENV, action, data_type, data)
+    if cid:
+        cmd_options += " " + cid
 
     configs= get_configs_by_filename('config', 'cid_minting')
-    
     logfile = configs[ENV]['logpath']
     db_config = str(utils.db_connect_url(configs[ENV]['minter_db']))
 
@@ -160,6 +168,7 @@ def main():
             format="%(asctime)s %(levelname)-4s %(message)s",
         )
     logging.info("Start " + os.path.basename(__file__))
+    logging.info(cmd_options)
 
     DB_CONNECT_STR = os.environ.get('OVERRIDE_DB_CONNECT_STR') or db_config
 
@@ -176,12 +185,14 @@ def main():
         if data_type == "sysid":
             results = find_cid_by_sysid(CidMintingStore, session, data)
         
+        engine.dispose()
         print(json.dumps(results))
         exit(0)
 
     if action == "write":
         record = CidMintingStore(type=data_type, identifier=data, cid=cid)
         inserted = insert_a_record(session, record)
+        engine.dispose()
         if inserted != "Success":
             exit(1)
         else:

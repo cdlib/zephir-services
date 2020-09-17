@@ -1,7 +1,7 @@
 dev:
   logpath: /apps/htmm/log/cid_minting/cid_minting.log
   minter_db:
-    database: database/cid_minting_store.sqlite
+    database:  /apps/htmm/minterdb/cid_minting_store.sqlite
     drivername: sqlite
 
 test:

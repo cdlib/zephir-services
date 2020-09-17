@@ -41,6 +41,9 @@ class ZephirDatabase:
             results_dict = [dict(row) for row in results.fetchall()]
             return results_dict
 
+    def close(self):
+        self.engine.dispose()
+
 def zephir_clusters_lookup(db_conn_str, ocns_list):
     """
     Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
@@ -99,7 +102,9 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
     if select_zephir:
         try:
             zephir = ZephirDatabase(db_conn_str)
-            return zephir.findall(text(select_zephir))
+            results = zephir.findall(text(select_zephir))
+            zephir.close()
+            return results
         except:
             return None
     return None
@@ -116,7 +121,9 @@ def find_zephir_clusters_by_cids(db_conn_str, cid_list):
     if select_zephir:
         try:
             zephir = ZephirDatabase(db_conn_str)
-            return zephir.findall(text(select_zephir))
+            results = zephir.findall(text(select_zephir))
+            zephir.close()
+            return results 
         except:
             return None
     return None
@@ -195,13 +202,9 @@ def main():
 
     db_connect_str = str(utils.db_connect_url(configs[env]))
 
-    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_str
-
-    #print(DB_CONNECT_STR)
-
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
 
-    results = zephir_clusters_lookup(DB_CONNECT_STR, ocns_list)
+    results = zephir_clusters_lookup(db_connect_str, ocns_list)
     print(results)
 
 if __name__ == '__main__':

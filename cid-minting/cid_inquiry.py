@@ -4,9 +4,6 @@ import environs
 import re
 import json
 
-from sqlalchemy import create_engine
-from sqlalchemy import text
-
 import lib.utils as utils
 from config import get_configs_by_filename
 
