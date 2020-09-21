@@ -22,8 +22,8 @@ CREATE TABLE `zephir_identifiers` (
 DROP TABLE IF EXISTS zephir_identifier_records;
 
 CREATE TABLE `zephir_identifier_records` (
-  `record_autoid` int(11) NOT NULL,
-  `identifier_autoid` int(11) NOT NULL,
+  `record_autoid` integer NOT NULL,
+  `identifier_autoid` integer NOT NULL,
    PRIMARY KEY (`record_autoid`,`identifier_autoid`)
 ); 
 INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)

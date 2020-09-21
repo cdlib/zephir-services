@@ -1,33 +1,15 @@
 import os
 import sys
+
 import environs
-import re
 import json
+import logging
 
-from sqlalchemy import create_engine
-from sqlalchemy import text
-
-from lib.utils import ConsoleMessenger
 import lib.utils as utils
+from config import get_configs_by_filename
 
 from oclc_lookup import lookup_ocns_from_oclc
 from zephir_cluster_lookup import zephir_clusters_lookup
-
-def get_config_by_key(config_dir_name, config_fname, key):
-    """return config value by key from .yml config file
-       config_dir: directory of configuration files
-       config_fname: configuration filename
-       key: configuration key
-    """
-    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-    CONFIG_PATH = os.path.join(ROOT_PATH, config_dir_name)
-
-    # load all configuration files in directory
-    configs = utils.load_config(CONFIG_PATH)
-
-    # get config value by filename and key
-    config = configs.get(config_fname, {}).get(key)
-    return config
 
 def cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
     """Find Zephir clusters by given OCNs and their associated OCLC OCNs.
@@ -70,6 +52,11 @@ def flat_and_dedup_sort_list(list_of_lists):
                 new_list.append(item)
     return sorted(new_list)
 
+def usage(script_name):
+    print("Parameter error.")
+    print("Usage: {} env[dev|stg|prd] comma_separated_ocns".format(script_name))
+    print("{} dev 1,6567842,6758168,8727632".format(script_name))
+
 def main():
     """ Retrieves Zephir clusters by OCNs.
         Command line arguments:
@@ -87,20 +74,33 @@ def main():
     env = sys.argv[1]
     ocns = sys.argv[2].split(",")
 
+    if env not in ["test", "dev", "stg", "prd"]:
+        usage(sys.argv[0])
+        exit(1)
+
     ocns_list = [int(i) for i in ocns]
 
-    zephir_db_config = get_config_by_key('config', 'zephir_db', env)
-    db_connect_url = str(utils.db_connect_url(zephir_db_config))
+    zephir_db_config = get_configs_by_filename("config", "zephir_db")
+    db_connect_url = str(utils.db_connect_url(zephir_db_config[env]))
 
-    primary_db_path = get_config_by_key('config', 'ocns_leveldb', "primary_db_path")
-    cluster_db_path = get_config_by_key('config', 'ocns_leveldb', "cluster_db_path")
+    cid_minting_config = get_configs_by_filename("config", "cid_minting")
+    primary_db_path = cid_minting_config["primary_db_path"]
+    cluster_db_path = cid_minting_config["cluster_db_path"]
+    logfile = cid_minting_config['logpath']
+
+    logging.basicConfig(
+            level=logging.DEBUG,
+            filename=logfile,
+            format="%(asctime)s %(levelname)-4s %(message)s",
+        )
+    logging.info("Start " + os.path.basename(__file__))
+    logging.info("cmd option: {} {}".format(env, ocns))
 
     DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_url
     PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
     results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
-    #print(results)
     print(json.dumps(results))
     exit(0)
 

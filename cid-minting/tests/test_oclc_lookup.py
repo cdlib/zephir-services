@@ -15,40 +15,58 @@ from oclc_lookup import main
 
 # TESTS
 def test_get_primary_ocn(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     input = list(setup["dfs"]["primary.csv"]["ocn"])
     expect = list(setup["dfs"]["primary.csv"]["primary"])
     result = [
-        get_primary_ocn(ocn, setup["primary_db_path"])
+        get_primary_ocn(ocn, primary_db_path)
         for ocn in input
     ]
     assert sorted(expect) == sorted(result)
 
 def test_get_primary_ocn_with_null_cases(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     # case: ocn passed is None
-    result = get_primary_ocn(None, setup["primary_db_path"])
+    result = get_primary_ocn(None, primary_db_path)
     assert result == None
     # case: ocn not in the database
-    result = get_primary_ocn(0, setup["primary_db_path"])
+    result = get_primary_ocn(0, primary_db_path)
     assert result == None
 
 def test_get_ocns_cluster_by_primary_ocn(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     primary_ocn = 1
     cluster = [9987701, 53095235, 433981287, 6567842]
-    result = get_ocns_cluster_by_primary_ocn(primary_ocn, setup["cluster_db_path"])
+    result = get_ocns_cluster_by_primary_ocn(primary_ocn, cluster_db_path)
     assert sorted(cluster) == sorted(result)
 
 def test_get_cluster_missing_primary(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     primary_ocn = 1
-    result = get_ocns_cluster_by_primary_ocn(primary_ocn, setup["cluster_db_path"])
+    result = get_ocns_cluster_by_primary_ocn(primary_ocn, cluster_db_path)
     assert primary_ocn not in result
 
 def test_get_ocns_cluster_by_primary_ocn_2(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     primary_ocn = 17216714 
     cluster = [535434196]
-    result = get_ocns_cluster_by_primary_ocn(primary_ocn, setup["cluster_db_path"])
+    result = get_ocns_cluster_by_primary_ocn(primary_ocn, cluster_db_path)
     assert sorted(cluster) == sorted(result)
 
 def test_get_cluster_ocn_with_null_cases(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     null_cases = {
         "cluster_of_one_ocn": 1000000000,
         "secondary_ocn": 6567842,
@@ -56,9 +74,12 @@ def test_get_cluster_ocn_with_null_cases(setup):
         "none_ocn": None,
     }
     for k,v in null_cases.items():
-        assert None == get_ocns_cluster_by_primary_ocn(v, setup["cluster_db_path"])
+        assert None == get_ocns_cluster_by_primary_ocn(v, cluster_db_path)
         
 def test_get_ocns_cluster_by_ocn(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     clusters = {
         # ocn: list of all ocns of the cluster
         1000000000: [1000000000],                               # cluster_of_one_ocn
@@ -67,18 +88,24 @@ def test_get_ocns_cluster_by_ocn(setup):
         17216714: [17216714, 535434196],                        # cluster_of_2_ocns_by_primary_ocn, 
     }
     for ocn, cluster in clusters.items():
-        result = get_ocns_cluster_by_ocn(ocn, setup["primary_db_path"], setup["cluster_db_path"])
+        result = get_ocns_cluster_by_ocn(ocn, primary_db_path, cluster_db_path)
         assert sorted(cluster) == sorted(result)
 
 def test_get_ocns_cluster_by_ocn_with_null_cases(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     null_cases = {
         "invalid_ocn": 1234567890,
         "none_ocn": None,
     }
     for k, v in null_cases.items():
-        assert None == get_ocns_cluster_by_ocn(v, setup["primary_db_path"], setup["cluster_db_path"])
+        assert None == get_ocns_cluster_by_ocn(v, primary_db_path, cluster_db_path)
 
 def test_get_ocns_cluster_by_ocns(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     clusters = {
         # primary_ocn, list of all ocns of the cluster 
         1000000000: [1000000000],                               # cluster_of_one_ocn
@@ -106,19 +133,22 @@ def test_get_ocns_cluster_by_ocns(setup):
     }
     
     for k, ocns in input_ocns_list.items():
-        result = get_clusters_by_ocns(ocns, setup["primary_db_path"], setup["cluster_db_path"])
+        result = get_clusters_by_ocns(ocns, primary_db_path, cluster_db_path)
         print(result)
         assert result != None
         assert result == expected_set[k] 
 
 def test_get_ocns_cluster_by_ocns_wthnull_cases(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     input_ocns_list = {
         "one_invalid_ocn": [1234567890],
         "two_invalid_ocns": [1234567890, 12345678901],
         "no_ocns": [],
     }
     for k, ocns in input_ocns_list.items():
-        result = get_clusters_by_ocns(ocns, setup["primary_db_path"], setup["cluster_db_path"])
+        result = get_clusters_by_ocns(ocns, primary_db_path, cluster_db_path)
         assert result == set()
 
 def test_convert_set_to_list():
@@ -139,6 +169,9 @@ def test_convert_set_to_list():
 
 
 def test_lookup_ocns_from_oclc(setup):
+    primary_db_path = setup["primary_db_path"]
+    cluster_db_path = setup["cluster_db_path"]
+
     input_ocns = {
         "one_ocn_primary_single_cluster": [1000000000],
         "one_ocn_primary_multi_cluster": [1],
@@ -182,15 +215,13 @@ def test_lookup_ocns_from_oclc(setup):
     }
 
     for k, ocns in input_ocns.items():
-        result = lookup_ocns_from_oclc(ocns, setup["primary_db_path"], setup["cluster_db_path"])
+        result = lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == ocns
         assert result["matched_oclc_clusters"] == expected[k]["matched_oclc_clusters"]
         assert result["num_of_matched_oclc_clusters"] == expected[k]["num_of_matched_oclc_clusters"]
 
 # TEST cmd line options
 def test_main(setup):
-    primary_path = setup["primary_db_path"]
-    cluster_path = setup["cluster_db_path"]
 
     runner = CliRunner()
     result = runner.invoke(main)

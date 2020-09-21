@@ -27,9 +27,6 @@ fi
 # environment: dev, stg, or prd
 ENV=`uname -n| cut -d '-' -f3`
 
-LOG="/apps/htmm/log/cid_inquiry/cid_inquiry_run.log"
-SCRIPT="/apps/htmm/zephir-reports/submission_email_notice/check_events_status.py"
-
 PIPFILE="/apps/htmm/zephir-services/Pipfile"
 SCRIPT="/apps/htmm/zephir-services/cid-minting/cid_inquiry.py"
 OCNS=$1
@@ -38,12 +35,7 @@ if [ ! -e $SCRIPT ]; then
   usage_error "Script $SCRIPT does not exist."
 fi
 
-echo `/bin/date` >>  $LOG
-
-run_date=`/bin/date +%Y-%m-%d`
-
 cmd="pipenv run python $SCRIPT $ENV $OCNS"
-echo "cmd: $cmd" >> $LOG
 
 PIPENV_PIPFILE=$PIPFILE $cmd
 

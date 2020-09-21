@@ -6,8 +6,8 @@ import re
 from sqlalchemy import create_engine
 from sqlalchemy import text
 
-from lib.utils import ConsoleMessenger
 import lib.utils as utils
+from config import get_configs_by_filename
 
 SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
     FROM zephir_records as z
@@ -31,23 +31,6 @@ def construct_select_zephir_cluster_by_cid(cids):
 
     return SELECT_ZEPHIR_BY_OCLC + " " + AND_CID_IN + " (" + cids + ") " + ORDER_BY
 
-def get_db_conn_string_from_config_by_key(config_dir_name, config_fname, key):
-    """return database connection string from db_config.yml file
-       config_dir: directory of configuration files
-       config_fname: configuration filename
-       key: configuration key
-    """
-    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-    CONFIG_PATH = os.path.join(ROOT_PATH, config_dir_name)
-
-    # load all configuration files in directory
-    configs = utils.load_config(CONFIG_PATH)
-
-    # get config value by filename and key
-    config = configs.get(config_fname, {}).get(key)
-
-    return str(utils.db_connect_url(config))
-
 class ZephirDatabase:
     def __init__(self, db_connect_str):
         self.engine = create_engine(db_connect_str)
@@ -57,6 +40,9 @@ class ZephirDatabase:
             results = connection.execute(sql, params or ())
             results_dict = [dict(row) for row in results.fetchall()]
             return results_dict
+
+    def close(self):
+        self.engine.dispose()
 
 def zephir_clusters_lookup(db_conn_str, ocns_list):
     """
@@ -116,7 +102,9 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
     if select_zephir:
         try:
             zephir = ZephirDatabase(db_conn_str)
-            return zephir.findall(text(select_zephir))
+            results = zephir.findall(text(select_zephir))
+            zephir.close()
+            return results
         except:
             return None
     return None
@@ -133,7 +121,9 @@ def find_zephir_clusters_by_cids(db_conn_str, cid_list):
     if select_zephir:
         try:
             zephir = ZephirDatabase(db_conn_str)
-            return zephir.findall(text(select_zephir))
+            results = zephir.findall(text(select_zephir))
+            zephir.close()
+            return results 
         except:
             return None
     return None
@@ -207,13 +197,14 @@ def main():
     else:
         env = "test"
 
-    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or get_db_conn_string_from_config_by_key('config','zephir_db', env)
+    configs= get_configs_by_filename('config', 'zephir_db')
+    print(configs)
 
-    #print(DB_CONNECT_STR)
+    db_connect_str = str(utils.db_connect_url(configs[env]))
 
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
 
-    results = zephir_clusters_lookup(DB_CONNECT_STR, ocns_list)
+    results = zephir_clusters_lookup(db_connect_str, ocns_list)
     print(results)
 
 if __name__ == '__main__':

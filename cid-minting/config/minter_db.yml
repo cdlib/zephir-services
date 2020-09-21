@@ -1,7 +1,0 @@
-dev:
-    database: database/cid_minting_store.sqlite
-    drivername: sqlite
-
-test:
-    database: database/zephir_test.db
-    drivername: sqlite
