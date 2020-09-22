@@ -1,3 +1,8 @@
+prd:
+  minter_db:
+    database:  /apps/htmm/minterdb/cid_minting_store.sqlite
+    drivername: sqlite
+
 dev:
   minter_db:
     database:  /apps/htmm/minterdb/cid_minting_store.sqlite
