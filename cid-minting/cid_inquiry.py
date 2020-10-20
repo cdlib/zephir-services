@@ -82,10 +82,6 @@ def main():
         exit(1)
 
     env = sys.argv[1]
-    if (len(sys.argv) == 3):
-        ocns = sys.argv[2].split(",")
-        ocns_list = [int(i) for i in ocns]
-
     if env not in ["test", "dev", "stg", "prd"]:
         usage(sys.argv[0])
         exit(1)
