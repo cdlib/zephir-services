@@ -17,3 +17,6 @@ primary_db_path: /apps/htmm/leveldb/primary-lookup
 cluster_db_path: /apps/htmm/leveldb/cluster-lookup
 
 logpath: /apps/htmm/log/cid_minting/cid_minting.log
+
+cid_inquiry_data_dir: /apps/htmm/htprep-data/cid-inquiry
+cid_inquiry_done_dir: /apps/htmm/htprep-data/cid-inquiry/done

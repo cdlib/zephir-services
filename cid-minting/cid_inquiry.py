@@ -61,24 +61,34 @@ def main():
     """ Retrieves Zephir clusters by OCNs.
         Command line arguments:
         argv[1]: Server environemnt (Required). Can be dev, stg, or prd.
-        argv[2]: List of OCNs (Required).
+        argv[2]: List of OCNs (Optional).
                  Comma separated strings without spaces in between any two values.
                  For example: 1,6567842,6758168,8727632
+                 When OCNs present: 
+                   1. retrieves Zephir clusters by given OCNs;
+                   2. return Zephir clusters in JSON string.
+                 When OCNs is not present:
+                   1. find OCNs from the next input file;
+                   2. retrieves Zephir clusters by given OCNs;
+                   3. write Zephir clusters in JSON string to output file;
+                   4. repeat 1-3 indefinitely.
     """
-    if (len(sys.argv) != 3):
+
+    if (len(sys.argv) != 2 and len(sys.argv) != 3):
         print("Parameter error.")
-        print("Usage: {} env[dev|stg|prd] comma_separated_ocns".format(sys.argv[0]))
+        print("Usage: {} env[dev|stg|prd] optional_comma_separated_ocns".format(sys.argv[0]))
+        print("{} dev".format(sys.argv[0]))
         print("{} dev 1,6567842,6758168,8727632".format(sys.argv[0]))
         exit(1)
 
     env = sys.argv[1]
-    ocns = sys.argv[2].split(",")
+    if (len(sys.argv) == 3):
+        ocns = sys.argv[2].split(",")
+        ocns_list = [int(i) for i in ocns]
 
     if env not in ["test", "dev", "stg", "prd"]:
         usage(sys.argv[0])
         exit(1)
-
-    ocns_list = [int(i) for i in ocns]
 
     zephir_db_config = get_configs_by_filename("config", "zephir_db")
     db_connect_url = str(utils.db_connect_url(zephir_db_config[env]))
@@ -87,6 +97,8 @@ def main():
     primary_db_path = cid_minting_config["primary_db_path"]
     cluster_db_path = cid_minting_config["cluster_db_path"]
     logfile = cid_minting_config['logpath']
+    cid_inquiry_data_dir = cid_minting_config['cid_inquiry_data_dir']
+    cid_inquiry_done_dir = cid_minting_config['cid_inquiry_done_dir']
 
     logging.basicConfig(
             level=logging.DEBUG,
@@ -94,15 +106,38 @@ def main():
             format="%(asctime)s %(levelname)-4s %(message)s",
         )
     logging.info("Start " + os.path.basename(__file__))
-    logging.info("cmd option: {} {}".format(env, ocns))
+    logging.info("Env: {}".format(env))
 
     DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_url
     PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
-    results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
-    print(json.dumps(results))
-    exit(0)
+    if (len(sys.argv) == 3):
+        ocns = sys.argv[2].split(",")
+        ocns_list = [int(i) for i in ocns]
+
+        results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+        print(json.dumps(results))
+
+        exit(0)
+
+    while True:
+        for file in os.listdir(cid_inquiry_data_dir):
+            if file.endswith(".txt"):
+                output_filename = os.path.join(cid_inquiry_data_dir, file)
+                done_filename = os.path.join(cid_inquiry_done_dir, file + ".done")
+
+                ocns_from_filename = file[37:][:-4]
+                ocns = ocns_from_filename.split(",")
+                #print (ocns)
+                ocns_list = [int(i) for i in ocns]
+                results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+                print(json.dumps(results))
+                with open(output_filename, 'w') as output_file:
+                    output_file.write(json.dumps(results))
+
+                os.rename(output_filename, done_filename)
+
 
 if __name__ == '__main__':
     main()
