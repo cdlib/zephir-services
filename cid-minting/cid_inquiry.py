@@ -4,6 +4,7 @@ import sys
 import environs
 import json
 import logging
+import time
 
 import lib.utils as utils
 from config import get_configs_by_filename
@@ -117,7 +118,9 @@ def main():
 
         exit(0)
 
-    while True:
+    process_timestamp = time.time()
+    run_process = True
+    while run_process:
         for file in os.listdir(cid_inquiry_data_dir):
             if file.endswith(".txt"):
                 output_filename = os.path.join(cid_inquiry_data_dir, file)
@@ -125,14 +128,18 @@ def main():
 
                 ocns_from_filename = file[37:][:-4]
                 ocns = ocns_from_filename.split(",")
-                #print (ocns)
                 ocns_list = [int(i) for i in ocns]
                 results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
-                print(json.dumps(results))
                 with open(output_filename, 'w') as output_file:
                     output_file.write(json.dumps(results))
 
                 os.rename(output_filename, done_filename)
+
+                process_timestamp = time.time()
+        else:
+            # end loop if there are no input data for 10 min
+            if (time.time() - process_timestamp > 600):
+                run_process = False
 
 
 if __name__ == '__main__':
