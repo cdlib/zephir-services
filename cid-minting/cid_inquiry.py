@@ -72,7 +72,7 @@ def main():
                    1. find OCNs from the next input file;
                    2. retrieves Zephir clusters by given OCNs;
                    3. write Zephir clusters in JSON string to output file;
-                   4. repeat 1-3 indefinitely.
+                   4. repeat 1-3 indefinitely or when there are no input files for 10 minutes.
     """
 
     if (len(sys.argv) != 2 and len(sys.argv) != 3):

@@ -39,7 +39,7 @@ This module contains core functions to retrieve Zephir clusters:
   Finds Zephir clusters by OCNs and returns Zephir clusters infomation such as cluster IDs, number of clusters and all OCNs in each cluster. 
 
 ### CID Inquiry (cid_inquiry)
-The cid_inquiry module has one core funciton which is to find matched Zephir Clusters by a list of OCNs :
+The cid_inquiry module has one core function which is to find matched Zephir Clusters by a list of OCNs :
 * cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
 ** Returns: a dict combining both OCLC lookup and Zephir lookup results:
 <pre>
@@ -67,14 +67,25 @@ The `cid_inquiry.py` script can be executed from the command line to find Zephir
 
 Command line arguments:
 * argv[1]: Server environemnt (Required). Can be dev, stg, or prd.
-* argv[2]: List of OCNs (Required).
-  Comma separated strings without spaces in between any two values.
+* argv[2]: List of OCNs (Optional).
+  OCNs are separated by comma without spaces in between any two OCNs.
   For example: 1,6567842,6758168,8727632
+  When argv[2] is present,
+    1. retrieve Zephir clusters by given OCNs;
+    2. return Zephir clusters in JSON string.
+  When OCNs is not present:
+    1. find OCNs from the next input file;
+    2. retrieve Zephir clusters by given OCNs;
+    3. write Zephir clusters in JSON string to output file;
+    4. repeat 1-3 indefinitely or after 10 min when there is no input data file. 
 
 ```
 pipenv run python cid_inquiry.py dev 1,6567842,6758168,8727632
 ```
-
+Or
+```
+pipenv run python cid_inquiry.py dev 
+```
 The script returns a dict combining both OCLC lookup and Zephir lookup results listed in the `cid_inquiry` function section. 
 
 #### Shell Wrapper
