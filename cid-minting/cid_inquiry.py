@@ -53,6 +53,22 @@ def flat_and_dedup_sort_list(list_of_lists):
                 new_list.append(item)
     return sorted(new_list)
 
+def convert_comma_separated_str_to_int_list(ocn_str):
+    int_list=[]
+    str_list = ocn_str.split(",")
+    for a_str in str_list:
+        try:
+            ocn = int(a_str)
+        except ValueError:
+            logging.error("ValueError: {}".format(a_str))
+            continue
+        if (ocn > 0):
+            int_list.append(ocn)
+        else:
+            logging.error("ValueError: {}".format(a_str))
+
+    return int_list
+
 def usage(script_name):
     print("Parameter error.")
     print("Usage: {} env[dev|stg|prd] comma_separated_ocns".format(script_name))
@@ -110,8 +126,7 @@ def main():
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
     if (len(sys.argv) == 3):
-        ocns = sys.argv[2].split(",")
-        ocns_list = [int(i) for i in ocns]
+        ocns_list = convert_comma_separated_str_to_int_list(sys.argv[2])
 
         results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
         print(json.dumps(results))
@@ -127,8 +142,7 @@ def main():
                 done_filename = os.path.join(cid_inquiry_done_dir, file + ".done")
 
                 ocns_from_filename = file[37:][:-4]
-                ocns = ocns_from_filename.split(",")
-                ocns_list = [int(i) for i in ocns]
+                ocns_list = convert_comma_separated_str_to_int_list(ocns_from_filename)
                 results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
                 with open(output_filename, 'w') as output_file:
                     output_file.write(json.dumps(results))

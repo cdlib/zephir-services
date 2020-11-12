@@ -8,6 +8,7 @@ import json
 
 from cid_inquiry import cid_inquiry
 from cid_inquiry import flat_and_dedup_sort_list
+from cid_inquiry import convert_comma_separated_str_to_int_list
 from cid_inquiry import main
 
 """Test cid_inquiry() function which returns a dict with: 
@@ -606,6 +607,29 @@ def test_flat_and_dedup_sort_list():
     for k, val in input_list.items():
         assert expected[k] == flat_and_dedup_sort_list(val)
 
+def test_convert_comma_separated_str_to_int_list():
+    input_list = {
+        "1_item": "1",
+        "2_items": "1,123",
+        "empty_item_1": ",123",
+        "empty_item_2": "123,",
+        "empty_item_3": "1,,123",
+        "error_1": "-123",
+        "error_2": "ebook)ocm76968450",
+        "error_3": "ebook)ocm76968450,123",
+    }
+    expected = {
+        "1_item": [1],
+        "2_items": [1, 123],
+        "empty_item_1": [123],
+        "empty_item_2": [123],
+        "empty_item_3": [1,123],
+        "error_1": [],
+        "error_2": [],
+        "error_3": [123],
+    }
+    for k, val in input_list.items():
+        assert expected[k] == convert_comma_separated_str_to_int_list(val)
 
 # FIXTURES
 @pytest.fixture
