@@ -21,22 +21,22 @@ with open(input_file) as fp:
         x = line.split(":")
         if (len(x) ==5):
             run_report = x[0]
-            key = x[1].strip()
-            value = x[2].strip()
+            key_item = x[1].strip()
+            value_cid = x[2].strip()
         else:
             run_report = ""
-            key = x[0].strip()
-            value = x[1].strip()
-        #print ("run_report={}: item={}: cid={}".format(run_report, key, value))
+            key_item = x[0].strip()
+            value_cid = x[1].strip()
+        #print ("run_report={}: item={}: cid={}".format(run_report, key_item, value_cid))
 
-        if key in cids.keys():
-            #print ("Key has defined: {} {}".format(key, value))
-            if cids[key] != value:
-                print ("Different CIDs:{}:item={}:new={}:old={}".format(run_report, key, cids[key], value))
-                output.write("Different CIDs:{}:{}:{}:{}\n".format(run_report, key, cids[key], value))
+        if key_item in cids.keys():
+            #print ("Key has defined: {} {}".format(key_item, value_cid))
+            if cids[key_item] != value_cid:
+                print ("Different CIDs:{}:item={}:new={}:old={}".format(run_report, key_item, cids[key_item], value_cid))
+                output.write("Different CIDs:{}:{}:{}:{}\n".format(run_report, key_item, cids[key_item], value_cid))
         else:
-            #print ("Not in, define new key/value: {} {}".format(key, value))
-            cids[key] = value
+            #print ("Not in, define new key_item/value_cid: {} {}".format(key_item, value_cid))
+            cids[key_item] = value_cid
 
 output.write("\n")
 output.write("Total processed sys IDs:{}\n".format(len(cids)))
