@@ -10,34 +10,70 @@ input_file = sys.argv[1]
 outpuf_file = os.path.splitext(input_file)[0] + "_rpt.txt"
 
 output = open(outpuf_file, "w")
-output.write("category:run_report_filename:sys_id:new_cid:old_cid\n")
+output.write("category:run_report_filename:ht_id:new_cid:old_cid\n")
 
 count = 0
-cids = {}
+new_cids = []
+old_cids = []
 with open(input_file) as fp:
    for line in fp:
         count += 1
-        #print("Line {}: {}".format(count, line.strip()))
-        x = line.split(":")
-        if (len(x) ==5):
-            run_report = x[0]
-            key_item = x[1].strip()
-            value_cid = x[2].strip()
+        if count % 2 == 0:
+            old_cids.append(line)
+        else:
+            new_cids.append(line)
+
+if (len(new_cids) != len(old_cids)):
+    print ("Log entires are not paired properly")
+    print ("Lines from old process: {}".format(len(old_cids)))
+    print ("Lines from new process: {}".format(len(new_cids)))
+    exit (1)
+
+#print ("paired lines: {}".format(len(new_cids)))
+
+for i in range(len(new_cids)):
+    x = new_cids[i].split(":")
+    y = old_cids[i].split(":")
+    if (len(x) == 5):
+        run_report = x[0]
+        item = x[1].strip()
+        new_cid = x[2].strip()
+        old_cid = y[2].strip()
+    else:
+        run_report = ""
+        item = x[0].strip()
+        new_cid = x[1].strip()
+        old_cid = y[1].strip()
+    #print ("run_report={}: item={}: new_cid={}: old_cid={}".format(run_report, item, new_cid, old_cid))
+
+    # data format is different for error line
+    if "ERROR" in old_cids[i]:
+        if (len(y) == 4):
+            error_msg = y[2].strip() + ", " + y[3].strip()
         else:
             run_report = ""
-            key_item = x[0].strip()
-            value_cid = x[1].strip()
-        #print ("run_report={}: item={}: cid={}".format(run_report, key_item, value_cid))
+            error_msg = y[1].strip() + ", " + y[2].strip()
 
-        if key_item in cids.keys():
-            #print ("Key has defined: {} {}".format(key_item, value_cid))
-            if cids[key_item] != value_cid:
-                print ("Different CIDs:{}:item={}:new={}:old={}".format(run_report, key_item, cids[key_item], value_cid))
-                output.write("Different CIDs:{}:{}:{}:{}\n".format(run_report, key_item, cids[key_item], value_cid))
+        #print ("ERROR:{}:item={}:new={}:old={}".format(run_report, item, new_cid, error_msg))
+        output.write("ERROR:{}:{}:{}:{}\n".format(run_report, item, new_cid, error_msg))
+    else:
+        if new_cid != old_cid:
+            if not old_cid:
+                cat = "Current code did not find CID"
+            else:
+                cat = "Different CIDs"
         else:
-            #print ("Not in, define new key_item/value_cid: {} {}".format(key_item, value_cid))
-            cids[key_item] = value_cid
+            if not old_cid:
+                cat = "Neither current or new code find CID"
+            else:
+                cat = "Same CID"
+        #print ("{}:{}:item={}:new={}:old={}".format(cat, run_report, item, new_cid, old_cid))
+        output.write("{}:{}:{}:{}:{}\n".format(cat, run_report, item, new_cid, old_cid))
+
 
 output.write("\n")
-output.write("Total processed sys IDs:{}\n".format(len(cids)))
+output.write("Total processed HTIDs:{}\n".format(len(new_cids)))
 output.close()
+
+print("Selected log entries are saved in: {}".format(input_file))
+print ("Report: {}".format(outpuf_file))
