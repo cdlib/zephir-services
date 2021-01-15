@@ -10,7 +10,7 @@ input_file = sys.argv[1]
 outpuf_file = os.path.splitext(input_file)[0] + "_rpt.txt"
 
 output = open(outpuf_file, "w")
-output.write("category:run_report_filename:ht_id:new_cid:old_cid\n")
+output.write("Category:Run Report Filename:HTID:CID from New Code:CID from Current Code\n")
 
 count = 0
 new_cids = []
@@ -64,7 +64,7 @@ for i in range(len(new_cids)):
                 cat = "Different CIDs"
         else:
             if not old_cid:
-                cat = "Neither current or new code find CID"
+                cat = "Neither current nor new code find CID"
             else:
                 cat = "Same CID"
         #print ("{}:{}:item={}:new={}:old={}".format(cat, run_report, item, new_cid, old_cid))

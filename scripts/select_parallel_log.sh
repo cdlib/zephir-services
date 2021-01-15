@@ -53,8 +53,7 @@ if [[ -f "$LOG_FILE" ]]; then
   grep "create_cid_field : new" -A1 $LOG_FILE > ${OUTPUT_FILE}
 elif [[ -d "$LOG_DIR" ]]; then
   if [ -z "$RPT_ID" ]; then
-    dir_name=`dirname $LOG_DIR`
-    RPT_ID=`basename $dir_name`
+    RPT_ID=`basename $LOG_DIR`
   fi
   #echo $RPT_ID
   OUTPUT_FILE=${OUTPUT_DIR}/${REPORT_DATE}_${RPT_ID}_paired_entries.txt
