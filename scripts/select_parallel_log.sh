@@ -50,7 +50,7 @@ if [[ -f "$LOG_FILE" ]]; then
   filename=`basename $LOG_FILE`
   OUTPUT_FILE=${OUTPUT_DIR}/${REPORT_DATE}_${filename}_paired_entries.txt
   #echo $OUTPUT_FILE
-  grep "create_cid_field : new" -A1 $LOG_FILE > ${OUTPUT_FILE}
+  grep "create_cid_field" -A1 $LOG_FILE | grep -v -E "INFO|WARNING|Success" > ${OUTPUT_FILE}
 elif [[ -d "$LOG_DIR" ]]; then
   if [ -z "$RPT_ID" ]; then
     RPT_ID=`basename $LOG_DIR`
@@ -58,11 +58,11 @@ elif [[ -d "$LOG_DIR" ]]; then
   #echo $RPT_ID
   OUTPUT_FILE=${OUTPUT_DIR}/${REPORT_DATE}_${RPT_ID}_paired_entries.txt
   #echo $OUTPUT_FILE
-  grep "create_cid_field : new" -A1 $LOG_DIR/*.txt | sed "/--$/d" | sed "s/.txt-/.txt:/g" > ${OUTPUT_FILE}
+  grep "create_cid_field" -A1 $LOG_DIR/*.txt | grep -v -E "INFO|WARNING|Success" | sed "/--$/d" | sed "s/.txt-/.txt:/g" > ${OUTPUT_FILE}
 else
   OUTPUT_FILE=${OUTPUT_DIR}/${REPORT_DATE}-${PAST_DAYS}_paired_entries.txt
   # find log files created in the past 7 days and get the matched lines
-  find $LOG_PATH -mtime -${PAST_DAYS} -type f -exec grep "create_cid_field : new" -A1 {} \+ | sed "/--$/d" | sed "s/.txt-/.txt:/g" > ${OUTPUT_FILE}
+  find $LOG_PATH -mtime -${PAST_DAYS} -type f -exec grep "create_cid_field" -A1 {} \+ | grep -v -E "INFO|WARNING|Success" | sed "/--$/d" | sed "s/.txt-/.txt:/g" > ${OUTPUT_FILE}
 fi
 
 PIPFILE="/apps/htmm/zephir-services/Pipfile"
