@@ -19,7 +19,7 @@ function usage {
 
 LOG_PATH=~/import/*/rundata/
 PAST_DAYS=7
-REPORT_DATE=`date "+%Y%m%d"`
+REPORT_DATE=`date "+%Y%m%d%H%M%S"`
 OUTPUT_DIR=~/import/parallel_log_analysis
 LOG_FILE=""
 LOG_DIR=""
@@ -50,7 +50,7 @@ if [[ -f "$LOG_FILE" ]]; then
   filename=`basename $LOG_FILE`
   OUTPUT_FILE=${OUTPUT_DIR}/${REPORT_DATE}_${filename}_paired_entries.txt
   #echo $OUTPUT_FILE
-  grep "create_cid_field" -A1 $LOG_FILE | grep -v -E "INFO|WARNING|Success" > ${OUTPUT_FILE}
+  grep "create_cid_field" -A1 $LOG_FILE | grep -v -E "INFO|WARNING|Success" | sed "/--$/d" > ${OUTPUT_FILE}
 elif [[ -d "$LOG_DIR" ]]; then
   if [ -z "$RPT_ID" ]; then
     RPT_ID=`basename $LOG_DIR`
