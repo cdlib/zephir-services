@@ -10,7 +10,7 @@ input_file = sys.argv[1]
 outpuf_file = os.path.splitext(input_file)[0] + "_rpt.txt"
 
 output = open(outpuf_file, "w")
-output.write("Category:Run Report Filename:HTID:CID from New Code:CID from Current Code\n")
+output.write("Category:Run Report Filename:Contribsys_ID:CID from New Code:CID from Current Code\n")
 
 count = 0
 new_cids = []
@@ -72,7 +72,7 @@ for i in range(len(new_cids)):
 
 
 output.write("\n")
-output.write("Total processed HTIDs:{}\n".format(len(new_cids)))
+output.write("Total records processed:{}\n".format(len(new_cids)))
 output.close()
 
 print("Selected log entries are saved in: {}".format(input_file))
