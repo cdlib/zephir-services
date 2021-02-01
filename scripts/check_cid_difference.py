@@ -31,6 +31,14 @@ if (len(new_cids) != len(old_cids)):
 
 #print ("paired lines: {}".format(len(new_cids)))
 
+counts = {
+    "Same CID": 0,
+    "Different CIDs": 0,
+    "Current code did not find CID": 0,
+    "Neither current nor new code find CID": 0,
+    "ERROR": 0,
+    }
+cat = ""
 for i in range(len(new_cids)):
     x = new_cids[i].split(":")
     y = old_cids[i].split(":")
@@ -49,13 +57,12 @@ for i in range(len(new_cids)):
     # data format is different for error line
     if "ERROR" in old_cids[i]:
         if (len(y) == 4):
-            error_msg = y[2].strip() + ", " + y[3].strip()
+            old_cid = y[2].strip() + ", " + y[3].strip()
         else:
             run_report = ""
-            error_msg = y[1].strip() + ", " + y[2].strip()
+            old_cid = y[1].strip() + ", " + y[2].strip()
 
-        #print ("ERROR:{}:item={}:new={}:old={}".format(run_report, item, new_cid, error_msg))
-        output.write("ERROR:{}:{}:{}:{}\n".format(run_report, item, new_cid, error_msg))
+        cat = "ERROR" 
     else:
         if new_cid != old_cid:
             if not old_cid:
@@ -67,11 +74,15 @@ for i in range(len(new_cids)):
                 cat = "Neither current nor new code find CID"
             else:
                 cat = "Same CID"
-        #print ("{}:{}:item={}:new={}:old={}".format(cat, run_report, item, new_cid, old_cid))
-        output.write("{}:{}:{}:{}:{}\n".format(cat, run_report, item, new_cid, old_cid))
+
+    output.write("{}:{}:{}:{}:{}\n".format(cat, run_report, item, new_cid, old_cid))
+    counts[cat] += 1
 
 
 output.write("\n")
+for key, val in counts.items():
+    output.write("Total {}:{}\n".format(key, val))
+
 output.write("Total records processed:{}\n".format(len(new_cids)))
 output.close()
 
