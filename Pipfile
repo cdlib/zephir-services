@@ -23,6 +23,8 @@ zed-event = {git = "https://github.com/cdlib/zephir-services.git",ref = "amz2_br
 msgpack = "*"
 plyvel = "*"
 pandas = "*"
+fuzzywuzzy = "*"
+python-levenshtein = "*"
 
 [dev-packages]
 
