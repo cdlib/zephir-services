@@ -3,8 +3,8 @@ from fuzzywuzzy import process
 
 class FuzzyRatios:
     def __init__ (self, string_1, string_2):
-        self.str_1 = string_1.lower()
-        self.str_2 = string_2.lower()
+        self.str_1 = string_1.lower() if string_1 else ""
+        self.str_2 = string_2.lower() if string_2 else ""
         self.fuzzy_ratio = fuzz.ratio(self.str_1, self.str_2)
         self.fuzzy_partial_ratio = fuzz.partial_ratio(self.str_1, self.str_2)
         self.fuzzy_token_sort_ratio = fuzz.token_sort_ratio(self.str_1, self.str_2)

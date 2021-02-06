@@ -3,11 +3,13 @@ import sys
 import environs
 import re
 
+import csv
 from sqlalchemy import create_engine
 from sqlalchemy import text
 
 import lib.utils as utils
 from config import get_configs_by_filename
+from compare_records import FuzzyRatios
 
 SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
     FROM zephir_records as z
@@ -109,15 +111,7 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
         None: when there is an exception
     """
     select_zephir = construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
-    if select_zephir:
-        try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
-            return results
-        except:
-            return None
-    return None
+    return find_zephir_records(db_conn_str, select_zephir)
 
 def find_zephir_clusters_by_cids(db_conn_str, cid_list):
     """
@@ -128,15 +122,7 @@ def find_zephir_clusters_by_cids(db_conn_str, cid_list):
         list of dict with keys "cid" and "ocn"
     """
     select_zephir = construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
-    if select_zephir:
-        try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
-            return results 
-        except:
-            return None
-    return None
+    return find_zephir_records(db_conn_str, select_zephir)
 
 def list_to_str(a_list):
     """Convert list item to a single quoted string, concat with a comma and space 
@@ -219,7 +205,7 @@ def find_zephir_records(db_conn_str, select_query):
             return None
     return None
 
-def find_zephir_titles_by_cids(db_conn_str, cid):
+def find_zephir_titles_by_cid(db_conn_str, cid):
     """
     Args:
         db_conn_str: database connection string
@@ -230,6 +216,31 @@ def find_zephir_titles_by_cids(db_conn_str, cid):
     select_zephir = construct_select_zephir_titles_by_cid(cid)
     return find_zephir_records(db_conn_str, select_zephir) 
 
+def test_zephir_search(db_connect_str):
+    cids = ["000000001", "000000002"]
+    results = find_zephir_clusters_by_cids(db_connect_str, cids)
+    print (results)
+
+    ocns = ["2779601", "2"]
+    results = find_zephir_clusters_by_ocns(db_connect_str, ocns)
+    print (results)
+
+    cid = "000000001"
+    results = find_zephir_titles_by_cid(db_connect_str, cid)
+    for result in results:
+        print (result)
+
+def test_match():
+    str_a = "a"
+    str_b= "A "
+    compare = FuzzyRatios(str_a, str_b)
+    print (str_a)
+    print (str_b)
+    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
+    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
+    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
+    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
+
 def main():
     if (len(sys.argv) > 1):
         env = sys.argv[1]
@@ -237,13 +248,47 @@ def main():
         env = "dev"
 
     configs= get_configs_by_filename('config', 'zephir_db')
-
     db_connect_str = str(utils.db_connect_url(configs[env]))
 
-    cid = "000000001"
-    results = find_zephir_titles_by_cids(db_connect_str, cid)
-    for result in results:
-        print (result)
+    #test_zephir_search(db_connect_str)
+    #test_match()
+
+    input_file = "./data/cids_with_multi_primary_ocns.csv"
+    output_file = "./output/cids_with_multi_primary_ocns_similarity_scores.txt"
+    csv_columns = ["cid", "contribsys_id", "title_key", "ratio", "partial_ratio", "token_sort", "token_set"]
+
+    count = 0
+    with open(input_file) as infile, open(output_file, 'w') as outfile:
+        reader = csv.reader(infile)
+        next(reader, None)  # skip the headers
+        writer = csv.DictWriter(outfile, fieldnames=csv_columns)
+        writer.writeheader()
+
+        for fields in reader:
+            count += 1
+            if len(fields) > 0:
+                # left padding 0s to CID
+                cid = ("000000000" + fields[0])[-9:]
+                #print (cid)
+                results = find_zephir_titles_by_cid(db_connect_str, cid)
+                first_item = True
+                for result in results:
+                    if first_item:
+                        title_key = result["title_key"]
+                        first_item = False
+                    else:
+                        ratios = FuzzyRatios(title_key, result["title_key"])
+                        #print (ratios.fuzzy_ratio)
+                        result = {
+                            "cid": result["cid"],
+                            "contribsys_id": result["contribsys_id"],
+                            "title_key" : result["title_key"],
+                            "ratio": ratios.fuzzy_ratio,
+                            "partial_ratio": ratios.fuzzy_partial_ratio,
+                            "token_sort": ratios.fuzzy_token_sort_ratio,
+                            "token_set": ratios.fuzzy_token_set_ratio,
+                        }
+                    writer.writerow(result)
 
 
 if __name__ == '__main__':
