@@ -133,7 +133,6 @@ def main():
 
         exit(0)
 
-    process_timestamp = time.time()
     run_process = True
     while run_process:
         for file in os.listdir(cid_inquiry_data_dir):
@@ -144,16 +143,11 @@ def main():
                 ocns_from_filename = file[37:][:-4]
                 ocns_list = convert_comma_separated_str_to_int_list(ocns_from_filename)
                 results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+
                 with open(output_filename, 'w') as output_file:
                     output_file.write(json.dumps(results))
 
                 os.rename(output_filename, done_filename)
-
-                process_timestamp = time.time()
-        else:
-            # end loop if there are no input data for 10 min
-            if (time.time() - process_timestamp > 600):
-                run_process = False
 
 
 if __name__ == '__main__':
