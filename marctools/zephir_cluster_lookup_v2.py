@@ -22,7 +22,7 @@ AND_CID_IN = "AND z.cid in"
 ORDER_BY = "ORDER BY z.cid, i.identifier"
 
 SELECT_TITLES = """SELECT DISTINCT 
-    cid, contribsys_id, CONCAT(title, ", ", creator, ", " , publisher) as title_key from zephir_records
+    cid, contribsys_id, CONCAT_WS(", ", title, creator, publisher) as title_key from zephir_records
 """
 
 def construct_select_zephir_cluster_by_ocns(ocns):
@@ -253,9 +253,16 @@ def main():
     #test_zephir_search(db_connect_str)
     #test_match()
 
-    input_file = "./data/cids_with_multi_primary_ocns.csv"
-    output_file = "./output/cids_with_multi_primary_ocns_similarity_scores.txt"
-    csv_columns = ["cid", "contribsys_id", "title_key", "ratio", "partial_ratio", "token_sort", "token_set"]
+    if len(sys.argv) > 2:
+        input_file = sys.argv[2]
+    else:
+        input_file = "./data/cids_with_multi_primary_ocns.csv"
+    if len(sys.argv) > 3:
+        output_file = sys.argv[3]
+    else:
+        output_file = "./output/cids_with_multi_primary_ocns_similarity_scores.csv"
+
+    csv_columns = ["cid", "contribsys_id", "title_key", "similarity_ratio", "partial_ratio", "token_sort", "token_set"]
 
     count = 0
     with open(input_file) as infile, open(output_file, 'w') as outfile:
@@ -283,7 +290,7 @@ def main():
                             "cid": result["cid"],
                             "contribsys_id": result["contribsys_id"],
                             "title_key" : result["title_key"],
-                            "ratio": ratios.fuzzy_ratio,
+                            "similarity_ratio": ratios.fuzzy_ratio,
                             "partial_ratio": ratios.fuzzy_partial_ratio,
                             "token_sort": ratios.fuzzy_token_sort_ratio,
                             "token_set": ratios.fuzzy_token_set_ratio,
