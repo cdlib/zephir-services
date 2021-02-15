@@ -17,6 +17,8 @@ new_cids = []
 old_cids = []
 with open(input_file) as fp:
    for line in fp:
+        if "ERROR" in line and "ERROR 35:" not in line:
+            continue
         count += 1
         if count % 2 == 0:
             old_cids.append(line)
