@@ -21,8 +21,14 @@ with open(input_file) as fp:
             continue
         count += 1
         if count % 2 == 0:
+            if "create_cid_field : old" not in line and "ERROR 35:" not in line:
+                print ("Unexpected log entry: {}".format(line))
+                exit(1)
             old_cids.append(line)
         else:
+            if "create_cid_field : new" not in line:
+                print ("Unexpected log entry: {}".format(line))
+                exit(1)
             new_cids.append(line)
 
 if (len(new_cids) != len(old_cids)):
