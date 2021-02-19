@@ -23,10 +23,9 @@ class AppEnv:
         root: The default root directory.
     """
 
-    def __init__(self, name, root_dir=os.path.dirname(__file__), kwargs=None):
+    def __init__(self, name, root_dir=os.path.dirname(__file__)):
         self.name = name
         self.console = None
-        self.kwargs = kwargs
 
         # load enviroment variables from .env file
         app_env = environs.Env()
@@ -39,6 +38,7 @@ class AppEnv:
                 self.ROOT_PATH, "config/"
             )
             self.OVERRIDE_CONFIG_PATH = app_env("OVERRIDE_CONFIG_PATH", False)
+
             self.CACHE_PATH = app_env("CACHE_PATH", False) or os.path.join(
                 self.ROOT_PATH, "cache/"
             )
@@ -162,6 +162,24 @@ class DatabaseHelper:
         }
 
         return args
+
+
+def application_setup(root_dir=None, state=None, kwargs={}):
+    # LOAD: environment, configuration
+    default_root_dir = os.path.join(os.path.dirname(__file__))
+    app = AppEnv(
+        name="ZEPHIR",
+        root_dir=root_dir,
+    )
+    app.state = state
+    app.args = kwargs
+
+    app.console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=int(state.verbosity))
+    app.console.debug("Loading application...")
+    app.console.debug("Environment: {}".format(app.ENV))
+    app.console.debug("Configuration: {}".format(app.CONFIG_PATH))
+
+    return app
 
 
 class ConsoleMessenger:
