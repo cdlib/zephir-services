@@ -39,7 +39,6 @@ def cid_repo_status_cli(state, **kwargs):
         )
         return_code = cid_repo_status_cmd(app)
     except Exception as err:
-        raise err
         return_code = 1
         raise click.ClickException(err)
     click.Context.exit(return_code)

@@ -21,7 +21,7 @@ def env_setup(td_tmpdir, monkeypatch):
 @pytest.mark.parametrize("test_case", ["all", "present", "absent"])
 def test_cid_repo_status_params(test_case, env_setup, td_tmpdir, capsys, pytestconfig):
     with pytest.raises(SystemExit) as pytest_e:
-        sys.argv = sys.argv = [
+        sys.argv = [
             "",
             os.path.join(td_tmpdir, "cid.change.txt"),
             "--status",

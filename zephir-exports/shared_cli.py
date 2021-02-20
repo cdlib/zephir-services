@@ -57,7 +57,6 @@ def debug_option(f):
         state = ctx.ensure_object(State)
         if value:
             state.verbosity = value
-            state.input_dir = None
         return
 
     return click.option(
@@ -90,8 +89,6 @@ def silent_option(f):
         state = ctx.ensure_object(State)
         if value:
             state.verbosity = value
-            state.inputs = []
-            state.ouptut = None
         return
 
     return click.option(
