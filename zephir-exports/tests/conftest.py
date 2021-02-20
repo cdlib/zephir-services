@@ -28,17 +28,15 @@ def td_tmpdir(request, tmpdir):
 
 
 def pytest_configure(config):
-    """Configuration before all tests are run.
-    """
+    """Configuration before all tests are run."""
     # save environment settings for after testing
     if os.environ.get("ZEPHIR_ENV"):
-        os.environ["ZEPHIR_TEST_SWAP_ENV"] = os.environ.get("ZED_ENV")
+        os.environ["ZEPHIR_TEST_SWAP_ENV"] = os.environ.get("ZEPHIR_ENV")
     os.environ["ZEPHIR_ENV"] = "test"
 
 
 def pytest_unconfigure(config):
-    """Configuration after all tests are run.
-    """
+    """Configuration after all tests are run."""
     # reset to previous enviroment
     if os.environ.get("ZEPHIR_TEST_SWAP_ENV"):
         os.environ["ZEPHIR_ENV"] = os.environ.get("ZEPHIR_TEST_SWAP_ENV")
