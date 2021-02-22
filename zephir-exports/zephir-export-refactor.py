@@ -8,8 +8,6 @@ import click
 from cid_repo_status_cli import cid_repo_status_cli
 import lib.utils_refactor as utils
 
-exec(compile(source=open('shared_click.py').read(), filename='shared_click.py', mode='exec'))
-
 @click.group()
 @click.pass_context
 def entry_point(ctx):
