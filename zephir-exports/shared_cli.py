@@ -132,5 +132,6 @@ def path_callback(ctx, param, value):
                                 path, date_path
                             )
                         )
-                raise click.ClickException("File not found: {}".format(path))
+                else:
+                     raise click.ClickException("File not found: {}".format(path))
         return
