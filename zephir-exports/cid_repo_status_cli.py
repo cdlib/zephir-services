@@ -1,3 +1,4 @@
+import csv
 import datetime
 import os
 import zlib
@@ -24,6 +25,12 @@ exec(compile(source=open('shared_cli.py').read(), filename='shared_cli.py', mode
     "-o",
     "--output-filepath",
     help="Filepath to write status output",
+)
+@click.option(
+    "--input-col",
+    default=0,
+    type=int,
+    help="Column of CID in input files",
 )
 @click.argument(
     "input-filepath",
@@ -61,10 +68,11 @@ def cid_repo_status_cmd(app):
     count = 0
     for input_filepath in app.state.input_filepaths:
         app.console.debug("Reading input file: {}".format(input_filepath))
+
         with open(input_filepath) as file:
-            for line in file:
-                stripped_line = line.strip()
-                cids.append(stripped_line)
+            csv_reader = csv.reader(file, delimiter='\t')
+            for line in csv_reader:
+                cids.append(line[app.args["input_col"]])
                 count += 1
     app.console.debug("CIDs read: {}".format(count))
     cids = list(set(cids))
