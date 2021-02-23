@@ -91,7 +91,7 @@ def cid_repo_status_cmd(app):
     conn_args = db_helper.connection_args()
     # select cids that have only holdings/items with a NULL ingest date using subquery
     SQL_STMT = "select distinct cid from zephir_records where attr_ingest_date is null and cid in ({0}) and cid not in (select distinct cid from zephir_records as is_not_null where attr_ingest_date is not null and cid in ({0}))".format(
-        ",".join(cids)
+        ",".join(("'{0}'".format(cid) for cid in cids))
     )
 
     try:
