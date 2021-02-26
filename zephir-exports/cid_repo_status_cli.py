@@ -9,7 +9,8 @@ from sqlalchemy import create_engine
 
 import lib.utils_refactor as utils
 
-exec(compile(source=open('shared_cli.py').read(), filename='shared_cli.py', mode='exec'))
+root_dir = os.path.join(os.path.dirname(__file__))
+exec(compile(source=open(os.path.join(os.path.dirname(__file__),'shared_cli.py').read(), filename='shared_cli.py', mode='exec'))
 
 
 # CID REPO STATUS CLI SIGNATURE
