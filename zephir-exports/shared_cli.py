@@ -99,6 +99,7 @@ def silent_option(f):
         callback=callback,
     )(f)
 
+
 # group common verbose options
 def common_verbose_options(f):
     f = silent_option(f)
@@ -107,6 +108,7 @@ def common_verbose_options(f):
     f = verbose_option(f)
     f = verbosity_option(f)
     return f
+
 
 # custom callback to inspect filepaths, with and without date substitution
 def path_callback(ctx, param, value):
@@ -133,5 +135,5 @@ def path_callback(ctx, param, value):
                             )
                         )
                 else:
-                     raise click.ClickException("File not found: {}".format(path))
+                    raise click.ClickException("File not found: {}".format(path))
         return

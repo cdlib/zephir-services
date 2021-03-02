@@ -10,7 +10,13 @@ from sqlalchemy import create_engine
 import lib.utils_refactor as utils
 
 root_dir = os.path.join(os.path.dirname(__file__))
-exec(compile(source=open(os.path.join(os.path.dirname(__file__),'shared_cli.py')).read(), filename='shared_cli.py', mode='exec'))
+exec(
+    compile(
+        source=open(os.path.join(os.path.dirname(__file__), "shared_cli.py")).read(),
+        filename="shared_cli.py",
+        mode="exec",
+    )
+)
 
 
 # CID REPO STATUS CLI SIGNATURE
@@ -51,6 +57,7 @@ def cid_repo_status_cli(state, **kwargs):
         raise click.ClickException(err)
     click.Context.exit(return_code)
 
+
 # CID REPO STATUS COMMAND
 def cid_repo_status_cmd(app):
     """ Status for CIDs"""
@@ -71,57 +78,63 @@ def cid_repo_status_cmd(app):
         app.console.debug("Reading input file: {}".format(input_filepath))
 
         with open(input_filepath) as file:
-            csv_reader = csv.reader(file, delimiter='\t')
+            csv_reader = csv.reader(file, delimiter="\t")
             for line in csv_reader:
                 cids.append(line[app.args["input_col"]])
                 count += 1
     app.console.debug("CIDs read: {}".format(count))
     cids = list(set(cids))
-    cids.sort()
-    cids_not_in_repo = []
 
-    # DATABASE
-    app.console.info(
-        "Checking HathiTrust Repository status for {0} CIDs out of {1} given".format(
-            app.args["status"].lower(), count
-        )
-    )
-    # setup configuration
-    db = app.CONFIG.get("database", {}).get(app.ENV)
-    db_helper = utils.DatabaseHelper(config=db, env_prefix="ZEPHIR")
-    conn_args = db_helper.connection_args()
-    # select cids that have only holdings/items with a NULL ingest date using subquery
-    SQL_STMT = "select distinct cid from zephir_records where attr_ingest_date is null and cid in ({0}) and cid not in (select distinct cid from zephir_records as is_not_null where attr_ingest_date is not null and cid in ({0}))".format(
-        ",".join(("'{0}'".format(cid) for cid in cids))
-    )
+    if not cids:
+        # no cids, just give blank output
+        cids_not_in_repo = []
+        cids_in_repo = []
+    else:
+        cids.sort()
+        cids_not_in_repo = []
 
-    try:
-        # connect to datbase
-        db_connection = mysql.connector.connect(**conn_args)
-        app.console.debug(
-            "Querying database w/: {}".format(
-                utils.replace_key(conn_args, "password", "****")
+        # DATABASE
+        app.console.info(
+            "Checking HathiTrust Repository status for {0} CIDs out of {1} given".format(
+                app.args["status"].lower(), count
             )
         )
+        # setup configuration
+        db = app.CONFIG.get("database", {}).get(app.ENV)
+        db_helper = utils.DatabaseHelper(config=db, env_prefix="ZEPHIR")
+        conn_args = db_helper.connection_args()
+        # select cids that have only holdings/items with a NULL ingest date using subquery
+        SQL_STMT = "select distinct cid from zephir_records where attr_ingest_date is null and cid in ({0}) and cid not in (select distinct cid from zephir_records as is_not_null where attr_ingest_date is not null and cid in ({0}))".format(
+            ",".join(("'{0}'".format(cid) for cid in cids))
+        )
+
         try:
-            # execute query and iterate results
-            db_cursor = db_connection.cursor()
-            db_cursor.execute(SQL_STMT)
+            # connect to datbase
+            db_connection = mysql.connector.connect(**conn_args)
+            app.console.debug(
+                "Querying database w/: {}".format(
+                    utils.replace_key(conn_args, "password", "****")
+                )
+            )
+            try:
+                # execute query and iterate results
+                db_cursor = db_connection.cursor()
+                db_cursor.execute(SQL_STMT)
 
-            for row in db_cursor:
-                cids_not_in_repo.append(row[0])
+                for row in db_cursor:
+                    cids_not_in_repo.append(row[0])
+            finally:
+                db_cursor.close()
+
         finally:
-            db_cursor.close()
+            db_connection.close()
 
-    finally:
-        db_connection.close()
+        # Find cids in repository through subjection
+        cids_in_repo = list(set(cids) - set(cids_not_in_repo))
 
-    # Find cids in repository through subjection
-    cids_in_repo = list(set(cids) - set(cids_not_in_repo))
-
-    #  Sort lists
-    cids_in_repo.sort()
-    cids_not_in_repo.sort()
+        #  Sort lists
+        cids_in_repo.sort()
+        cids_not_in_repo.sort()
 
     # Simplify variables
     status_type = app.args["status"].lower()
@@ -153,10 +166,10 @@ def cid_repo_status_cmd(app):
         with open(output_filepath, "w") as file:
             if status_type == STATUS_PRESENT:
                 # CID exists in HT Repository
-                file.write("\n".join(cids_in_repo)+"\n")
+                file.write("\n".join(cids_in_repo) + "\n")
             if status_type == STATUS_ABSENT:
                 # CID is missing in HT Repository
-                file.write("\n".join(cids_not_in_repo)+"\n")
+                file.write("\n".join(cids_not_in_repo) + "\n")
             if status_type == STATUS_ALL:
                 # Display both missing and existing CIDs
                 for cid in cids:
