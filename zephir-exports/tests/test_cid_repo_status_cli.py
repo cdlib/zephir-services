@@ -5,6 +5,7 @@ import pytest
 
 from cid_repo_status_cli import cid_repo_status_cli
 
+
 @pytest.fixture
 def env_setup(td_tmpdir, monkeypatch):
     # use tmpdir configuration
@@ -27,19 +28,27 @@ def test_cid_repo_status_params(test_case, env_setup, td_tmpdir, capsys, pytestc
             "--status",
             test_case,
             "--output-filepath",
-            os.path.join(str(td_tmpdir),"{}_output_generated.txt".format(test_case)),
+            os.path.join(str(td_tmpdir), "{}_output_generated.txt".format(test_case)),
             "--verbosity",
             pytestconfig.getoption("verbose") or "2",
         ]
         cid_repo_status_cli()
     stdout, stderr = capsys.readouterr()
-    generated_file = open(os.path.join(str(td_tmpdir),"{}_output_generated.txt".format(test_case)),mode='r').read()
-    file_testcase = open(os.path.join(str(td_tmpdir),"{}_output.txt".format(test_case)),mode='r').read()
+    generated_file = open(
+        os.path.join(str(td_tmpdir), "{}_output_generated.txt".format(test_case)),
+        mode="r",
+    ).read()
+    file_testcase = open(
+        os.path.join(str(td_tmpdir), "{}_output.txt".format(test_case)), mode="r"
+    ).read()
     assert stdout == file_testcase
     assert generated_file == file_testcase
 
+
 @pytest.mark.parametrize("test_case", ["all", "present", "absent"])
-def test_cid_repo_status_w_alternate_column(test_case, env_setup, td_tmpdir, capsys, pytestconfig):
+def test_cid_repo_status_w_alternate_column(
+    test_case, env_setup, td_tmpdir, capsys, pytestconfig
+):
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = [
             "",
@@ -47,7 +56,7 @@ def test_cid_repo_status_w_alternate_column(test_case, env_setup, td_tmpdir, cap
             "--status",
             test_case,
             "--output-filepath",
-            os.path.join(str(td_tmpdir),"{}_output_generated.txt".format(test_case)),
+            os.path.join(str(td_tmpdir), "{}_output_generated.txt".format(test_case)),
             "--input-col",
             "1",
             "--verbosity",
@@ -55,7 +64,40 @@ def test_cid_repo_status_w_alternate_column(test_case, env_setup, td_tmpdir, cap
         ]
         cid_repo_status_cli()
     stdout, stderr = capsys.readouterr()
-    generated_file = open(os.path.join(str(td_tmpdir),"{}_output_generated.txt".format(test_case)),mode='r').read()
-    file_testcase = open(os.path.join(str(td_tmpdir),"{}_output.txt".format(test_case)),mode='r').read()
+    generated_file = open(
+        os.path.join(str(td_tmpdir), "{}_output_generated.txt".format(test_case)),
+        mode="r",
+    ).read()
+    file_testcase = open(
+        os.path.join(str(td_tmpdir), "{}_output.txt".format(test_case)), mode="r"
+    ).read()
+    assert stdout == file_testcase
+    assert generated_file == file_testcase
+
+
+def test_cid_repo_status_w_empty(env_setup, td_tmpdir, capsys, pytestconfig):
+    test_case = "all"
+    with pytest.raises(SystemExit) as pytest_e:
+        sys.argv = [
+            "",
+            os.path.join(td_tmpdir, "empty.txt"),
+            "--status",
+            test_case,
+            "--output-filepath",
+            os.path.join(str(td_tmpdir), "{}_output_generated.txt".format(test_case)),
+            "--input-col",
+            "1",
+            "--verbosity",
+            pytestconfig.getoption("verbose") or "2",
+        ]
+        cid_repo_status_cli()
+    stdout, stderr = capsys.readouterr()
+    print(stdout)
+    print(stderr)
+    generated_file = open(
+        os.path.join(str(td_tmpdir), "{}_output_generated.txt".format(test_case)),
+        mode="r",
+    ).read()
+    file_testcase = open(os.path.join(str(td_tmpdir), "empty.txt"), mode="r").read()
     assert stdout == file_testcase
     assert generated_file == file_testcase
