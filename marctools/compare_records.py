@@ -26,62 +26,36 @@ class FuzzyRatios:
         return False
 
 def test():
-    str_a = "a"
-    str_b= "b"
-    compare = FuzzyRatios(str_a, str_b)
-    print (str_a)
-    print (str_b)
-    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
-    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
-    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
-    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
-
-    str_a = "a"
-    str_b = "a "
-    compare = FuzzyRatios(str_a, str_b)
-    print (str_a)
-    print (str_b)
-    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
-    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
-    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
-    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
-
-    str_a = "APPLE"
-    str_b = "apple "
-    compare = FuzzyRatios(str_a, str_b)
-    print (str_a)
-    print (str_b)
-    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
-    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
-    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
-    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
 
     str_a = 'FuzzyWuzzy is a lifesaver!'
     str_b = 'fuzzy wuzzy is a LIFE SAVER.'
-    ratio = fuzz.ratio(str_a.lower(), str_b.lower())
-    print('Similarity score: {}'.format(ratio))
+    compare = FuzzyRatios(str_a, str_b)
+    print (str_a)
+    print (str_b)
+    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
+    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
+    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
+    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
 
     str_a = 'Chicago, Illinois'
     str_b = 'Chicago'
-    ratio = fuzz.partial_ratio(str_a.lower(), str_b.lower())
-    print('Similarity score: {}'.format(ratio))
-
-    str_a = 'Chicago, Illinois'
-    str_b = 'Chicago'
-    ratio = fuzz.partial_ratio(str_b.lower(), str_a.lower())
-    print('Similarity score: {}'.format(ratio))
-
-    str_a = 'Gunner William Kline' 
-    str_b = 'Kline, Gunner William'
-    ratio = fuzz.token_sort_ratio(str_a, str_b)
-    print('Similarity score: {}'.format(ratio))
-
+    compare = FuzzyRatios(str_a, str_b)
+    print (str_a)
+    print (str_b)
+    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
+    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
+    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
+    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
 
     str_a = 'The 3000 meter steeplechase winner, Soufiane El Bakkali'
     str_b = 'Soufiane El Bakkali'
-    ratio = fuzz.token_set_ratio(str_a, str_b)
-    print('Similarity score: {}'.format(ratio))
-
+    compare = FuzzyRatios(str_a, str_b)
+    print (str_a)
+    print (str_b)
+    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
+    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
+    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
+    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
 
     choices = ["3000m Steeplechase", "Men's 3000 meter steeplechase",
             "3000m STEEPLECHASE MENS", "mens 3000 meter SteepleChase"]
