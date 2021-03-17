@@ -103,10 +103,6 @@ def cid_repo_status_cmd(app):
         db = app.CONFIG.get("database", {}).get(app.ENV)
         db_helper = utils.DatabaseHelper(config=db, env_prefix="ZEPHIR")
         conn_args = db_helper.connection_args()
-        # select cids that have only holdings/items with a NULL ingest date using subquery
-        SQL_STMT = "select distinct cid from zephir_records where attr_ingest_date is null and cid in ({0}) and cid not in (select distinct cid from zephir_records as is_not_null where attr_ingest_date is not null and cid in ({0}))".format(
-            ",".join(("'{0}'".format(cid) for cid in cids))
-        )
 
         try:
             # connect to datbase
@@ -119,7 +115,28 @@ def cid_repo_status_cmd(app):
             try:
                 # execute query and iterate results
                 db_cursor = db_connection.cursor()
-                db_cursor.execute(SQL_STMT)
+
+                # select cids that have only holdings/items with a NULL ingest date using subquery
+                CLUSTERS_THAT_EXIST_STMT = "select distinct cid from zephir_records where cid in ({0})".format(
+                    ",".join(("'{0}'".format(cid) for cid in cids))
+                )
+                # select cids that have only holdings/items with a NULL ingest date using subquery
+                POPULATED_CLUSTERS_STMT = "select distinct cid from zephir_records where attr_ingest_date is null and cid in ({0}) and cid not in (select distinct cid from zephir_records as is_not_null where attr_ingest_date is not null and cid in ({0}))".format(
+                    ",".join(("'{0}'".format(cid) for cid in cids))
+                )
+
+                db_cursor.execute(CLUSTERS_THAT_EXIST_STMT)
+
+                not_found_cids = list(cids)
+                for row in db_cursor:
+                    if row[0] in not_found_cids:
+                        not_found_cids.remove(row[0])
+
+                if not_found_cids:
+                    cids_not_in_repo = list(not_found_cids)
+
+                # execute query and iterate results
+                db_cursor.execute(POPULATED_CLUSTERS_STMT)
 
                 for row in db_cursor:
                     cids_not_in_repo.append(row[0])
