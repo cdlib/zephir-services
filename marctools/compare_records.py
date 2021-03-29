@@ -8,7 +8,7 @@ class FuzzyRatios:
         self.fuzzy_ratio = fuzz.ratio(self.str_1, self.str_2)
         self.fuzzy_partial_ratio = fuzz.partial_ratio(self.str_1, self.str_2)
         self.fuzzy_token_sort_ratio = fuzz.token_sort_ratio(self.str_1, self.str_2)
-        self.fuzzy_token_set_ratio = fuzz.token_sort_ratio(self.str_1, self.str_2)
+        self.fuzzy_token_set_ratio = fuzz.token_set_ratio(self.str_1, self.str_2)
 
     @staticmethod
     def match_strings(string_1, string_2):
@@ -25,37 +25,28 @@ class FuzzyRatios:
             return True
         return False
 
+def output_ratios(str_a, str_b):
+    compare = FuzzyRatios(str_a, str_b)
+    print ("str_a: " + str_a)
+    print ("str_b: " + str_b)
+    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
+    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
+    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
+    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
+
 def test():
 
     str_a = 'FuzzyWuzzy is a lifesaver!'
     str_b = 'fuzzy wuzzy is a LIFE SAVER.'
-    compare = FuzzyRatios(str_a, str_b)
-    print (str_a)
-    print (str_b)
-    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
-    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
-    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
-    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
+    output_ratios(str_a, str_b)
 
     str_a = 'Chicago, Illinois'
     str_b = 'Chicago'
-    compare = FuzzyRatios(str_a, str_b)
-    print (str_a)
-    print (str_b)
-    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
-    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
-    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
-    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
+    output_ratios(str_a, str_b)
 
     str_a = 'The 3000 meter steeplechase winner, Soufiane El Bakkali'
     str_b = 'Soufiane El Bakkali'
-    compare = FuzzyRatios(str_a, str_b)
-    print (str_a)
-    print (str_b)
-    print ("fuzzy_ratio {}".format(compare.fuzzy_ratio))
-    print ("fuzzy_partial_ratio {}".format(compare.fuzzy_partial_ratio))
-    print ("fuzzy_token_sort_ratio {}".format(compare.fuzzy_token_sort_ratio))
-    print ("fuzzy_token_set_ratio {}".format(compare.fuzzy_token_set_ratio))
+    output_ratios(str_a, str_b)
 
     choices = ["3000m Steeplechase", "Men's 3000 meter steeplechase",
             "3000m STEEPLECHASE MENS", "mens 3000 meter SteepleChase"]
