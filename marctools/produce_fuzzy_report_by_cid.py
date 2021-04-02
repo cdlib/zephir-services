@@ -105,7 +105,7 @@ def main():
     else:
         output_file = "./output/cids_with_multi_primary_ocns_similarity_scores.csv"
 
-    csv_columns = ["cid", "contribsys_id", "title_key", "lang", "similarity_ratio", "partial_ratio", "token_sort", "token_set"]
+    csv_columns = ["cid", "contribsys_id", "flag", "title_key", "lang", "similarity_ratio", "partial_ratio", "token_sort", "token_set"]
 
     count = 0
     with open(input_file) as infile, open(output_file, 'w') as outfile:
@@ -126,18 +126,20 @@ def main():
                     if first_item:
                         title_key = result["title_key"]
                         first_item = False
-                        result = {
+                        result_base = {
                             "cid": result["cid"],
                             "contribsys_id": result["contribsys_id"],
+                            "flag": "B",
                             "title_key" : result["title_key"],
                             "lang" : result["lang"].decode() if result["lang"] else "",
                         }
                     else:
                         ratios = FuzzyRatios(title_key, result["title_key"])
                         #print (ratios.fuzzy_ratio)
-                        result = {
+                        result_pair = {
                             "cid": result["cid"],
                             "contribsys_id": result["contribsys_id"],
+                            "flag": "",
                             "title_key" : result["title_key"],
                             "lang" : result["lang"].decode() if result["lang"] else "",
                             "similarity_ratio": ratios.fuzzy_ratio,
@@ -145,7 +147,9 @@ def main():
                             "token_sort": ratios.fuzzy_token_sort_ratio,
                             "token_set": ratios.fuzzy_token_set_ratio,
                         }
-                    writer.writerow(result)
+                        if (ratios.fuzzy_ratio < 100):
+                            writer.writerow(result_base)
+                            writer.writerow(result_pair)
 
 
 if __name__ == '__main__':
