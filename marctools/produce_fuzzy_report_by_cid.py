@@ -147,7 +147,7 @@ def main():
                             "token_sort": ratios.fuzzy_token_sort_ratio,
                             "token_set": ratios.fuzzy_token_set_ratio,
                         }
-                        if (ratios.fuzzy_ratio < 100):
+                        if (ratios.fuzzy_ratio >= 30 and ratios.fuzzy_ratio <= 70):
                             writer.writerow(result_base)
                             writer.writerow(result_pair)
 
