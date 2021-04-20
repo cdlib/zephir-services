@@ -88,8 +88,8 @@ def main():
         output_filename = "./output/marc_records.xml"
 
     outfile = open(output_filename, 'w')
-    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
 
     with open(input_filename) as infile:
         for line in infile:
