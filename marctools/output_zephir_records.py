@@ -5,6 +5,7 @@ import re
 
 from sqlalchemy import create_engine
 from sqlalchemy import text
+from pandas import DataFrame
 
 import lib.utils as utils
 from config import get_configs_by_filename
@@ -87,6 +88,12 @@ def main():
     else:
         output_filename = "./output/marc_records.xml"
 
+    output_xmlrecords(input_filename, output_filename, db_connect_str)
+
+    readSqlToDataframe(db_connect_str)
+
+
+def output_xmlrecords(input_filename, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
     outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
@@ -103,7 +110,19 @@ def main():
     outfile.write("</collection>\n")
     outfile.close()
 
-    print("output marcxml file: {}".format(output_filename))
+    print("marcxml records are save in file: {}".format(output_filename))
+
+def readSqlToDataframe(db_connect_str):
+
+    select_query = "select cid, id, contribsys_id from zephir_records limit 5 "
+    records = find_zephir_records(db_connect_str, select_query)
+    print(records)
+
+    df = DataFrame(records)
+    print(type(df))
+    print(df)
+
+
 
 if __name__ == '__main__':
     main()
