@@ -23,7 +23,7 @@ autoid between 1 and 100,000: 1.3 sec
 autoid between 1 and 1,000,000: 36 sec
 autoid between 1 and 10,000,000: killed
 """
-SELECT_ZEPHIR_IDS = """select zr.autoid as zr_autoid, cid, identifier as oclc, contribsys_id, id as htid  
+SELECT_ZEPHIR_IDS = """select cid, identifier as oclc, contribsys_id, id as htid  
   from zephir_records zr
   inner join zephir_identifier_records zir on zir.record_autoid = zr.autoid
   inner join zephir_identifiers zi on zir.identifier_autoid = zi.autoid
@@ -124,11 +124,11 @@ def main():
         output_filename = "./output/marc_records.xml"
 
     zephir_concordance_path = "data/zephir_concordance.csv"
-    names= ["primary","oclc"], 
-    header=0
-    zephir_concordance_df = readCsvFileToDataFrame(zephir_concordance_path, names, header)
+    zephir_concordance_df = readCsvFileToDataFrame(zephir_concordance_path)
 
     raw_zephir_item_detail = getZephirItemDetailsDataFrame(db_connect_str)
+   # raw_zephir_item_detail_path = "./output/zephir_items.csv"
+   # raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, header=0, dtype={"cid":int, "oclc":object, "contribsys_ud":object, "htid":object, "ingested":np.bool}, error_bad_lines=False)
 
     htids_df = find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_detail)
 
@@ -174,13 +174,13 @@ def output_xmlrecords_file_version(input_filename, output_filename, db_connect_s
 def getZephirItemDetailsDataFrame(db_connect_str):
 
     max_zephir_autoid = find_max_zephir_autoid(db_connect_str)
-    max_zephir_autoid = 10000
+    #max_zephir_autoid = 10000
 
     df = None 
     start_autoid = 0 
     end_autoid = 0 
     step = 100000
-    step = 1000
+    #step = 1000
     while max_zephir_autoid and end_autoid <= max_zephir_autoid + step:
         start_autoid = end_autoid + 1
         end_autoid = start_autoid + step -1
@@ -200,15 +200,17 @@ def getZephirItemDetailsDataFrame(db_connect_str):
         else:
             df_2 = None
             df_2 = DataFrame(records)
-            df.append(df_2, ignore_index = True)
+            df = df.append(df_2, ignore_index = True)
 
     print(df.head())
     print("rows in dataframe: {}".format(len(df)))
 
+    zephir_items = "output/zephir_items.csv"
+    df.to_csv(zephir_items, index=False)
     return df
 
-def readCsvFileToDataFrame(file_path, names=None, header=0):
-    zephir_concordance_df = pd.read_csv(file_path, names= ["primary","oclc"], header=0)
+def readCsvFileToDataFrame(file_path):
+    zephir_concordance_df = pd.read_csv(file_path, names=["primary","oclc"], header=0)
     print(zephir_concordance_df.info())
     print(zephir_concordance_df.head())
     return zephir_concordance_df
@@ -226,6 +228,7 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_d
         4. Find the HTIDs associated to the selected CIDs
         5. Return the HTIDs
     """
+    print("Step 5 - CLEANUP DATA")
     # Step 5 - CLEANUP DATA
     # coerce identifier data from objects, to numeric
     zephir_item_detail = raw_zephir_item_detail.copy()
@@ -241,6 +244,7 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_d
     zephir_item_detail.info()
     zephir_item_detail.head()
 
+    print("Step 6 - Analysis - join DFs by oclc")
     # Step 6 - Analysis
     # Create analysis table by joining with zephir concordance
     # this results in a zephir table with both the original oclc and the primary oclc
@@ -250,6 +254,7 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_d
     analysis_df.info()
     analysis_df.head()
 
+    print("Step 7 - Find primary numbers with a CID count> 1")
     # Step 7 - Find primary numbers with a CID count> 1
     df = analysis_df.copy()
     df = df[['cid','primary']]
@@ -265,12 +270,14 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_d
     df_primary_with_duplicates = df
     df = None # clear out for next analysis
 
+    print("Step 8 - create a subset of analysis data with only primary numbers that have >1 CID assoicated using a join")
     # Step 8 - create a subset of analysis data with only primary numbers that have >1 CID assoicated using a join
     df = analysis_df.dropna().merge(df_primary_with_duplicates, on='primary', how='right')
     df.sort_values(by=['primary', 'cid'])
     df.info()
     df.head(30)
 
+    print("Step 10 - create lookup table for the lowest CID per primary number")
     # Step 10 - create lookup table for the lowest CID per primary number 
     lowest_cid_df = df[~df.duplicated(subset=['primary'],keep='first')][["primary","cid"]]
     lowest_cid_df = dict(zip(lowest_cid_df.primary, lowest_cid_df.cid))
@@ -279,17 +286,19 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_d
     for i, row in df.iterrows():
         dups.append(row['cid'] > lowest_cid_df[row["primary"]])
 
+    print("Step 11 - create a dataframe subset of all the duplicate CID-HTIDs")
     # Step 11 - create a dataframe subset of all the duplicate CID-HTIDs
     # Note: Some duplicate CIDs may have additional records with a different OCLC
     higher_cid_duplicates_df = df[dups]
     higher_cid_duplicates_df.info()
     higher_cid_duplicates_df.head(30)
 
+    print("Step 12 - select a dataframe with only htids from cids with higher cid values")
     # Step 12 - select a dataframe with only htids from cids with higher cid values
     htid_duplicates_df = higher_cid_duplicates_df[["htid"]]
     htid_duplicates_df.head(30)
     # save dataset to csv
-    #htid_duplicates_df.to_csv("htids_for_jing.csv", index=False)
+    htid_duplicates_df.to_csv("output/htids_for_jing.csv", index=False)
     return htid_duplicates_df
 
 
