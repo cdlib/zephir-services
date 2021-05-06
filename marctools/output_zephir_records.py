@@ -176,7 +176,9 @@ def getZephirItemDetailsDataFrame(db_connect_str):
     max_zephir_autoid = find_max_zephir_autoid(db_connect_str)
     #max_zephir_autoid = 10000
 
-    df = None 
+    zephir_items_file = "output/zephir_items.csv"
+
+    results = []
     start_autoid = 0 
     end_autoid = 0 
     step = 100000
@@ -195,18 +197,29 @@ def getZephirItemDetailsDataFrame(db_connect_str):
         current_time = datetime.datetime.now()
         print(current_time)
         
-        if df is None:
-            df = DataFrame(records)
-        else:
-            df_2 = None
-            df_2 = DataFrame(records)
-            df = df.append(df_2, ignore_index = True)
+        df = DataFrame(records)
+        df.to_csv(zephir_items_file, mode='a', header=False, index=False)
+        df = None
 
+        #print(type(records))
+        #print(len(records))
+
+        #results.extend(records)
+
+        #print(type(results))
+        #print(len(results))
+
+    #print("DB returned rows: {}".format(len(results)))
+
+    #df = DataFrame(results, columns=["cid", "oclc", "contribsys_id", "htid"])
+
+    #print(df.head())
+    #print("rows in dataframe: {}".format(len(df)))
+
+    #zephir_items = "output/zephir_items.csv"
+    df= pd.read_csv(zephir_items_file, names=["cid", "oclc", "contribsys_id", "htid"], header=0)
+    print(df.info())
     print(df.head())
-    print("rows in dataframe: {}".format(len(df)))
-
-    zephir_items = "output/zephir_items.csv"
-    df.to_csv(zephir_items, index=False)
     return df
 
 def readCsvFileToDataFrame(file_path):
