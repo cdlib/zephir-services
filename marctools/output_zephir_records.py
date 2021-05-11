@@ -23,7 +23,7 @@ autoid between 1 and 100,000: 1.3 sec
 autoid between 1 and 1,000,000: 36 sec
 autoid between 1 and 10,000,000: killed
 """
-SELECT_ZEPHIR_IDS = """select cid, identifier as oclc, contribsys_id, id as htid  
+SELECT_ZEPHIR_IDS = """select CAST(cid as UNSIGNED) cid, identifier as oclc, zr.autoid as z_record_autoid 
   from zephir_records zr
   inner join zephir_identifier_records zir on zir.record_autoid = zr.autoid
   inner join zephir_identifiers zi on zir.identifier_autoid = zi.autoid
@@ -34,6 +34,8 @@ SELECT_ZEPHIR_IDS = """select cid, identifier as oclc, contribsys_id, id as htid
 """
 
 SELECT_MAX_ZEPHIR_AUTOID = "select max(autoid) as max_autoid from zephir_records"
+
+SELECT_MARCXML_BY_AUTOID = "SELECT metadata FROM zephir_filedata WHERE autoid =:autoid"
 
 SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata"
 
@@ -86,6 +88,17 @@ def find_marcxml_records_by_id(db_connect_str, id):
     select_zephir = construct_select_marcxml_by_id(id)
     return find_zephir_records(db_connect_str, select_zephir)
 
+def find_marcxml_records_by_autoid(db_connect_str, autoid):
+    """
+    Args:
+        db_connect_str: database connection string
+        autoid: integer
+    Returns:
+        list of dict with marcxml
+    """
+    params = {"autoid": autoid}
+    return find_zephir_records(db_connect_str, SELECT_MARCXML_BY_AUTOID, params)
+
 def find_max_zephir_autoid(db_connect_str):
     max_zephir_autoid = None
     results = find_zephir_records(db_connect_str, SELECT_MAX_ZEPHIR_AUTOID)
@@ -127,8 +140,9 @@ def main():
     zephir_concordance_df = readCsvFileToDataFrame(zephir_concordance_path)
 
     raw_zephir_item_detail = getZephirItemDetailsDataFrame(db_connect_str)
-   # raw_zephir_item_detail_path = "./output/zephir_items.csv"
-   # raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, header=0, dtype={"cid":int, "oclc":object, "contribsys_ud":object, "htid":object, "ingested":np.bool}, error_bad_lines=False)
+    #raw_zephir_item_detail_path = "./output/zephir_items-stg.csv"
+    #raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, header=0, dtype={"cid":int, "oclc":object, "contribsys_ud":object, "htid":object, "ingested":np.bool}, error_bad_lines=False)
+    #raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, names=["cid", "oclc", "contribsys_id", "htid"], header=0)
 
     htids_df = find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_detail)
 
@@ -140,8 +154,8 @@ def output_xmlrecords(htids_df, output_filename, db_connect_str):
     outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
 
     for index in htids_df.index:
-        id = htids_df['htid'][index]
-        records = find_marcxml_records_by_id(db_connect_str, id)
+        autoid = htids_df['z_record_autoid'][index]
+        records = find_marcxml_records_by_autoid(db_connect_str, autoid)
         for record in records:
             marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
             marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
@@ -177,13 +191,14 @@ def getZephirItemDetailsDataFrame(db_connect_str):
     #max_zephir_autoid = 10000
 
     zephir_items_file = "output/zephir_items.csv"
+    # create an empty file
+    open(zephir_items_file, 'w').close()
 
-    results = []
     start_autoid = 0 
     end_autoid = 0 
     step = 100000
     #step = 1000
-    while max_zephir_autoid and end_autoid <= max_zephir_autoid + step:
+    while max_zephir_autoid and end_autoid < max_zephir_autoid: 
         start_autoid = end_autoid + 1
         end_autoid = start_autoid + step -1
         print("start: {}".format(start_autoid))
@@ -199,25 +214,9 @@ def getZephirItemDetailsDataFrame(db_connect_str):
         
         df = DataFrame(records)
         df.to_csv(zephir_items_file, mode='a', header=False, index=False)
-        df = None
+        #df = None
 
-        #print(type(records))
-        #print(len(records))
-
-        #results.extend(records)
-
-        #print(type(results))
-        #print(len(results))
-
-    #print("DB returned rows: {}".format(len(results)))
-
-    #df = DataFrame(results, columns=["cid", "oclc", "contribsys_id", "htid"])
-
-    #print(df.head())
-    #print("rows in dataframe: {}".format(len(df)))
-
-    #zephir_items = "output/zephir_items.csv"
-    df= pd.read_csv(zephir_items_file, names=["cid", "oclc", "contribsys_id", "htid"], header=0)
+    df= pd.read_csv(zephir_items_file, names=["cid", "oclc", "z_record_autoid"], header=None, dtype={"cid":int, "oclc":object, "z_record_autoid":int}, error_bad_lines=False)
     print(df.info())
     print(df.head())
     return df
@@ -228,12 +227,12 @@ def readCsvFileToDataFrame(file_path):
     print(zephir_concordance_df.head())
     return zephir_concordance_df
 
-def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_detail):
+def find_htids_for_deduplicate_clusters(zephir_concordance_df, zephir_item_detail):
     """Returns a dataframe with HTIDs.
 
     Keyword arguments:
     zephir_concordance_df - Dataframe containing oclc number and its resolved primary oclc number
-    raw_zephir_item_detail - Dataframe containing selected fields from the zephir_records table (cid, oclc, contribsys_id, htid, ingested [computed as true/false])
+    zephir_item_detail - Dataframe containing selected fields from the zephir_records table (cid, oclc, autoid)
     Step:
         1. Join the two data frames on the oclc number field
         2. Find the primary oclc numbers with multiple CIDs
@@ -244,7 +243,6 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_d
     print("Step 5 - CLEANUP DATA")
     # Step 5 - CLEANUP DATA
     # coerce identifier data from objects, to numeric
-    zephir_item_detail = raw_zephir_item_detail.copy()
     zephir_item_detail["oclc"] = zephir_item_detail["oclc"].apply(lambda x: int(x) if str(x).isdigit() else None)
     zephir_item_detail["oclc"] = zephir_item_detail["oclc"].apply(pd.to_numeric, errors='coerce')
 
@@ -262,6 +260,7 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_d
     # Create analysis table by joining with zephir concordance
     # this results in a zephir table with both the original oclc and the primary oclc
     analysis_df = zephir_item_detail.merge(zephir_concordance_df, on='oclc', how='left')
+    zephir_concordance_df = None
     analysis_df["oclc"] = analysis_df["oclc"].astype('Int64')
     analysis_df["primary"] = analysis_df["primary"].astype('Int64')
     analysis_df.info()
@@ -308,10 +307,10 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_d
 
     print("Step 12 - select a dataframe with only htids from cids with higher cid values")
     # Step 12 - select a dataframe with only htids from cids with higher cid values
-    htid_duplicates_df = higher_cid_duplicates_df[["htid"]]
+    htid_duplicates_df = higher_cid_duplicates_df[["z_record_auotid"]]
     htid_duplicates_df.head(30)
     # save dataset to csv
-    htid_duplicates_df.to_csv("output/htids_for_jing.csv", index=False)
+    htid_duplicates_df.to_csv("output/z_record_autoids.csv", index=False)
     return htid_duplicates_df
 
 
