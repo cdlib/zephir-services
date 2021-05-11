@@ -136,16 +136,26 @@ def main():
     else:
         output_filename = "./output/marc_records.xml"
 
+    print("Get Zephir Item Details")
+    #raw_zephir_item_detail = getZephirItemDetailsDataFrame(db_connect_str)
+    raw_zephir_item_detail_path = "./output/zephir_items-stg.csv"
+    raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, names=["cid", "oclc", "z_record_autoid"], header=None, dtype={"cid":int, "oclc":object, "z_record_autoid":int}, error_bad_lines=False)
+    raw_zephir_item_detail.info()
+    raw_zephir_item_detail.head()
+
+    print("Cleanup Data")
+    raw_zephir_item_detail = cleanupData(raw_zephir_item_detail)
+    raw_zephir_item_detail.info()
+    raw_zephir_item_detail.head()
+
+    print("Get Concordance")
     zephir_concordance_path = "data/zephir_concordance.csv"
     zephir_concordance_df = readCsvFileToDataFrame(zephir_concordance_path)
 
-    raw_zephir_item_detail = getZephirItemDetailsDataFrame(db_connect_str)
-    #raw_zephir_item_detail_path = "./output/zephir_items-stg.csv"
-    #raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, header=0, dtype={"cid":int, "oclc":object, "contribsys_ud":object, "htid":object, "ingested":np.bool}, error_bad_lines=False)
-    #raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, names=["cid", "oclc", "contribsys_id", "htid"], header=0)
-
+    print("Find htids for deduplicate clusters")
     htids_df = find_htids_for_deduplicate_clusters(zephir_concordance_df, raw_zephir_item_detail)
 
+    print("Output Zephir records in XML")
     output_xmlrecords(htids_df, output_filename, db_connect_str)
 
 def output_xmlrecords(htids_df, output_filename, db_connect_str):
@@ -227,19 +237,41 @@ def readCsvFileToDataFrame(file_path):
     print(zephir_concordance_df.head())
     return zephir_concordance_df
 
+def cleanupData(zephir_item_detail):
+    print("CLEANUP DATA")
+    # Step 5 - CLEANUP DATA
+    # coerce identifier data from objects, to numeric
+    zephir_item_detail["oclc"] = zephir_item_detail["oclc"].apply(lambda x: int(x) if str(x).isdigit() else None)
+    zephir_item_detail["oclc"] = zephir_item_detail["oclc"].apply(pd.to_numeric, errors='coerce')
+
+    # drop null rows
+    zephir_item_detail = zephir_item_detail.dropna()
+
+    # cast data as integers (the "to_numberic" causes change in type) - drops leading zeros
+    zephir_item_detail["oclc"] = zephir_item_detail["oclc"].astype(int)
+
+    zephir_item_detail.info()
+    zephir_item_detail.head()
+
+    return zephir_item_detail
+
 def find_htids_for_deduplicate_clusters(zephir_concordance_df, zephir_item_detail):
-    """Returns a dataframe with HTIDs.
+    """Returns a dataframe with Zephir_Records AUTOIDs.
 
     Keyword arguments:
     zephir_concordance_df - Dataframe containing oclc number and its resolved primary oclc number
     zephir_item_detail - Dataframe containing selected fields from the zephir_records table (cid, oclc, autoid)
+    Note:
+      The initial plan was to return HTIDs. We switched to use AUTOID to reduce the size of dataset.
+      This won't affect the final results as AUTOID and HTIDs are in one to one relationship.
     Step:
         1. Join the two data frames on the oclc number field
         2. Find the primary oclc numbers with multiple CIDs
-        3. Find the higher CIds for the same primary oclc number
-        4. Find the HTIDs associated to the selected CIDs
-        5. Return the HTIDs
+        3. Find the higher CIDs for the same primary oclc number
+        4. Find the AUTOIDs associated to the selected CIDs
+        5. Return the AUTOIDs 
     """
+    """moved out and run as prep-step
     print("Step 5 - CLEANUP DATA")
     # Step 5 - CLEANUP DATA
     # coerce identifier data from objects, to numeric
@@ -254,6 +286,7 @@ def find_htids_for_deduplicate_clusters(zephir_concordance_df, zephir_item_detai
 
     zephir_item_detail.info()
     zephir_item_detail.head()
+    """
 
     print("Step 6 - Analysis - join DFs by oclc")
     # Step 6 - Analysis
