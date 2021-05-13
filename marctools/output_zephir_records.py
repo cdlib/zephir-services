@@ -35,7 +35,10 @@ SELECT_ZEPHIR_IDS = """select CAST(cid as UNSIGNED) cid, identifier as oclc, zr.
 
 SELECT_MAX_ZEPHIR_AUTOID = "select max(autoid) as max_autoid from zephir_records"
 
-SELECT_MARCXML_BY_AUTOID = "SELECT metadata FROM zephir_filedata WHERE autoid =:autoid"
+SELECT_MARCXML_BY_AUTOID = """SELECT metadata FROM zephir_filedata
+  join zephir_records on zephir_records.id = zephir_filedata.id 
+  WHERE zephir_records.autoid =:autoid
+"""
 
 SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata"
 
@@ -136,18 +139,22 @@ def main():
     else:
         output_filename = "./output/marc_records.xml"
 
+    # 543 MB
     print("Get Zephir Item Details")
     #raw_zephir_item_detail = getZephirItemDetailsDataFrame(db_connect_str)
     raw_zephir_item_detail_path = "./output/zephir_items-stg.csv"
     raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, names=["cid", "oclc", "z_record_autoid"], header=None, dtype={"cid":int, "oclc":object, "z_record_autoid":int}, error_bad_lines=False)
 
+    # 724 MB
     print("Cleanup Data")
     raw_zephir_item_detail = cleanupData(raw_zephir_item_detail)
 
+    # 150 MB
     print("Get Concordance")
     zephir_concordance_path = "data/zephir_concordance.csv"
     zephir_concordance_df = readCsvFileToDataFrame(zephir_concordance_path)
 
+    # 980 MB
     print("Join data frames")
     analysis_df = createAnalysisDataframe(zephir_concordance_df, raw_zephir_item_detail)
     del raw_zephir_item_detail
@@ -161,12 +168,38 @@ def main():
     del df_primary_with_duplicates
 
     print("Find htids for deduplicate clusters")
-    df = find_htids_for_deduplicate_clusters(df)
+    autoid_file = "output/z_record_autoids.csv"
+    find_htids_for_deduplicate_clusters(df, autoid_file)
 
     print("Output Zephir records in XML")
-    output_xmlrecords(df, output_filename, db_connect_str)
+    output_xmlrecords(autoid_file, output_filename, db_connect_str)
 
-def output_xmlrecords(htids_df, output_filename, db_connect_str):
+def temp_run_output_xml_only():
+    if (len(sys.argv) > 1):
+        env = sys.argv[1]
+    else:
+        env = "dev"
+
+    configs= get_configs_by_filename('config', 'zephir_db')
+    db_connect_str = str(utils.db_connect_url(configs[env]))
+
+    #test_zephir_search(db_connect_str)
+    #exit()
+
+    if len(sys.argv) > 2:
+        input_filename = sys.argv[2]
+    else:
+        input_filename = "/data/htids.txt"
+    if len(sys.argv) > 3:
+        output_filename = sys.argv[3]
+    else:
+        output_filename = "output/marc_records.xml"
+
+    file_path = "output/z_record_autoids.csv"
+    output_xmlrecords(file_path, output_filename, db_connect_str)
+
+
+def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
     outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
@@ -184,15 +217,15 @@ def output_xmlrecords(htids_df, output_filename, db_connect_str):
 
     print("marcxml records are save in file: {}".format(output_filename))
 
-def output_xmlrecords_file_version(input_filename, output_filename, db_connect_str):
+def output_xmlrecords(input_filename, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
     outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
 
     with open(input_filename) as infile:
         for line in infile:
-            id = line.strip()
-            records = find_marcxml_records_by_id(db_connect_str, id)
+            autoid = line.strip()
+            records = find_marcxml_records_by_autoid(db_connect_str, autoid)
             for record in records:
                 marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
                 marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
@@ -302,7 +335,7 @@ def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
     print(df.head(30))
     return df
 
-def find_htids_for_deduplicate_clusters(df):
+def find_htids_for_deduplicate_clusters(df, output_file):
     print("Step 10 - create lookup table for the lowest CID per primary number")
     # Step 10 - create lookup table for the lowest CID per primary number 
     lowest_cid_df = df[~df.duplicated(subset=['primary'],keep='first')][["primary","cid"]]
@@ -325,9 +358,9 @@ def find_htids_for_deduplicate_clusters(df):
     print(htid_duplicates_df.info())
     print(htid_duplicates_df.head(30))
     # save dataset to csv
-    htid_duplicates_df.to_csv("output/z_record_autoids.csv", index=False)
-    return htid_duplicates_df
+    htid_duplicates_df.to_csv(output_file, index=False, header=False)
 
 
 if __name__ == '__main__':
     main()
+    #temp_run_output_xml_only()
