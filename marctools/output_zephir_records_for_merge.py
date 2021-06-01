@@ -15,100 +15,13 @@ import locale
 import pandas as pd
 from pandas import DataFrame
 
+import click
+
 import lib.utils as utils
 from config import get_configs_by_filename
 
-""" performance note:
-autoid between 1 and 100,000: 1.3 sec
-autoid between 1 and 1,000,000: 36 sec
-autoid between 1 and 10,000,000: killed
-"""
-SELECT_ZEPHIR_IDS = """select CAST(cid as UNSIGNED) cid, identifier as oclc, zr.autoid as z_record_autoid 
-  from zephir_records zr
-  inner join zephir_identifier_records zir on zir.record_autoid = zr.autoid
-  inner join zephir_identifiers zi on zir.identifier_autoid = zi.autoid
-  where zr.autoid between :start_autoid and :end_autoid
-  and zi.type = 'oclc'
-  group by cid, identifier, id
-  order by cid, id, identifier
-"""
-
-SELECT_MAX_ZEPHIR_AUTOID = "select max(autoid) as max_autoid from zephir_records"
-
-SELECT_MARCXML_BY_AUTOID = """SELECT metadata FROM zephir_filedata
-  join zephir_records on zephir_records.id = zephir_filedata.id 
-  WHERE zephir_records.autoid =:autoid
-"""
-
-SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata"
-
-def construct_select_marcxml_by_id(id):
-    if id:
-        return SELECT_MARCXML_BY_ID + " WHERE id = '" + id + "'"
-    else:
-        return None
-
-
-class ZephirDatabase:
-    def __init__(self, db_connect_str):
-        self.engine = create_engine(db_connect_str)
-
-    def findall(self, sql, params=None):
-        with self.engine.connect() as connection:
-            results = connection.execute(sql, params or ())
-            results_dict = [dict(row) for row in results.fetchall()]
-            return results_dict
-
-    def close(self):
-        self.engine.dispose()
-
-def find_zephir_records(db_connect_str, select_query, params=None):
-    """
-    Args:
-        db_connect_str: database connection string
-        sql_select_query: SQL select query
-    Returns:
-        list of dict with selected field names as keys
-    """
-    if select_query:
-        try:
-            zephir = ZephirDatabase(db_connect_str)
-            results = zephir.findall(text(select_query), params)
-            zephir.close()
-            return results
-        except:
-            return None
-    return None
-
-def find_marcxml_records_by_id(db_connect_str, id):
-    """
-    Args:
-        db_connect_str: database connection string
-        id: htid in string
-    Returns:
-        list of dict with marcxml 
-    """
-    select_zephir = construct_select_marcxml_by_id(id)
-    return find_zephir_records(db_connect_str, select_zephir)
-
-def find_marcxml_records_by_autoid(db_connect_str, autoid):
-    """
-    Args:
-        db_connect_str: database connection string
-        autoid: integer
-    Returns:
-        list of dict with marcxml
-    """
-    params = {"autoid": autoid}
-    return find_zephir_records(db_connect_str, SELECT_MARCXML_BY_AUTOID, params)
-
-def find_max_zephir_autoid(db_connect_str):
-    max_zephir_autoid = None
-    results = find_zephir_records(db_connect_str, SELECT_MAX_ZEPHIR_AUTOID)
-    if (results):
-        max_zephir_autoid = results[0]["max_autoid"]
-        print("max zephir autoid: {}".format(max_zephir_autoid))
-    return max_zephir_autoid
+from zephir_db_utils import createZephirItemDetailsFileFromDB
+from zephir_db_utils import find_marcxml_records_by_autoid 
 
 def test_zephir_search(db_connect_str):
 
@@ -118,11 +31,21 @@ def test_zephir_search(db_connect_str):
         print (result)
 
 
-def main():
-    if (len(sys.argv) > 1):
-        env = sys.argv[1]
-    else:
-        env = "dev"
+@click.command()
+@click.option('-e', '--env', default="dev")
+@click.option('-H', '--input-htid-file')
+@click.option('-S', '--search-zephir-database', is_flag=True, help="Get Zephir items data from database.")
+@click.option('-Z', '--zephir-items-file', default="./data/zephir_items.csv")
+@click.option('-C', '--oclc-concordance-file', default="./data/zephir_concordance.csv")
+@click.option('-o', '--output-marc-file', default="./output/marc_records_for_reload.xml")
+def main(env, input_htid_file, search_zephir_database,
+        zephir_items_file, oclc_concordance_file, output_marc_file):
+    print(env)
+    print(input_htid_file)
+    print(search_zephir_database)
+    print(zephir_items_file)
+    print(oclc_concordance_file)
+    print(output_marc_file)
 
     configs= get_configs_by_filename('config', 'zephir_db')
     db_connect_str = str(utils.db_connect_url(configs[env]))
@@ -130,20 +53,33 @@ def main():
     #test_zephir_search(db_connect_str)
     #exit()
 
-    if len(sys.argv) > 2:
-        input_filename = sys.argv[2]
+    if input_htid_file:
+        print("Output marc records from HTIDs defined in: {}".format(input_htid_file))
+        output_xmlrecords_by_htid(input_htid_file, output_marc_file, db_connect_str)
+        print("The marcxml records are save in file: {}".format(output_marc_file))
+        print("Finished processing.")
+        exit()
+
+    if search_zephir_database:
+        print("Get Zephir item details from the database")
+        print("Data will be saved in file {}".format(zephir_items_file))
+        createZephirItemDetailsFileFromDB(db_connect_str, zephir_items_file)
     else:
-        input_filename = "./data/htids.txt"
-    if len(sys.argv) > 3:
-        output_filename = sys.argv[3]
-    else:
-        output_filename = "./output/marc_records.xml"
+        print("Get Zephir item details from prepared file: {}".format(zephir_items_file))
+
+    print("Zephir item data contains fields: cid, oclc, contribsys_id, htid, z_record_autoid")
+    print("The data file does not contain a header line.")
+
+    f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_file)
+    print("Records for merge are saved in file: {}".format(output_marc_file))
+
+def f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_file):
 
     # 543 MB
-    print("Get Zephir Item Details")
-    #raw_zephir_item_detail = getZephirItemDetailsDataFrame(db_connect_str)
-    raw_zephir_item_detail_path = "./output/zephir_items-stg.csv"
-    raw_zephir_item_detail = pd.read_csv(raw_zephir_item_detail_path, names=["cid", "oclc", "z_record_autoid"], header=None, dtype={"cid":int, "oclc":object, "z_record_autoid":int}, error_bad_lines=False)
+    print("Get Zephir Item Details: cid, oclc, contribsys_id, htid, z_record_autoid")
+    print("Read in data to DF: cid, oclc, z_record_autoid")
+
+    raw_zephir_item_detail = pd.read_csv(zephir_items_file, header=0, usecols=[0, 1, 4], names=["cid", "oclc", "z_record_autoid"], dtype={"cid":int, "oclc":object, "z_record_autoid":int}, error_bad_lines=False)
 
     # 724 MB
     print("Cleanup Data")
@@ -151,8 +87,7 @@ def main():
 
     # 150 MB
     print("Get Concordance")
-    zephir_concordance_path = "data/zephir_concordance.csv"
-    zephir_concordance_df = readCsvFileToDataFrame(zephir_concordance_path)
+    zephir_concordance_df = readCsvFileToDataFrame(oclc_concordance_file)
 
     # 980 MB
     print("Join data frames")
@@ -172,7 +107,7 @@ def main():
     find_htids_for_deduplicate_clusters(df, autoid_file)
 
     print("Output Zephir records in XML")
-    output_xmlrecords(autoid_file, output_filename, db_connect_str)
+    output_xmlrecords(autoid_file, output_marc_file, db_connect_str)
 
 def temp_run_output_xml_only():
     if (len(sys.argv) > 1):
@@ -352,7 +287,7 @@ def find_htids_for_deduplicate_clusters(df, output_file):
     print(higher_cid_duplicates_df.info())
     print(higher_cid_duplicates_df.head(30))
 
-    print("Step 12 - select a dataframe with only htids from cids with higher cid values")
+    print("Step 12 - select a dataframe with only htids(autoid) from cids with higher cid values")
     # Step 12 - select a dataframe with only htids from cids with higher cid values
     htid_duplicates_df = higher_cid_duplicates_df[["z_record_autoid"]]
     print(htid_duplicates_df.info())
