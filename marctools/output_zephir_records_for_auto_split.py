@@ -12,6 +12,8 @@ import locale
 import pandas as pd
 from pandas import DataFrame
 
+import click
+
 import lib.utils as utils
 from config import get_configs_by_filename
 
@@ -48,13 +50,7 @@ SELECT_MARCXML_BY_AUTOID = """SELECT metadata FROM zephir_filedata
   WHERE zephir_records.autoid =:autoid
 """
 
-SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata"
-
-def construct_select_marcxml_by_id(id):
-    if id:
-        return SELECT_MARCXML_BY_ID + " WHERE id = '" + id + "'"
-    else:
-        return None
+SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata WHERE id=:id"
 
 def find_marcxml_records_by_id(db_connect_str, id):
     """
@@ -64,8 +60,8 @@ def find_marcxml_records_by_id(db_connect_str, id):
     Returns:
         list of dict with marcxml 
     """
-    select_zephir = construct_select_marcxml_by_id(id)
-    return find_zephir_records(db_connect_str, select_zephir)
+    params = {"id": id}
+    return find_zephir_records(db_connect_str, SELECT_MARCXML_BY_ID, params)
 
 def find_marcxml_records_by_autoid(db_connect_str, autoid):
     """
@@ -93,12 +89,23 @@ def test_zephir_search(db_connect_str):
     for result in results:
         print (result)
 
-
-def main():
-    if (len(sys.argv) > 1):
-        env = sys.argv[1]
-    else:
-        env = "dev"
+@click.command()
+@click.option('-e', '--env', default="dev")
+@click.option('-H', '--input-htid-file')
+@click.option('-S', '--search-zephir-database', is_flag=True, help="Get Zephir items data from database.")
+@click.option('-Z', '--zephir-items-file', default="./data/zephir_items.csv")
+@click.option('-C', '--oclc-concordance-file', default="./data/zephir_concordance.csv")
+@click.option('-o', '--output-marc-file', default="./output/marc_records_for_reload.xml")
+@click.option('-c', '--output-cid-file', default="./output/cids_for_auto_split.txt")
+def main(env, input_htid_file, search_zephir_database,
+        zephir_items_file, oclc_concordance_file, output_marc_file, output_cid_file):
+    print(env)
+    print(input_htid_file)
+    print(search_zephir_database)
+    print(zephir_items_file)
+    print(oclc_concordance_file)
+    print(output_marc_file)
+    print(output_cid_file)
 
     configs= get_configs_by_filename('config', 'zephir_db')
     db_connect_str = str(utils.db_connect_url(configs[env]))
@@ -106,22 +113,29 @@ def main():
     #test_zephir_search(db_connect_str)
     #exit()
 
-    if len(sys.argv) > 2:
-        input_filename = sys.argv[2]
-    else:
-        input_filename = "./data/htids.txt"
-    if len(sys.argv) > 3:
-        output_filename = sys.argv[3]
-    else:
-        output_filename = "./output/marc_records.xml"
+    if input_htid_file:
+        print("Output marc records from HTIDs defined in: {}".format(input_htid_file))
+        output_xmlrecords_by_htid(input_htid_file, output_marc_file, db_connect_str)
+        print("The marcxml records are save in file: {}".format(output_marc_file))
+        print("Finished processing.")
+        exit()
 
-    zephir_items_file = "./output/zephir_items.csv"
-    print("Get Zephir Item Details")
-    print("Data are saved in file {}".format(zephir_items_file))
-    print("With fields: cid, oclc, contribsys_id, htid, z_record_autoid")
-    print("No header line in data file")
-    #createZephirItemDetailsFileFromDB(db_connect_str, zephir_items_file)
+    if search_zephir_database:
+        print("Get Zephir item details from the database")
+        print("Data will be saved in file {}".format(zephir_items_file))
+        createZephirItemDetailsFileFromDB(db_connect_str, zephir_items_file)
+    else:
+        print("Get Zephir item details from prepared file: {}".format(zephir_items_file))
 
+    print("Zephir item data contains fields: cid, oclc, contribsys_id, htid, z_record_autoid")
+    print("The data file does not contain a header line.")
+
+    f_output_split_clusters(zephir_items_file, oclc_concordance_file, output_cid_file)
+
+    print("CIDs for auto-split are saved in file: {}".format(output_cid_file))
+
+
+def f_output_split_clusters(zephir_items_file, oclc_concordance_file, output_cid_file):
     # memory use: 543 MB
     print("")
     print("Read in data to DF: cid, oclc, contribsys_id")
@@ -148,9 +162,8 @@ def main():
 
     # 150 MB
     print("")
-    print("Get Concordance")
-    zephir_concordance_path = "./data/zephir_concordance.csv"
-    zephir_concordance_df = readCsvFileToDataFrame(zephir_concordance_path)
+    print("Get Concordance data")
+    zephir_concordance_df = readCsvFileToDataFrame(oclc_concordance_file)
 
     # 980 MB
     print("")
@@ -176,36 +189,9 @@ def main():
     del cids_with_multi_primary_fc_df
     del contribsys_ids_with_multi_primary_fc_df
 
-    cids_file = "./output/cids_for_auto_split.txt"
-    with open(cids_file, "w") as output_f:
+    with open(output_cid_file, "w") as output_f:
         for ind in auto_splitable_cids.index :
             output_f.write("cid=" + ("000000000" + str(auto_splitable_cids["cid"][ind]))[-9:] + "\n")
-
-    print("CIDs for auto-split are saved to file: {}".format(cids_file))
-
-def temp_run_output_xml_only():
-    if (len(sys.argv) > 1):
-        env = sys.argv[1]
-    else:
-        env = "dev"
-
-    configs= get_configs_by_filename('config', 'zephir_db')
-    db_connect_str = str(utils.db_connect_url(configs[env]))
-
-    #test_zephir_search(db_connect_str)
-    #exit()
-
-    if len(sys.argv) > 2:
-        input_filename = sys.argv[2]
-    else:
-        input_filename = "/data/htids.txt"
-    if len(sys.argv) > 3:
-        output_filename = sys.argv[3]
-    else:
-        output_filename = "output/marc_records.xml"
-
-    file_path = "output/z_record_autoids.csv"
-    output_xmlrecords(file_path, output_filename, db_connect_str)
 
 
 def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
@@ -226,7 +212,26 @@ def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
 
     print("marcxml records are save in file: {}".format(output_filename))
 
-def output_xmlrecords(input_filename, output_filename, db_connect_str):
+def output_xmlrecords_by_htid(input_filename, output_filename, db_connect_str):
+    outfile = open(output_filename, 'w')
+    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
+
+    with open(input_filename) as infile:
+        for line in infile:
+            autoid = line.strip()
+            records = find_marcxml_records_by_id(db_connect_str, autoid)
+            for record in records:
+                marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
+                marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
+                outfile.write(marcxml)
+
+    outfile.write("</collection>\n")
+    outfile.close()
+
+    print("marcxml records are save in file: {}".format(output_filename))
+
+def output_xmlrecords_by_autoid(input_filename, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
     outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
