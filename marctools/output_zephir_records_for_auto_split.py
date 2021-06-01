@@ -17,70 +17,8 @@ import click
 import lib.utils as utils
 from config import get_configs_by_filename
 
-from zephir_db_utils import find_zephir_records
-
-""" performance note:
-autoid between 1 and 100,000: 1.3 sec
-autoid between 1 and 1,000,000: 36 sec
-autoid between 1 and 10,000,000: killed
-"""
-
-"""Note: select all fields from DB but limit to required fields when transform to dataframe
-to reduce memory usage. 
-The data cleanup routine requires large amount of memory and may cause process to fail:
-    cid, oclc, autoid: data cleanup routine survived on server with 2GB
-    cid, oclc, contribsys_id, autoid: data cleanup routine survived on server with 4GB
-    cid, oclc, contribsys_id, htid: data cleanup routine failed on server with 4GB mem
-"""
-SELECT_ZEPHIR_IDS = """select CAST(cid as UNSIGNED) cid, identifier as oclc, 
-  zr.contribsys_id as contribsys_id, zr.id as htid, zr.autoid as z_record_autoid
-  from zephir_records zr
-  inner join zephir_identifier_records zir on zir.record_autoid = zr.autoid
-  inner join zephir_identifiers zi on zir.identifier_autoid = zi.autoid
-  where zr.autoid between :start_autoid and :end_autoid
-  and zi.type = 'oclc'
-  group by cid, identifier, id
-  order by cid, id, identifier
-"""
-
-SELECT_MAX_ZEPHIR_AUTOID = "select max(autoid) as max_autoid from zephir_records"
-
-SELECT_MARCXML_BY_AUTOID = """SELECT metadata FROM zephir_filedata
-  join zephir_records on zephir_records.id = zephir_filedata.id 
-  WHERE zephir_records.autoid =:autoid
-"""
-
-SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata WHERE id=:id"
-
-def find_marcxml_records_by_id(db_connect_str, id):
-    """
-    Args:
-        db_connect_str: database connection string
-        id: htid in string
-    Returns:
-        list of dict with marcxml 
-    """
-    params = {"id": id}
-    return find_zephir_records(db_connect_str, SELECT_MARCXML_BY_ID, params)
-
-def find_marcxml_records_by_autoid(db_connect_str, autoid):
-    """
-    Args:
-        db_connect_str: database connection string
-        autoid: integer
-    Returns:
-        list of dict with marcxml
-    """
-    params = {"autoid": autoid}
-    return find_zephir_records(db_connect_str, SELECT_MARCXML_BY_AUTOID, params)
-
-def find_max_zephir_autoid(db_connect_str):
-    max_zephir_autoid = None
-    results = find_zephir_records(db_connect_str, SELECT_MAX_ZEPHIR_AUTOID)
-    if (results):
-        max_zephir_autoid = results[0]["max_autoid"]
-        print("max zephir autoid: {}".format(max_zephir_autoid))
-    return max_zephir_autoid
+from zephir_db_utils import createZephirItemDetailsFileFromDB
+from zephir_db_utils import find_marcxml_records_by_id
 
 def test_zephir_search(db_connect_str):
 
@@ -250,7 +188,7 @@ def output_xmlrecords_by_autoid(input_filename, output_filename, db_connect_str)
 
     print("marcxml records are save in file: {}".format(output_filename))
 
-def createZephirItemDetailsFileFromDB(db_connect_str, zephir_items_file):
+def createZephirItemDetailsFileFromDB_1(db_connect_str, zephir_items_file):
 
     # create an empty file
     open(zephir_items_file, 'w').close()
