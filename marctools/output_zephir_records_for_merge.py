@@ -70,10 +70,10 @@ def main(env, input_htid_file, search_zephir_database,
     print("Zephir item data contains fields: cid, oclc, contribsys_id, htid, z_record_autoid")
     print("The data file does not contain a header line.")
 
-    f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_file)
+    f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_file, db_connect_str)
     print("Records for merge are saved in file: {}".format(output_marc_file))
 
-def f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_file):
+def f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_file, db_connect_str):
 
     # 543 MB
     print("Get Zephir Item Details: cid, oclc, contribsys_id, htid, z_record_autoid")
@@ -104,34 +104,10 @@ def f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_fil
 
     print("Find htids for deduplicate clusters")
     autoid_file = "output/z_record_autoids.csv"
-    find_htids_for_deduplicate_clusters(df, autoid_file)
+    find_autoids_for_deduplicate_clusters(df, autoid_file)
 
     print("Output Zephir records in XML")
     output_xmlrecords(autoid_file, output_marc_file, db_connect_str)
-
-def temp_run_output_xml_only():
-    if (len(sys.argv) > 1):
-        env = sys.argv[1]
-    else:
-        env = "dev"
-
-    configs= get_configs_by_filename('config', 'zephir_db')
-    db_connect_str = str(utils.db_connect_url(configs[env]))
-
-    #test_zephir_search(db_connect_str)
-    #exit()
-
-    if len(sys.argv) > 2:
-        input_filename = sys.argv[2]
-    else:
-        input_filename = "/data/htids.txt"
-    if len(sys.argv) > 3:
-        output_filename = sys.argv[3]
-    else:
-        output_filename = "output/marc_records.xml"
-
-    file_path = "output/z_record_autoids.csv"
-    output_xmlrecords(file_path, output_filename, db_connect_str)
 
 
 def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
@@ -270,7 +246,7 @@ def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
     print(df.head(30))
     return df
 
-def find_htids_for_deduplicate_clusters(df, output_file):
+def find_autoids_for_deduplicate_clusters(df, output_file):
     print("Step 10 - create lookup table for the lowest CID per primary number")
     # Step 10 - create lookup table for the lowest CID per primary number 
     lowest_cid_df = df[~df.duplicated(subset=['primary'],keep='first')][["primary","cid"]]
