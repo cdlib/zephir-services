@@ -70,15 +70,8 @@ def main(env, input_htid_file, search_zephir_database,
     print("Zephir item data contains fields: cid, oclc, contribsys_id, htid, z_record_autoid")
     print("The data file does not contain a header line.")
 
-    f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_file, db_connect_str)
-    print("Records for merge are saved in file: {}".format(output_marc_file))
-
-def f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_file, db_connect_str):
-
     # 543 MB
-    print("Get Zephir Item Details: cid, oclc, contribsys_id, htid, z_record_autoid")
     print("Read in data to DF: cid, oclc, z_record_autoid")
-
     raw_zephir_item_detail = pd.read_csv(zephir_items_file, header=0, usecols=[0, 1, 4], names=["cid", "oclc", "z_record_autoid"], dtype={"cid":int, "oclc":object, "z_record_autoid":int}, error_bad_lines=False)
 
     # 724 MB
@@ -103,11 +96,12 @@ def f_output_marc_file(zephir_items_file, oclc_concordance_file, output_marc_fil
     del df_primary_with_duplicates
 
     print("Find htids for deduplicate clusters")
-    autoid_file = "output/z_record_autoids.csv"
-    find_autoids_for_deduplicate_clusters(df, autoid_file)
+    autoids_df = find_autoids_for_deduplicate_clusters(df)
 
-    print("Output Zephir records in XML")
-    output_xmlrecords(autoid_file, output_marc_file, db_connect_str)
+    print("Output Zephir records for reload")
+    output_xmlrecords_df_version(autoids_df, output_marc_file, db_connect_str)
+
+    print("Records for reload are saved in file: {}".format(output_marc_file))
 
 
 def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
@@ -117,7 +111,7 @@ def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
 
     for index in htids_df.index:
         autoid = htids_df['z_record_autoid'][index]
-        records = find_marcxml_records_by_autoid(db_connect_str, autoid)
+        records = find_marcxml_records_by_autoid(db_connect_str, autoid.item())
         for record in records:
             marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
             marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
@@ -246,7 +240,7 @@ def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
     print(df.head(30))
     return df
 
-def find_autoids_for_deduplicate_clusters(df, output_file):
+def find_autoids_for_deduplicate_clusters(df):
     print("Step 10 - create lookup table for the lowest CID per primary number")
     # Step 10 - create lookup table for the lowest CID per primary number 
     lowest_cid_df = df[~df.duplicated(subset=['primary'],keep='first')][["primary","cid"]]
@@ -269,9 +263,10 @@ def find_autoids_for_deduplicate_clusters(df, output_file):
     print(htid_duplicates_df.info())
     print(htid_duplicates_df.head(30))
     # save dataset to csv
-    htid_duplicates_df.to_csv(output_file, index=False, header=False)
+    #htid_duplicates_df.to_csv(output_file, index=False, header=False)
+
+    return htid_duplicates_df
 
 
 if __name__ == '__main__':
     main()
-    #temp_run_output_xml_only()
