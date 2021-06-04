@@ -83,7 +83,7 @@ def f_output_split_clusters(zephir_items_file, oclc_concordance_file, output_cid
     print(raw_zephir_item_detail.info())
     print(raw_zephir_item_detail.head())
 
-    raw_zephir_item_detail = raw_zephir_item_detail.drop_duplicates()
+    raw_zephir_item_detail.drop_duplicates(inplace=True)
     print("raw_zephir_item_detail: after drop duplicates")
     print(raw_zephir_item_detail.info())
     print(raw_zephir_item_detail.head())
@@ -91,24 +91,33 @@ def f_output_split_clusters(zephir_items_file, oclc_concordance_file, output_cid
     # memory use: 724 MB
     print("")
     print("Cleanup Data")
-    raw_zephir_item_detail = cleanupData(raw_zephir_item_detail)
+    zephir_item_detail = cleanupData(raw_zephir_item_detail)
+    del raw_zephir_item_detail
 
-    raw_zephir_item_detail = raw_zephir_item_detail.drop_duplicates()
-    print("raw_zephir_item_detail: after drop duplicates")
-    print(raw_zephir_item_detail.info())
-    print(raw_zephir_item_detail.head())
+    zephir_item_detail.drop_duplicates(inplace=True)
+    print("zephir_item_detail: after drop duplicates")
+    print(zephir_item_detail.info())
+    print(zephir_item_detail.head())
 
     # 150 MB
     print("")
     print("Get Concordance data")
     zephir_concordance_df = readCsvFileToDataFrame(oclc_concordance_file)
+    print(zephir_concordance_df.loc[zephir_concordance_df['primary'] == "569"])
+    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == "569"])
 
     # 980 MB
     print("")
     print("Join data frames")
-    analysis_df = createAnalysisDataframe(zephir_concordance_df, raw_zephir_item_detail)
-    del raw_zephir_item_detail
+    analysis_df = createAnalysisDataframe(zephir_concordance_df, zephir_item_detail)
+    del zephir_item_detail
     del zephir_concordance_df
+
+    analysis_df.drop_duplicates(inplace=True)
+    print("analysis_df: after drop duplicates")
+    print(analysis_df.info())
+    print(analysis_df.head(10))
+    print(analysis_df.loc[analysis_df['cid'] == 11])
 
     print("")
     print("Find CIDs with multiple OCLC primary numbers - Full Collection") 
@@ -219,7 +228,7 @@ def createZephirItemDetailsFileFromDB_1(db_connect_str, zephir_items_file):
 
 
 def readCsvFileToDataFrame(file_path):
-    zephir_concordance_df = pd.read_csv(file_path, names=["primary","oclc"], header=0)
+    zephir_concordance_df = pd.read_csv(file_path, names=["oclc", "primary"], header=0)
     print(zephir_concordance_df.info())
     print(zephir_concordance_df.head())
     return zephir_concordance_df
