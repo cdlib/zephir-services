@@ -21,12 +21,14 @@ SELECT_ZEPHIR_IDS = """select CAST(cid as UNSIGNED) cid, identifier as oclc,
 
 SELECT_MAX_ZEPHIR_AUTOID = "select max(autoid) as max_autoid from zephir_records"
 
-SELECT_MARCXML_BY_AUTOID = """SELECT metadata FROM zephir_filedata
+SELECT_MARCXML_BY_AUTOID = """SELECT metadata, zephir_records.id FROM zephir_filedata
   join zephir_records on zephir_records.id = zephir_filedata.id
   WHERE zephir_records.autoid =:autoid
 """
 
 SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata WHERE id=:id"
+
+SELECT_HTID_BY_AUTOID = "SELECT autoid, id FROM zephir_records WHERE autoid =:autoid"
 
 class ZephirDatabase:
     def __init__(self, db_connect_str):
@@ -89,6 +91,11 @@ def find_max_zephir_autoid(db_connect_str):
         max_zephir_autoid = results[0]["max_autoid"]
         print("max zephir autoid: {}".format(max_zephir_autoid))
     return max_zephir_autoid
+
+def find_htid_by_autoid(db_connect_str, autoid):
+    params = {"autoid": autoid}
+    return find_zephir_records(db_connect_str, SELECT_HTID_BY_AUTOID, params)
+
 
 def createZephirItemDetailsFileFromDB(db_connect_str, zephir_items_file):
 

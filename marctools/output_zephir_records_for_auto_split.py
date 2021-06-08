@@ -103,8 +103,8 @@ def f_output_split_clusters(zephir_items_file, oclc_concordance_file, output_cid
     print("")
     print("Get Concordance data")
     zephir_concordance_df = readCsvFileToDataFrame(oclc_concordance_file)
-    print(zephir_concordance_df.loc[zephir_concordance_df['primary'] == "569"])
-    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == "569"])
+    print(zephir_concordance_df.loc[zephir_concordance_df['primary'] == 569])
+    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == 569])
 
     # 980 MB
     print("")

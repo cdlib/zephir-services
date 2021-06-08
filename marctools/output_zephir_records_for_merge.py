@@ -22,6 +22,7 @@ from config import get_configs_by_filename
 
 from zephir_db_utils import createZephirItemDetailsFileFromDB
 from zephir_db_utils import find_marcxml_records_by_autoid 
+from zephir_db_utils import find_htid_by_autoid
 
 def test_zephir_search(db_connect_str):
 
@@ -40,6 +41,7 @@ def test_zephir_search(db_connect_str):
 @click.option('-o', '--output-marc-file', default="./output/marc_records_for_reload.xml")
 def main(env, input_htid_file, search_zephir_database,
         zephir_items_file, oclc_concordance_file, output_marc_file):
+
     print(env)
     print(input_htid_file)
     print(search_zephir_database)
@@ -81,10 +83,18 @@ def main(env, input_htid_file, search_zephir_database,
     # 150 MB
     print("Get Concordance")
     zephir_concordance_df = readCsvFileToDataFrame(oclc_concordance_file)
+    print("ocn-primary=569")
+    print(zephir_concordance_df.loc[zephir_concordance_df['primary'] == 569])
+    print("oclc=569")
+    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == 569])
 
     # 980 MB
     print("Join data frames")
     analysis_df = createAnalysisDataframe(zephir_concordance_df, raw_zephir_item_detail)
+    print("ocn-primary=569 after join")
+    print(analysis_df.loc[analysis_df['primary'] == 569])
+    print("oclc=569")
+    print(analysis_df.loc[analysis_df['oclc'] == 569])
     del raw_zephir_item_detail
     del zephir_concordance_df
 
@@ -92,35 +102,48 @@ def main(env, input_htid_file, search_zephir_database,
     df_primary_with_duplicates = findOCNsWithMultipleCIDs(analysis_df)
 
     df = subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates)
+    print("ocn-primary=569 after step 8:")
+    print(df.loc[df['primary'] == 569])
     del analysis_df
     del df_primary_with_duplicates
 
-    print("Find htids for deduplicate clusters")
-    autoids_df = find_autoids_for_deduplicate_clusters(df)
+    print("Find deduplicate clusters")
+    duplicates_df = find_duplicate_clusters(df)
+
+    print("Step 12 - select a dataframe with only htids(autoid) from cids with higher cid values")
+    autoids_df = duplicates_df[["z_record_autoid"]]
+    print(autoids_df.info())
+    print(autoids_df.head())
+
+    # save dataset to csv
+    autoid_file = htid_file = os.path.splitext(output_marc_file)[0] + ".autoids" 
+    autoids_df.to_csv(autoid_file, index=False, header=False)
 
     print("Output Zephir records for reload")
     output_xmlrecords_df_version(autoids_df, output_marc_file, db_connect_str)
-
     print("Records for reload are saved in file: {}".format(output_marc_file))
 
 
 def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
+    htid_file = os.path.splitext(output_filename)[0] + ".htids"
+    outfile_ids = open(htid_file, "w")
+
     outfile = open(output_filename, 'w')
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
     outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
 
     for index in htids_df.index:
-        autoid = htids_df['z_record_autoid'][index]
-        records = find_marcxml_records_by_autoid(db_connect_str, autoid.item())
+        autoid = htids_df['z_record_autoid'][index].item()
+        records = find_marcxml_records_by_autoid(db_connect_str, autoid)
         for record in records:
             marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
             marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
             outfile.write(marcxml)
+            outfile_ids.write(str(autoid) + "," + record["id"] + "\n")
 
     outfile.write("</collection>\n")
     outfile.close()
-
-    print("marcxml records are save in file: {}".format(output_filename))
+    outfile_ids.close()
 
 def output_xmlrecords(input_filename, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')
@@ -141,44 +164,9 @@ def output_xmlrecords(input_filename, output_filename, db_connect_str):
 
     print("marcxml records are save in file: {}".format(output_filename))
 
-def getZephirItemDetailsDataFrame(db_connect_str):
-
-    max_zephir_autoid = find_max_zephir_autoid(db_connect_str)
-    #max_zephir_autoid = 10000
-
-    zephir_items_file = "output/zephir_items.csv"
-    # create an empty file
-    open(zephir_items_file, 'w').close()
-
-    start_autoid = 0 
-    end_autoid = 0 
-    step = 100000
-    #step = 1000
-    while max_zephir_autoid and end_autoid < max_zephir_autoid: 
-        start_autoid = end_autoid + 1
-        end_autoid = start_autoid + step -1
-        print("start: {}".format(start_autoid))
-        print("end: {}".format(end_autoid))
-
-        current_time = datetime.datetime.now()
-        print(current_time)
-        params = {"start_autoid": start_autoid, "end_autoid": end_autoid} 
-        records = find_zephir_records(db_connect_str, SELECT_ZEPHIR_IDS, params)
-
-        current_time = datetime.datetime.now()
-        print(current_time)
-        
-        df = DataFrame(records)
-        df.to_csv(zephir_items_file, mode='a', header=False, index=False)
-        #df = None
-
-    df= pd.read_csv(zephir_items_file, names=["cid", "oclc", "z_record_autoid"], header=None, dtype={"cid":int, "oclc":object, "z_record_autoid":int}, error_bad_lines=False)
-    print(df.info())
-    print(df.head())
-    return df
 
 def readCsvFileToDataFrame(file_path):
-    zephir_concordance_df = pd.read_csv(file_path, names=["primary","oclc"], header=0)
+    zephir_concordance_df = pd.read_csv(file_path, names=["oclc", "primary"], header=0)
     print(zephir_concordance_df.info())
     print(zephir_concordance_df.head())
     return zephir_concordance_df
@@ -193,7 +181,7 @@ def cleanupData(zephir_item_detail):
     zephir_item_detail = zephir_item_detail.dropna()
 
     # cast data as integers (the "to_numberic" causes change in type) - drops leading zeros
-    zephir_item_detail["oclc"] = zephir_item_detail["oclc"].astype(int)
+    zephir_item_detail["oclc"] = zephir_item_detail["oclc"].astype('Int64')
 
     print(zephir_item_detail.info())
     print(zephir_item_detail.head())
@@ -210,7 +198,7 @@ def createAnalysisDataframe(zephir_concordance_df, zephir_item_detail):
     analysis_df["primary"] = analysis_df["primary"].astype('Int64')
     
     print(analysis_df.info())
-    print(analysis_df.head())
+    print(analysis_df.head(30))
 
     return analysis_df 
 
@@ -232,7 +220,6 @@ def findOCNsWithMultipleCIDs(analysis_df):
 
 def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
     print("Step 8 - create a subset of analysis data with only primary numbers that have >1 CID assoicated using a join")
-    # Step 8 - create a subset of analysis data with only primary numbers that have >1 CID assoicated using a join
     df = analysis_df.dropna().merge(df_primary_with_duplicates, on='primary', how='right')
     df.sort_values(by=['primary', 'cid'])
     
@@ -240,7 +227,10 @@ def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
     print(df.head(30))
     return df
 
-def find_autoids_for_deduplicate_clusters(df):
+def find_duplicate_clusters(df):
+    """Duplicate clusters are the ones share the same primary OCN with another cluster (same primary OCN with different CIDs).
+    This function identifies clusters which has duplicates, marks the one with the lowest CID as base cluster and other clusters with higher CID as duplicates, then returns a new dataframe with only the duplicates. 
+    """
     print("Step 10 - create lookup table for the lowest CID per primary number")
     # Step 10 - create lookup table for the lowest CID per primary number 
     lowest_cid_df = df[~df.duplicated(subset=['primary'],keep='first')][["primary","cid"]]
@@ -257,15 +247,7 @@ def find_autoids_for_deduplicate_clusters(df):
     print(higher_cid_duplicates_df.info())
     print(higher_cid_duplicates_df.head(30))
 
-    print("Step 12 - select a dataframe with only htids(autoid) from cids with higher cid values")
-    # Step 12 - select a dataframe with only htids from cids with higher cid values
-    htid_duplicates_df = higher_cid_duplicates_df[["z_record_autoid"]]
-    print(htid_duplicates_df.info())
-    print(htid_duplicates_df.head(30))
-    # save dataset to csv
-    #htid_duplicates_df.to_csv(output_file, index=False, header=False)
-
-    return htid_duplicates_df
+    return higher_cid_duplicates_df
 
 
 if __name__ == '__main__':
