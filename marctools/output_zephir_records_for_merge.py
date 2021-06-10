@@ -24,6 +24,8 @@ from zephir_db_utils import createZephirItemDetailsFileFromDB
 from zephir_db_utils import find_marcxml_records_by_autoid 
 from zephir_db_utils import find_htid_by_autoid
 
+debug=True
+
 def test_zephir_search(db_connect_str):
 
     id = "pur1.32754075735872"
@@ -48,6 +50,8 @@ def main(env, input_htid_file, search_zephir_database,
     print(zephir_items_file)
     print(oclc_concordance_file)
     print(output_marc_file)
+
+    debug=True
 
     configs= get_configs_by_filename('config', 'zephir_db')
     db_connect_str = str(utils.db_connect_url(configs[env]))
@@ -83,17 +87,12 @@ def main(env, input_htid_file, search_zephir_database,
     # 150 MB
     print("Get Concordance")
     zephir_concordance_df = readCsvFileToDataFrame(oclc_concordance_file)
-    print("ocn-primary=569")
-    print(zephir_concordance_df.loc[zephir_concordance_df['primary'] == 569])
-    print("oclc=569")
-    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == 569])
-
-    print("ocn-primary=51451923")
-    print(zephir_concordance_df.loc[zephir_concordance_df['primary'] == 51451923])
-    print("oclc=51451923")
-    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == 51451923])
-    print("oclc=1335344")
-    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == 1335344])
+    if debug:
+        print_out_df_element(zephir_concordance_df, 'primary', 569, "ocn-primary=569")
+        print_out_df_element(zephir_concordance_df, 'oclc', 569, "ocn=569")
+        print_out_df_element(zephir_concordance_df, 'primary', 51451923, "ocn-primary=51451923")
+        print_out_df_element(zephir_concordance_df, 'oclc', 51451923, "oclc=51451923")
+        print_out_df_element(zephir_concordance_df, 'oclc', 1335344, "oclc=1335344")
 
     # 980 MB
     print("Join data frames")
@@ -101,50 +100,37 @@ def main(env, input_htid_file, search_zephir_database,
     del raw_zephir_item_detail
     del zephir_concordance_df
 
-    print("ocn-primary=569 after join")
-    print(analysis_df.loc[analysis_df['primary'] == 569])
-    print("oclc=569")
-    print(analysis_df.loc[analysis_df['oclc'] == 569])
-
-    print("ocn-primary=51451923 after join")
-    print(analysis_df.loc[analysis_df['primary'] == 51451923])
-    print("oclc=51451923")
-    print(analysis_df.loc[analysis_df['oclc'] == 51451923])
-    print("oclc=1335344")
-    print(analysis_df.loc[analysis_df['oclc'] == 1335344])
+    if debug:
+        print_out_df_element(analysis_df, 'primary', 569, "ocn-primary=569 after JOIN")
+        print_out_df_element(analysis_df, 'oclc', 569, "ocn=569")
+        print_out_df_element(analysis_df, 'primary', 51451923, "ocn-primary=51451923 after JOIN")
+        print_out_df_element(analysis_df, 'oclc', 51451923, "oclc=51451923")
+        print_out_df_element(analysis_df, 'oclc', 1335344, "oclc=1335344")
 
     print("Find primary numbers with a CID count> 1") 
     df_primary_with_duplicates = findOCNsWithMultipleCIDs(analysis_df)
 
-    print("ocn-primary=569 after Step 7")
-    print(df_primary_with_duplicates.loc[df_primary_with_duplicates['primary'] == 569])
-
-    print("ocn-primary=51451923 after Step 7")
-    print(df_primary_with_duplicates.loc[df_primary_with_duplicates['primary'] == 51451923])
+    if debug:
+        print_out_df_element(df_primary_with_duplicates, 'primary', 569, "ocn-primary=569 after Step 7")
+        print_out_df_element(df_primary_with_duplicates, 'primary', 51451923, "ocn-primary=51451923 after Step 7")
 
     df = subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates)
     del analysis_df
     del df_primary_with_duplicates
 
-    print("ocn-primary=569 after step 8:")
-    print(df.loc[df['primary'] == 569])
-    print("ocn-primary=51451923 after step 8:")
-    print(df.loc[df['primary'] == 51451923])
+    if debug:
+        print_out_df_element(df, 'primary', 569, "ocn-primary=569 after Step 8")
+        print_out_df_element(df, 'primary', 51451923, "ocn-primary=51451923 after Step 8")
 
     print("Find deduplicate clusters")
     duplicates_df = find_duplicate_clusters(df)
 
-    print("ocn-primary=569 after step 11")
-    print(duplicates_df.loc[duplicates_df['primary'] == 569])
-    print("oclc=569")
-    print(duplicates_df.loc[duplicates_df['oclc'] == 569])
-
-    print("ocn-primary=51451923 after step 11")
-    print(duplicates_df.loc[duplicates_df['primary'] == 51451923])
-    print("oclc=51451923")
-    print(duplicates_df.loc[duplicates_df['oclc'] == 51451923])
-    print("oclc=1335344")
-    print(duplicates_df.loc[duplicates_df['oclc'] == 1335344])
+    if debug:
+        print_out_df_element(duplicates_df, 'primary', 569, "ocn-primary=569 after Step 11")
+        print_out_df_element(duplicates_df, 'oclc', 569, "ocn=569 after Step 11")
+        print_out_df_element(duplicates_df, 'primary', 51451923, "ocn-primary=51451923 after Step 11")
+        print_out_df_element(duplicates_df, 'oclc', 51451923, "ocn-primary=51451923 after Step 11")
+        print_out_df_element(duplicates_df, 'oclc', 1335344, "ocn=1335344 after Step 11")
 
     exit()
 
@@ -260,10 +246,25 @@ def findOCNsWithMultipleCIDs(analysis_df):
 def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
     print("Step 8 - create a subset of analysis data with only primary numbers that have >1 CID assoicated using a join")
     df = analysis_df.dropna().merge(df_primary_with_duplicates, on='primary', how='right')
-    df.sort_values(by=['primary', 'cid'])
+
+    print("ocn-primary=569 step 8 - before sort")
+    print(df.loc[df['primary'] == 569])
+
+    print("ocn-primary=51451923 step 8 - before sort")
+    print(df.loc[df['primary'] == 51451923])
+
+    df = df.sort_values(by=['primary', 'cid'])
     
+    print("ocn-primary=569 step 8 - after sort")
+    print(df.loc[df['primary'] == 569])
+
+    print("ocn-primary=51451923 step 8 - after sort")
+    print(df.loc[df['primary'] == 51451923])
+
     print(df.info())
-    print(df.head(30))
+    print(df.head())
+
+
     return df
 
 def find_duplicate_clusters(df):
@@ -273,7 +274,14 @@ def find_duplicate_clusters(df):
     print("Step 10 - create lookup table for the lowest CID per primary number")
     # Step 10 - create lookup table for the lowest CID per primary number 
     lowest_cid_df = df[~df.duplicated(subset=['primary'],keep='first')][["primary","cid"]]
+
+    if debug:
+        print_out_df_info_and_head(lowest_cid_df)
+        print_out_df_element(lowest_cid_df, 'primary', 569, "ocn-primary=569 after step 10")
+        print_out_df_element(lowest_cid_df, 'primary', 51451923, "ocn-primary=51451923 after step 10")
+
     lowest_cid_df = dict(zip(lowest_cid_df.primary, lowest_cid_df.cid))
+
     # preserve rows where the cid is higher than the first cid matching the OCLC
     dups = []
     for i, row in df.iterrows():
@@ -283,11 +291,24 @@ def find_duplicate_clusters(df):
     # Step 11 - create a dataframe subset of all the duplicate CID-HTIDs
     # Note: Some duplicate CIDs may have additional records with a different OCLC
     higher_cid_duplicates_df = df[dups]
-    print(higher_cid_duplicates_df.info())
-    print(higher_cid_duplicates_df.head(30))
+
+    if debug:
+        print_out_df_info_and_head(higher_cid_duplicates_df)
 
     return higher_cid_duplicates_df
 
+
+def print_out_df_element(df, column, value, msg=None):
+    if msg is not None:
+        print(msg)
+    print(df.loc[df[column] == value])
+
+def print_out_df_info_and_head(df, head_lines=None):
+    print(df.info())
+    if head_lines is not None:
+        print(df.head(head_lines))
+    else:
+        print(df.head())
 
 if __name__ == '__main__':
     main()
