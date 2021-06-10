@@ -24,7 +24,7 @@ from zephir_db_utils import createZephirItemDetailsFileFromDB
 from zephir_db_utils import find_marcxml_records_by_autoid 
 from zephir_db_utils import find_htid_by_autoid
 
-debug=True
+debug_mode = False
 
 def test_zephir_search(db_connect_str):
 
@@ -41,17 +41,18 @@ def test_zephir_search(db_connect_str):
 @click.option('-Z', '--zephir-items-file', default="./data/zephir_items.csv")
 @click.option('-C', '--oclc-concordance-file', default="./data/zephir_concordance.csv")
 @click.option('-o', '--output-marc-file', default="./output/marc_records_for_reload.xml")
+@click.option('-d', '--debug', is_flag=True, help="Output debug information")
 def main(env, input_htid_file, search_zephir_database,
-        zephir_items_file, oclc_concordance_file, output_marc_file):
+        zephir_items_file, oclc_concordance_file, output_marc_file, debug):
 
-    print(env)
-    print(input_htid_file)
-    print(search_zephir_database)
-    print(zephir_items_file)
-    print(oclc_concordance_file)
-    print(output_marc_file)
-
-    debug=True
+    if debug:
+        debug_mode=True
+        print(env)
+        print(input_htid_file)
+        print(search_zephir_database)
+        print(zephir_items_file)
+        print(oclc_concordance_file)
+        print(output_marc_file)
 
     configs= get_configs_by_filename('config', 'zephir_db')
     db_connect_str = str(utils.db_connect_url(configs[env]))
@@ -83,11 +84,14 @@ def main(env, input_htid_file, search_zephir_database,
     # 724 MB
     print("Cleanup Data")
     raw_zephir_item_detail = cleanupData(raw_zephir_item_detail)
+    if debug_mode:
+        print_out_df_info_and_head(raw_zephir_item_detail)
 
     # 150 MB
     print("Get Concordance")
-    zephir_concordance_df = readCsvFileToDataFrame(oclc_concordance_file)
-    if debug:
+    zephir_concordance_df = pd.read_csv(oclc_concordance_file, names=["oclc", "primary"], header=0)
+    if debug_mode:
+        print_out_df_info_and_head(zephir_concordance_df)
         print_out_df_element(zephir_concordance_df, 'primary', 569, "ocn-primary=569")
         print_out_df_element(zephir_concordance_df, 'oclc', 569, "ocn=569")
         print_out_df_element(zephir_concordance_df, 'primary', 51451923, "ocn-primary=51451923")
@@ -100,7 +104,8 @@ def main(env, input_htid_file, search_zephir_database,
     del raw_zephir_item_detail
     del zephir_concordance_df
 
-    if debug:
+    if debug_mode:
+        print_out_df_info_and_head(analysis_df, 30)
         print_out_df_element(analysis_df, 'primary', 569, "ocn-primary=569 after JOIN")
         print_out_df_element(analysis_df, 'oclc', 569, "ocn=569")
         print_out_df_element(analysis_df, 'primary', 51451923, "ocn-primary=51451923 after JOIN")
@@ -110,7 +115,8 @@ def main(env, input_htid_file, search_zephir_database,
     print("Find primary numbers with a CID count> 1") 
     df_primary_with_duplicates = findOCNsWithMultipleCIDs(analysis_df)
 
-    if debug:
+    if debug_mode:
+        print_out_df_info_and_head(df_primary_with_duplicates)
         print_out_df_element(df_primary_with_duplicates, 'primary', 569, "ocn-primary=569 after Step 7")
         print_out_df_element(df_primary_with_duplicates, 'primary', 51451923, "ocn-primary=51451923 after Step 7")
 
@@ -118,33 +124,42 @@ def main(env, input_htid_file, search_zephir_database,
     del analysis_df
     del df_primary_with_duplicates
 
-    if debug:
+    if debug_mode:
+        print_out_df_info_and_head(df)
         print_out_df_element(df, 'primary', 569, "ocn-primary=569 after Step 8")
         print_out_df_element(df, 'primary', 51451923, "ocn-primary=51451923 after Step 8")
 
     print("Find deduplicate clusters")
     duplicates_df = find_duplicate_clusters(df)
+    del df
 
-    if debug:
+    if debug_mode:
+        print_out_df_info_and_head(duplicates_df)
         print_out_df_element(duplicates_df, 'primary', 569, "ocn-primary=569 after Step 11")
         print_out_df_element(duplicates_df, 'oclc', 569, "ocn=569 after Step 11")
         print_out_df_element(duplicates_df, 'primary', 51451923, "ocn-primary=51451923 after Step 11")
         print_out_df_element(duplicates_df, 'oclc', 51451923, "ocn-primary=51451923 after Step 11")
         print_out_df_element(duplicates_df, 'oclc', 1335344, "ocn=1335344 after Step 11")
 
-    exit()
-
-    print("Step 12 - select a dataframe with only htids(autoid) from cids with higher cid values")
+    print("Step 12 - get htid/autoid for cids with higher cid values")
     autoids_df = duplicates_df[["z_record_autoid"]]
-    print(autoids_df.info())
-    print(autoids_df.head())
+    del duplicates_df
 
-    # save dataset to csv
-    autoid_file = htid_file = os.path.splitext(output_marc_file)[0] + ".autoids" 
-    autoids_df.to_csv(autoid_file, index=False, header=False)
+    if debug_mode:
+        print_out_df_info_and_head(autoids_df)
+
+    zephir_ids_df = pd.read_csv(zephir_items_file, header=0, usecols=[3, 4], names=["htid", "z_record_autoid"], dtype={"htid":object, "z_record_autoid":int}, error_bad_lines=False)
+
+    df = autoids_df.merge(zephir_ids_df, on='z_record_autoid', how='left')
+    if debug_mode:
+        print_out_df_info_and_head(df)
+
+    print("Save autoid and htids to csv")
+    id_file = os.path.splitext(output_marc_file)[0] + "_ids.txt" 
+    df.to_csv(id_file, index=False, header=False)
 
     print("Output Zephir records for reload")
-    output_xmlrecords_df_version(autoids_df, output_marc_file, db_connect_str)
+    #output_xmlrecords_df_version(autoids_df, output_marc_file, db_connect_str)
     print("Records for reload are saved in file: {}".format(output_marc_file))
 
 
@@ -189,12 +204,6 @@ def output_xmlrecords(input_filename, output_filename, db_connect_str):
     print("marcxml records are save in file: {}".format(output_filename))
 
 
-def readCsvFileToDataFrame(file_path):
-    zephir_concordance_df = pd.read_csv(file_path, names=["oclc", "primary"], header=0)
-    print(zephir_concordance_df.info())
-    print(zephir_concordance_df.head())
-    return zephir_concordance_df
-
 def cleanupData(zephir_item_detail):
     # Step 5 - CLEANUP DATA
     # coerce identifier data from objects, to numeric
@@ -207,9 +216,6 @@ def cleanupData(zephir_item_detail):
     # cast data as integers (the "to_numberic" causes change in type) - drops leading zeros
     zephir_item_detail["oclc"] = zephir_item_detail["oclc"].astype('int')
 
-    print(zephir_item_detail.info())
-    print(zephir_item_detail.head())
-
     return zephir_item_detail
 
 def createAnalysisDataframe(zephir_concordance_df, zephir_item_detail):
@@ -221,9 +227,6 @@ def createAnalysisDataframe(zephir_concordance_df, zephir_item_detail):
     analysis_df = analysis_df.dropna()
     analysis_df["oclc"] = analysis_df["oclc"].astype('int')
     analysis_df["primary"] = analysis_df["primary"].astype('int')
-    
-    print(analysis_df.info())
-    print(analysis_df.head(30))
 
     return analysis_df 
 
@@ -239,8 +242,6 @@ def findOCNsWithMultipleCIDs(analysis_df):
     # create a subset of primary numbers where cid count is greater than 1
     df = df[df['cid_count'] > 1]
 
-    print(df.info())
-    print(df.head())
     return df
 
 def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
@@ -261,10 +262,6 @@ def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
     print("ocn-primary=51451923 step 8 - after sort")
     print(df.loc[df['primary'] == 51451923])
 
-    print(df.info())
-    print(df.head())
-
-
     return df
 
 def find_duplicate_clusters(df):
@@ -275,7 +272,7 @@ def find_duplicate_clusters(df):
     # Step 10 - create lookup table for the lowest CID per primary number 
     lowest_cid_df = df[~df.duplicated(subset=['primary'],keep='first')][["primary","cid"]]
 
-    if debug:
+    if debug_mode:
         print_out_df_info_and_head(lowest_cid_df)
         print_out_df_element(lowest_cid_df, 'primary', 569, "ocn-primary=569 after step 10")
         print_out_df_element(lowest_cid_df, 'primary', 51451923, "ocn-primary=51451923 after step 10")
@@ -292,7 +289,7 @@ def find_duplicate_clusters(df):
     # Note: Some duplicate CIDs may have additional records with a different OCLC
     higher_cid_duplicates_df = df[dups]
 
-    if debug:
+    if debug_mode:
         print_out_df_info_and_head(higher_cid_duplicates_df)
 
     return higher_cid_duplicates_df
