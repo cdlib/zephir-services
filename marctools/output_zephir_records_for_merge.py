@@ -88,27 +88,65 @@ def main(env, input_htid_file, search_zephir_database,
     print("oclc=569")
     print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == 569])
 
+    print("ocn-primary=51451923")
+    print(zephir_concordance_df.loc[zephir_concordance_df['primary'] == 51451923])
+    print("oclc=51451923")
+    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == 51451923])
+    print("oclc=1335344")
+    print(zephir_concordance_df.loc[zephir_concordance_df['oclc'] == 1335344])
+
     # 980 MB
     print("Join data frames")
     analysis_df = createAnalysisDataframe(zephir_concordance_df, raw_zephir_item_detail)
+    del raw_zephir_item_detail
+    del zephir_concordance_df
+
     print("ocn-primary=569 after join")
     print(analysis_df.loc[analysis_df['primary'] == 569])
     print("oclc=569")
     print(analysis_df.loc[analysis_df['oclc'] == 569])
-    del raw_zephir_item_detail
-    del zephir_concordance_df
+
+    print("ocn-primary=51451923 after join")
+    print(analysis_df.loc[analysis_df['primary'] == 51451923])
+    print("oclc=51451923")
+    print(analysis_df.loc[analysis_df['oclc'] == 51451923])
+    print("oclc=1335344")
+    print(analysis_df.loc[analysis_df['oclc'] == 1335344])
 
     print("Find primary numbers with a CID count> 1") 
     df_primary_with_duplicates = findOCNsWithMultipleCIDs(analysis_df)
 
+    print("ocn-primary=569 after Step 7")
+    print(df_primary_with_duplicates.loc[df_primary_with_duplicates['primary'] == 569])
+
+    print("ocn-primary=51451923 after Step 7")
+    print(df_primary_with_duplicates.loc[df_primary_with_duplicates['primary'] == 51451923])
+
     df = subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates)
-    print("ocn-primary=569 after step 8:")
-    print(df.loc[df['primary'] == 569])
     del analysis_df
     del df_primary_with_duplicates
 
+    print("ocn-primary=569 after step 8:")
+    print(df.loc[df['primary'] == 569])
+    print("ocn-primary=51451923 after step 8:")
+    print(df.loc[df['primary'] == 51451923])
+
     print("Find deduplicate clusters")
     duplicates_df = find_duplicate_clusters(df)
+
+    print("ocn-primary=569 after step 11")
+    print(duplicates_df.loc[duplicates_df['primary'] == 569])
+    print("oclc=569")
+    print(duplicates_df.loc[duplicates_df['oclc'] == 569])
+
+    print("ocn-primary=51451923 after step 11")
+    print(duplicates_df.loc[duplicates_df['primary'] == 51451923])
+    print("oclc=51451923")
+    print(duplicates_df.loc[duplicates_df['oclc'] == 51451923])
+    print("oclc=1335344")
+    print(duplicates_df.loc[duplicates_df['oclc'] == 1335344])
+
+    exit()
 
     print("Step 12 - select a dataframe with only htids(autoid) from cids with higher cid values")
     autoids_df = duplicates_df[["z_record_autoid"]]
@@ -181,7 +219,7 @@ def cleanupData(zephir_item_detail):
     zephir_item_detail = zephir_item_detail.dropna()
 
     # cast data as integers (the "to_numberic" causes change in type) - drops leading zeros
-    zephir_item_detail["oclc"] = zephir_item_detail["oclc"].astype('Int64')
+    zephir_item_detail["oclc"] = zephir_item_detail["oclc"].astype('int')
 
     print(zephir_item_detail.info())
     print(zephir_item_detail.head())
@@ -189,13 +227,14 @@ def cleanupData(zephir_item_detail):
     return zephir_item_detail
 
 def createAnalysisDataframe(zephir_concordance_df, zephir_item_detail):
-    print("Step 6 - Analysis - join DFs by oclc")
-    # Step 6 - Analysis
+    print("# Step 6 - Analysis - join DFs by oclc")
     # Create analysis table by joining with zephir concordance
     # this results in a zephir table with both the original oclc and the primary oclc
     analysis_df = zephir_item_detail.merge(zephir_concordance_df, on='oclc', how='left')
-    analysis_df["oclc"] = analysis_df["oclc"].astype('Int64')
-    analysis_df["primary"] = analysis_df["primary"].astype('Int64')
+    # drop lines with primay=NA 
+    analysis_df = analysis_df.dropna()
+    analysis_df["oclc"] = analysis_df["oclc"].astype('int')
+    analysis_df["primary"] = analysis_df["primary"].astype('int')
     
     print(analysis_df.info())
     print(analysis_df.head(30))
