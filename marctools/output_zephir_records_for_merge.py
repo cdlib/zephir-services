@@ -23,6 +23,7 @@ from config import get_configs_by_filename
 from zephir_db_utils import createZephirItemDetailsFileFromDB
 from zephir_db_utils import find_marcxml_records_by_autoid 
 from zephir_db_utils import find_htid_by_autoid
+from batch_output_zephir_records import output_xmlrecords_in_batch
 
 debug_mode = False
 
@@ -45,6 +46,7 @@ def test_zephir_search(db_connect_str):
 def main(env, input_htid_file, search_zephir_database,
         zephir_items_file, oclc_concordance_file, output_marc_file, debug):
 
+    debug_mode = False
     if debug:
         debug_mode=True
         print(env)
@@ -142,31 +144,54 @@ def main(env, input_htid_file, search_zephir_database,
         print_out_df_element(duplicates_df, 'oclc', 1335344, "ocn=1335344 after Step 11")
 
     print("Step 12 - get htid/autoid for cids with higher cid values")
-    autoids_df = duplicates_df[["z_record_autoid"]]
+    autoids_df = duplicates_df[["z_record_autoid"]].sort_values(by=['z_record_autoid'])
+    autoids_df = autoids_df.drop_duplicates()
+
     del duplicates_df
 
     if debug_mode:
         print_out_df_info_and_head(autoids_df)
 
     zephir_ids_df = pd.read_csv(zephir_items_file, header=0, usecols=[3, 4], names=["htid", "z_record_autoid"], dtype={"htid":object, "z_record_autoid":int}, error_bad_lines=False)
+    zephir_ids_df = zephir_ids_df.sort_values(by=['z_record_autoid', 'htid'])
+    zephir_ids_df = zephir_ids_df.drop_duplicates()
 
-    df = autoids_df.merge(zephir_ids_df, on='z_record_autoid', how='left')
+    df = autoids_df.merge(zephir_ids_df, on='z_record_autoid')
     if debug_mode:
         print_out_df_info_and_head(df)
 
-    print("Save autoid and htids to csv")
-    id_file = os.path.splitext(output_marc_file)[0] + "_ids.txt" 
+    print("Save autoid and htids to file ...")
+    output_filename = os.path.splitext(output_marc_file)[0]
+    id_file = output_filename + "_ids.txt"
     df.to_csv(id_file, index=False, header=False)
+    print("The autoid and htids are saved in {}".format(id_file))
+
+    del zephir_ids_df
+    del df
 
     print("Output Zephir records for reload")
-    #output_xmlrecords_df_version(autoids_df, output_marc_file, db_connect_str)
+    batch_size = 10000
+    output_xmlrecords_in_batch(autoids_df, output_filename, db_connect_str, batch_size)
     print("Records for reload are saved in file: {}".format(output_marc_file))
 
 
-def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
-    htid_file = os.path.splitext(output_filename)[0] + ".htids"
-    outfile_ids = open(htid_file, "w")
+def tmp_output_xmlrecords_in_batch(autoids_df, output_filename, db_connect_str):
+    outfile = open(output_filename, 'w')
+    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
 
+    for index in autoids_df.index:
+        autoid = htids_df['z_record_autoid'][index].item()
+        records = find_marcxml_records_by_autoid(db_connect_str, autoid)
+        for record in records:
+            marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
+            marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
+            outfile.write(marcxml)
+
+    outfile.write("</collection>\n")
+    outfile.close()
+
+def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
     outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
@@ -178,11 +203,9 @@ def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
             marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
             marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
             outfile.write(marcxml)
-            outfile_ids.write(str(autoid) + "," + record["id"] + "\n")
 
     outfile.write("</collection>\n")
     outfile.close()
-    outfile_ids.close()
 
 def output_xmlrecords(input_filename, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')

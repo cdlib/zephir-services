@@ -26,6 +26,20 @@ SELECT_MARCXML_BY_AUTOID = """SELECT metadata, zephir_records.id FROM zephir_fil
   WHERE zephir_records.autoid =:autoid
 """
 
+SELECT_MARCXML_BY_AUTOID_RANGE = """SELECT metadata, zephir_records.autoid as z_record_autoid FROM zephir_filedata
+  join zephir_records on zephir_records.id = zephir_filedata.id
+  WHERE zephir_records.autoid BETWEEN :autoid_from AND :autoid_to
+"""
+
+SELECT_MARCXML_BY_AUTOID_LIST = """SELECT metadata FROM zephir_filedata
+  join zephir_records on zephir_records.id = zephir_filedata.id
+  WHERE zephir_records.autoid in ( autoid_list)
+"""
+
+SELECT_MARCXML_BY_AUTOID_LIST_2 = """SELECT metadata FROM zephir_filedata
+  join zephir_records on zephir_records.id = zephir_filedata.id
+"""
+
 SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata WHERE id=:id"
 
 SELECT_HTID_BY_AUTOID = "SELECT autoid, id FROM zephir_records WHERE autoid =:autoid"
@@ -83,6 +97,26 @@ def find_marcxml_records_by_autoid(db_connect_str, autoid):
     """
     params = {"autoid": autoid}
     return find_zephir_records(db_connect_str, SELECT_MARCXML_BY_AUTOID, params)
+
+def find_marcxml_records_by_autoid_range(db_connect_str, autoid_from, autoid_to):
+    params = {"autoid_from": autoid_from, "autoid_to": autoid_to}
+    print(params)
+    return find_zephir_records(db_connect_str, SELECT_MARCXML_BY_AUTOID_RANGE, params)
+
+def find_marcxml_records_by_autoid_list(db_connect_str, autoid_list):
+    params = {"autoid_list": autoid_list}
+    print(params)
+    return find_zephir_records(db_connect_str, SELECT_MARCXML_BY_AUTOID_LIST, params)
+
+def find_marcxml_records_by_autoid_list_2(db_connect_str, autoid_list):
+    type(autoid_list)
+    print(autoid_list)
+    converted_list = [str(element) for element in autoid_list]
+    ids = ",".join(converted_list)
+    query = SELECT_MARCXML_BY_AUTOID_LIST_2 + " WHERE zephir_records.autoid in (" + ids + ")" 
+    print(query)
+    return find_zephir_records(db_connect_str, query)
+
 
 def find_max_zephir_autoid(db_connect_str):
     max_zephir_autoid = None
