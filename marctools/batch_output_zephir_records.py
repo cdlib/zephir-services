@@ -21,6 +21,8 @@ from config import get_configs_by_filename
 
 from zephir_db_utils import find_marcxml_records_by_autoid_range
 from zephir_db_utils import find_marcxml_records_by_autoid_list
+from zephir_db_utils import find_marcxml_records_by_htid
+from zephir_db_utils import find_marcxml_records_by_autoid
 
 def test():
 
@@ -66,8 +68,25 @@ def output_xmlrecords_in_batch(df, output_filename, db_connect_str, batch_size):
         else:
             autoid_list.append(autoid)
 
+def output_xmlrecords_by_htid(input_filename, output_filename, db_connect_str):
+    outfile = open(output_filename, 'w')
+    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
 
-def output_xmlrecords(input_filename, output_filename, db_connect_str):
+    with open(input_filename) as infile:
+        for line in infile:
+            htid = line.strip()
+            records = find_marcxml_records_by_htid(db_connect_str, htid)
+            for record in records:
+                marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
+                marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
+                outfile.write(marcxml)
+
+    outfile.write("</collection>\n")
+    outfile.close()
+
+
+def output_xmlrecords_by_autoid(input_filename, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
     outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
@@ -84,7 +103,6 @@ def output_xmlrecords(input_filename, output_filename, db_connect_str):
     outfile.write("</collection>\n")
     outfile.close()
 
-    print("marcxml records are save in file: {}".format(output_filename))
 
 if __name__ == '__main__':
     test()

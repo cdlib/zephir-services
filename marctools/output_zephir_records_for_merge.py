@@ -21,9 +21,8 @@ import lib.utils as utils
 from config import get_configs_by_filename
 
 from zephir_db_utils import createZephirItemDetailsFileFromDB
-from zephir_db_utils import find_marcxml_records_by_autoid 
-from zephir_db_utils import find_htid_by_autoid
 from batch_output_zephir_records import output_xmlrecords_in_batch
+from batch_output_zephir_records import output_xmlrecords_by_htid
 
 debug_mode = False
 
@@ -219,19 +218,19 @@ def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
     print("Step 8 - create a subset of analysis data with only primary numbers that have >1 CID assoicated using a join")
     df = analysis_df.dropna().merge(df_primary_with_duplicates, on='primary', how='right')
 
-    print("ocn-primary=569 step 8 - before sort")
-    print(df.loc[df['primary'] == 569])
-
-    print("ocn-primary=51451923 step 8 - before sort")
-    print(df.loc[df['primary'] == 51451923])
+    if debug_mode:
+        print("ocn-primary=569 step 8 - before sort")
+        print(df.loc[df['primary'] == 569])
+        print("ocn-primary=51451923 step 8 - before sort")
+        print(df.loc[df['primary'] == 51451923])
 
     df = df.sort_values(by=['primary', 'cid'])
     
-    print("ocn-primary=569 step 8 - after sort")
-    print(df.loc[df['primary'] == 569])
-
-    print("ocn-primary=51451923 step 8 - after sort")
-    print(df.loc[df['primary'] == 51451923])
+    if debug_mode:
+        print("ocn-primary=569 step 8 - after sort")
+        print(df.loc[df['primary'] == 569])
+        print("ocn-primary=51451923 step 8 - after sort")
+        print(df.loc[df['primary'] == 51451923])
 
     return df
 

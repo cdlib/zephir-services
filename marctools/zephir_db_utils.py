@@ -72,7 +72,7 @@ def find_zephir_records(db_connect_str, select_query, params=None):
     return None
 
 
-def find_marcxml_records_by_id(db_connect_str, id):
+def find_marcxml_records_by_htid(db_connect_str, id):
     """
     Args:
         db_connect_str: database connection string
