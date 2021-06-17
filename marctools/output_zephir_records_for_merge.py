@@ -175,58 +175,6 @@ def main(env, input_htid_file, search_zephir_database,
     print("Records for reload are saved in file: {}".format(output_marc_file))
 
 
-def tmp_output_xmlrecords_in_batch(autoids_df, output_filename, db_connect_str):
-    outfile = open(output_filename, 'w')
-    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
-
-    for index in autoids_df.index:
-        autoid = htids_df['z_record_autoid'][index].item()
-        records = find_marcxml_records_by_autoid(db_connect_str, autoid)
-        for record in records:
-            marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
-            marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
-            outfile.write(marcxml)
-
-    outfile.write("</collection>\n")
-    outfile.close()
-
-def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
-    outfile = open(output_filename, 'w')
-    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
-
-    for index in htids_df.index:
-        autoid = htids_df['z_record_autoid'][index].item()
-        records = find_marcxml_records_by_autoid(db_connect_str, autoid)
-        for record in records:
-            marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
-            marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
-            outfile.write(marcxml)
-
-    outfile.write("</collection>\n")
-    outfile.close()
-
-def output_xmlrecords(input_filename, output_filename, db_connect_str):
-    outfile = open(output_filename, 'w')
-    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
-
-    with open(input_filename) as infile:
-        for line in infile:
-            autoid = line.strip()
-            records = find_marcxml_records_by_autoid(db_connect_str, autoid)
-            for record in records:
-                marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
-                marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
-                outfile.write(marcxml)
-
-    outfile.write("</collection>\n")
-    outfile.close()
-
-    print("marcxml records are save in file: {}".format(output_filename))
-
-
 def cleanupData(zephir_item_detail):
     # Step 5 - CLEANUP DATA
     # coerce identifier data from objects, to numeric
