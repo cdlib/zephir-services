@@ -21,8 +21,8 @@ import lib.utils as utils
 from config import get_configs_by_filename
 
 from zephir_db_utils import createZephirItemDetailsFileFromDB
-from batch_output_zephir_records import output_xmlrecords_in_batch
-from batch_output_zephir_records import output_xmlrecords_by_htid
+from output_zephir_records import output_xmlrecords_in_batch
+from output_zephir_records import output_xmlrecords_by_htid
 
 debug_mode = False
 

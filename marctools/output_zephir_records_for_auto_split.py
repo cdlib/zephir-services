@@ -18,12 +18,13 @@ import lib.utils as utils
 from config import get_configs_by_filename
 
 from zephir_db_utils import createZephirItemDetailsFileFromDB
-from zephir_db_utils import find_marcxml_records_by_id
+from zephir_db_utils import find_marcxml_records_by_htid
+from output_zephir_records import output_xmlrecords_by_htid
 
 def test_zephir_search(db_connect_str):
 
     id = "pur1.32754075735872"
-    results = find_marcxml_records_by_id(db_connect_str, id)
+    results = find_marcxml_records_by_htid(db_connect_str, id)
     for result in results:
         print (result)
 
@@ -141,92 +142,6 @@ def f_output_split_clusters(zephir_items_file, oclc_concordance_file, output_cid
             output_f.write("cid=" + ("000000000" + str(auto_splitable_cids["cid"][ind]))[-9:] + "\n")
 
 
-def output_xmlrecords_df_version(htids_df, output_filename, db_connect_str):
-    outfile = open(output_filename, 'w')
-    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
-
-    for index in htids_df.index:
-        autoid = htids_df['z_record_autoid'][index]
-        records = find_marcxml_records_by_autoid(db_connect_str, autoid)
-        for record in records:
-            marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
-            marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
-            outfile.write(marcxml)
-
-    outfile.write("</collection>\n")
-    outfile.close()
-
-    print("marcxml records are save in file: {}".format(output_filename))
-
-def output_xmlrecords_by_htid(input_filename, output_filename, db_connect_str):
-    outfile = open(output_filename, 'w')
-    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
-
-    with open(input_filename) as infile:
-        for line in infile:
-            autoid = line.strip()
-            records = find_marcxml_records_by_id(db_connect_str, autoid)
-            for record in records:
-                marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
-                marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
-                outfile.write(marcxml)
-
-    outfile.write("</collection>\n")
-    outfile.close()
-
-    print("marcxml records are save in file: {}".format(output_filename))
-
-def output_xmlrecords_by_autoid(input_filename, output_filename, db_connect_str):
-    outfile = open(output_filename, 'w')
-    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
-
-    with open(input_filename) as infile:
-        for line in infile:
-            autoid = line.strip()
-            records = find_marcxml_records_by_autoid(db_connect_str, autoid)
-            for record in records:
-                marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
-                marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
-                outfile.write(marcxml)
-
-    outfile.write("</collection>\n")
-    outfile.close()
-
-    print("marcxml records are save in file: {}".format(output_filename))
-
-def createZephirItemDetailsFileFromDB_1(db_connect_str, zephir_items_file):
-
-    # create an empty file
-    open(zephir_items_file, 'w').close()
-
-    max_zephir_autoid = find_max_zephir_autoid(db_connect_str)
-    #max_zephir_autoid = 10000
-
-    start_autoid = 0 
-    end_autoid = 0 
-    step = 100000
-    #step = 1000
-    while max_zephir_autoid and end_autoid < max_zephir_autoid: 
-        start_autoid = end_autoid + 1
-        end_autoid = start_autoid + step -1
-        print("start: {}".format(start_autoid))
-        print("end: {}".format(end_autoid))
-
-        current_time = datetime.datetime.now()
-        print(current_time)
-        params = {"start_autoid": start_autoid, "end_autoid": end_autoid} 
-        records = find_zephir_records(db_connect_str, SELECT_ZEPHIR_IDS, params)
-
-        current_time = datetime.datetime.now()
-        print(current_time)
-        
-        df = DataFrame(records)
-        df.to_csv(zephir_items_file, mode='a', header=False, index=False)
-
-
 def readCsvFileToDataFrame(file_path):
     zephir_concordance_df = pd.read_csv(file_path, names=["oclc", "primary"], header=0)
     print(zephir_concordance_df.info())
@@ -263,51 +178,8 @@ def createAnalysisDataframe(zephir_concordance_df, zephir_item_detail):
 
     return analysis_df 
 
-def findOCNsWithMultipleCIDs(analysis_df):
-    print("## Step 7 - Find primary numbers with a CID count> 1")
-    df = analysis_df.copy()
-    df = df[['cid','primary']]
-    df = df.dropna()
-    df = df[~df.duplicated(subset=['cid','primary'],keep='first')]
-    # create a column with the count of cids per primary oclc row
-    df = df.groupby(["primary"]).size().reset_index().rename(columns={0:'cid_count'})
-    # create a subset of primary numbers where cid count is greater than 1
-    df = df[df['cid_count'] > 1]
 
-    print(df.info())
-    print(df.head())
-    return df
 
-def subsetOCNWithMultipleCIDs(analysis_df, df_primary_with_duplicates):
-    print("## Step 8 - create a subset of analysis data with only primary numbers that have >1 CID assoicated using a join")
-    df = analysis_df.dropna().merge(df_primary_with_duplicates, on='primary', how='right')
-    df.sort_values(by=['primary', 'cid'])
-    
-    print(df.info())
-    print(df.head(30))
-    return df
-
-def find_htids_for_deduplicate_clusters(df, output_file):
-    print("## Step 10 - create lookup table for the lowest CID per primary number")
-    lowest_cid_df = df[~df.duplicated(subset=['primary'],keep='first')][["primary","cid"]]
-    lowest_cid_df = dict(zip(lowest_cid_df.primary, lowest_cid_df.cid))
-    # preserve rows where the cid is higher than the first cid matching the OCLC
-    dups = []
-    for i, row in df.iterrows():
-        dups.append(row['cid'] > lowest_cid_df[row["primary"]])
-
-    print("## Step 11 - create a dataframe subset of all the duplicate CID-HTIDs")
-    # Note: Some duplicate CIDs may have additional records with a different OCLC
-    higher_cid_duplicates_df = df[dups]
-    print(higher_cid_duplicates_df.info())
-    print(higher_cid_duplicates_df.head(30))
-
-    print("## Step 12 - select a dataframe with only htids from cids with higher cid values")
-    htid_duplicates_df = higher_cid_duplicates_df[["z_record_autoid"]]
-    print(htid_duplicates_df.info())
-    print(htid_duplicates_df.head(30))
-    # save dataset to csv
-    htid_duplicates_df.to_csv(output_file, index=False, header=False)
 
 
 def findCIDsWithMultipleOCNs(analysis_df):
