@@ -23,6 +23,7 @@ from zephir_db_utils import find_marcxml_records_by_autoid_range
 from zephir_db_utils import find_marcxml_records_by_autoid_list
 from zephir_db_utils import find_marcxml_records_by_htid
 from zephir_db_utils import find_marcxml_records_by_autoid
+from zephir_db_utils import find_records_by_id_list 
 
 def test():
 
@@ -68,6 +69,7 @@ def output_xmlrecords_in_batch(df, output_filename, db_connect_str, batch_size):
         else:
             autoid_list.append(autoid)
 
+
 def output_xmlrecords_by_htid(input_filename, output_filename, db_connect_str):
     outfile = open(output_filename, 'w')
     outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
@@ -103,6 +105,43 @@ def output_xmlrecords_by_autoid(input_filename, output_filename, db_connect_str)
     outfile.write("</collection>\n")
     outfile.close()
 
+def test_output_ids_in_batch():
+
+    env="stg"
+    configs= get_configs_by_filename('config', 'zephir_db')
+    db_connect_str = str(utils.db_connect_url(configs[env]))
+
+    # sorted autoids
+    id_file = "./output/cid_htid_for_merge_all.csv"
+    ids_df = pd.read_csv(id_file, usecols=[1], names=['id'], header=None)
+
+    ids_df = ids_df.sort_values(by=['id'])
+    ids_df.info()
+    print(ids_df.head(21))
+    print(len(ids_df.index))
+
+    output_ids_file = "output/cid_htid_for_merge_not_shadowed"
+    output_ids_in_batch(ids_df, output_ids_file, db_connect_str, 10000)
+
+def output_ids_in_batch(df, output_filename, db_connect_str, batch_size):
+
+    id_list = []
+    for index, row in df.iterrows():
+        id = row['id']
+
+        if (index % batch_size == 0 and index !=0):
+            filename = "{}_{}.txt".format(output_filename, index)
+            outfile = open(filename, 'w')
+
+            results = find_records_by_id_list(db_connect_str, id_list)
+            for result in results:
+                outfile.write("{},{}\n".format(result['cid'], result['id']))
+
+            outfile.close()
+
+            id_list = []
+        else:
+            id_list.append(id)
 
 if __name__ == '__main__':
-    test()
+    test_output_ids_in_batch()

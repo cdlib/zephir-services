@@ -25,6 +25,7 @@ plyvel = "*"
 pandas = "*"
 fuzzywuzzy = "*"
 python-levenshtein = "*"
+numpy = "*"
 
 [dev-packages]
 

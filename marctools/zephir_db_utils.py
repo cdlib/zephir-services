@@ -36,6 +36,8 @@ SELECT_MARCXML_BY_AUTOID_LIST = """SELECT metadata FROM zephir_filedata
   WHERE zephir_records.autoid in {}
 """
 
+SELECT_RECORDS_BY_ID_LIST = "SELECT cid, id FROM zephir_records where id in {}"
+
 SELECT_MARCXML_BY_ID = "SELECT metadata FROM zephir_filedata WHERE id=:id"
 
 SELECT_HTID_BY_AUTOID = "SELECT autoid, id FROM zephir_records WHERE autoid =:autoid"
@@ -101,6 +103,12 @@ def find_marcxml_records_by_autoid_range(db_connect_str, autoid_from, autoid_to)
 def find_marcxml_records_by_autoid_list(db_connect_str, autoid_list):
     # workaround - sqlalchemy does not support parameter binding well with IN Clause
     query = SELECT_MARCXML_BY_AUTOID_LIST.format(tuple(autoid_list))
+    #print(query)
+    return find_zephir_records(db_connect_str, query)
+
+def find_records_by_id_list(db_connect_str, id_list):
+    # workaround - sqlalchemy does not support parameter binding well with IN Clause
+    query = SELECT_RECORDS_BY_ID_LIST.format(tuple(id_list))
     #print(query)
     return find_zephir_records(db_connect_str, query)
 
