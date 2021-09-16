@@ -24,6 +24,7 @@ from zephir_db_utils import find_marcxml_records_by_autoid_list
 from zephir_db_utils import find_marcxml_records_by_htid
 from zephir_db_utils import find_marcxml_records_by_autoid
 from zephir_db_utils import find_records_by_id_list 
+from zephir_db_utils import find_shadow_records_by_id_list 
 
 def test():
 
@@ -143,5 +144,21 @@ def output_ids_in_batch(df, output_filename, db_connect_str, batch_size):
         else:
             id_list.append(id)
 
+def test_output_shadow_records():
+
+    env="prd"
+    configs= get_configs_by_filename('config', 'zephir_db')
+    db_connect_str = str(utils.db_connect_url(configs[env]))
+
+    htid_file = "./data/htids_to_fix.txt"
+    input_file = open(htid_file, "r")
+    id_list = input_file.read().splitlines()
+    print(id_list)
+    input_file.close()
+
+    results = find_shadow_records_by_id_list(db_connect_str, id_list)
+    for result in results:
+        print("{},{}\n".format(result['cid'], result['id']))
+
 if __name__ == '__main__':
-    test_output_ids_in_batch()
+    test_output_shadow_records()
