@@ -1,5 +1,7 @@
 import os
 
+from datetime import datetime
+
 import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np
@@ -84,15 +86,17 @@ def test_USE():
     print(embeddings)
 
 def predict():
+    print(datetime.now())
     records_file = os.path.join(os.getcwd(), "./data/zephir_test_records_1.csv")
     
     print_records(records_file)
 
     vectors = prep_data(records_file)
-    for vector in vectors:
-        print(vector)
-        predict = compare_model.predict(vector)
-        print(predict)
+    predict = compare_model.predict(vectors)
+    print(predict)
+
+    print(datetime.now())
+    
 
 if __name__ == "__main__":
     # execute only if run as a script
