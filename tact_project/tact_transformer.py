@@ -5,21 +5,7 @@ from datetime import datetime
 from csv import DictReader
 from csv import DictWriter
 
-fieldnames_acm = [
-        "DOI",
-        "Title",
-        "License Chosen",
-        "CC License",
-        "Date Published",
-        "name",
-        "Publication Title",
-        "Publication ISSN/ISBN",
-        "First Name",
-        "Last Name",
-        "Email",
-        "Affiliation",
-        "Notes"
-        ]
+import acm_transformer
 
 fieldnames_output = [
         "Publisher",
@@ -80,48 +66,24 @@ def transform(publisher, input_filename, output_filename):
 
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         if publisher == "ACM":
-            fieldnames = fieldnames_acm
+            fieldnames = acm_transformer.fieldnames
         reader = DictReader(csvfile, fieldnames=fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
+            output_row = acm_transformer.transform(row)
             if publisher == "ACM":
-                output_row = transform_acm(row)
-                writer.writerow(output_row)
+                special_transform_acm(output_row)
+            writer.writerow(special_transform_acm(output_row))
 
     output_file.close()
 
 
-def transform_acm(row):
-    output = {
-        'Publisher': "ACM",
-        'DOI': row['DOI'],
-        'Article Title': normalized_article_title(row['Title']),
-        'Corresponding Author': row['First Name'] + " " + row['Last Name'],
-        'Corresponding Author Email': row['Email'],
-        'UC Institution': get_institution_name(row['name']),
-        'Institution Identifier': "",
-        'Document Type': "",
-        'Eligible': "Yes",
-        'Inclusion Date': normalized_date(row['Date Published'], row['DOI']),
-        'UC Approval Date': "",
-        'Article Access Type': "OA",
-        'Article License': row['CC License'],
-        'Journal Name': row['Publication Title'],
-        'ISSN/eISSN': row['Publication ISSN/ISBN'],
-        'Journal Access Type': get_journal_access_type(row['Publication Title']),
-        'Journal Subject': "STM",
-        'Grant Participation': "",
-        'Funder Information': "",
-        'Full Coverage Reason': "",
-        'Original APC (USD)': "",
-        'Contractual APC (USD)': "",
-        'Library APC Portion (USD)': "",
-        'Author APC Portion (USD)': "",
-        'Payment Note': row['Notes'],
-        'CDL Notes': "",
-        'License Chosen': row['License Chosen'],
-        }
-    return output
+def special_transform_acm(row):
+    row['Article Title'] = normalized_article_title(row['Article Title'])
+    row['UC Institution'] = get_institution_name(row['UC Institution'])
+    row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['Journal Access Type'] =  get_journal_access_type(row['Journal Name'])
+    return row
 
 def get_institution_name(name):
     """Institution Look-up:
@@ -158,21 +120,16 @@ def get_journal_access_type(publication_title):
 def normalized_publication_title(title):
     normalized_title = ' '.join(word.strip(string.punctuation) for word in title.split())
     normalized_title = ' '.join(normalized_title.split())  # replace multiple spaces with single space
-    #if normalized_title != title:
-    #    print(title)
-    #    print(normalized_title)
     return normalized_title
 
 def normalized_article_title(title):
     # change any "\"" to ""; change any "&#34;" to ""
     normalized_title = title.replace('\\"', '').replace('&#34;', '')
-    #if normalized_title != title:
-    #    print(title)
-    #    print(normalized_title)
     return normalized_title
 
 def normalized_date(date, doi):
     # 1/31/21 => 01/31/2021
+    # 01/31/2021: keep as is
     normalized_date = ''
     if date.strip():
         try:
