@@ -17,7 +17,7 @@ fieldnames = [
         ]
 
 
-def transform(row):
+def mapping(row):
     output = {
         'Publisher': "ACM",
         'DOI': row['DOI'],

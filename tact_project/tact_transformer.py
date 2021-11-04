@@ -70,15 +70,15 @@ def transform(publisher, input_filename, output_filename):
         reader = DictReader(csvfile, fieldnames=fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
-            output_row = acm_transformer.transform(row)
             if publisher == "ACM":
-                special_transform_acm(output_row)
-            writer.writerow(special_transform_acm(output_row))
+                output_row = acm_transformer.mapping(row)
+                transform_acm(output_row)
+            writer.writerow(output_row)
 
     output_file.close()
 
 
-def special_transform_acm(row):
+def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
     row['UC Institution'] = get_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
