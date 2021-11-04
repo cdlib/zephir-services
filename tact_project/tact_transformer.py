@@ -118,6 +118,7 @@ def get_journal_access_type(publication_title):
         return "Hybrid"
 
 def normalized_publication_title(title):
+    title = title.replace('-', ' ')
     normalized_title = ' '.join(word.strip(string.punctuation) for word in title.split())
     normalized_title = ' '.join(normalized_title.split())  # replace multiple spaces with single space
     return normalized_title
@@ -142,6 +143,10 @@ def normalized_date(date, doi):
     
     return normalized_date
 
+def test_remove_punctuation():
+    title = " Thank you Human-Robot!  -- You're welcome. "
+    converted = "Thank you Human Robot You're welcome"
+    assert(converted == normalized_publication_title(title))
 
 def main():
     input_filename = "./indata/ACM/ACM_UC_Report_Input.csv"
