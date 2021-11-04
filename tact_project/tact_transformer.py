@@ -66,12 +66,12 @@ def transform(publisher, input_filename, output_filename):
 
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         if publisher == "ACM":
-            fieldnames = acm_transformer.fieldnames
+            fieldnames = acm_transformer.source_fieldnames
         reader = DictReader(csvfile, fieldnames=fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
             if publisher == "ACM":
-                output_row = acm_transformer.mapping(row)
+                output_row = acm_transformer.source_to_output_mapping(row)
                 transform_acm(output_row)
             writer.writerow(output_row)
 

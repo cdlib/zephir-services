@@ -1,6 +1,6 @@
 # ACM transformer
 
-fieldnames = [
+source_fieldnames = [
         "DOI",
         "Title",
         "License Chosen",
@@ -17,7 +17,7 @@ fieldnames = [
         ]
 
 
-def mapping(row):
+def source_to_output_mapping(row):
     output = {
         'Publisher': "ACM",
         'DOI': row['DOI'],
