@@ -6,8 +6,9 @@ from csv import DictReader
 from csv import DictWriter
 
 import acm_transformer
+import elsevier_transformer
 
-fieldnames_output = [
+output_fieldnames = [
         "Publisher",
         "DOI",
         "Article Title",
@@ -34,7 +35,8 @@ fieldnames_output = [
         "Author APC Portion (USD)",
         "Payment Note",
         "CDL Notes",
-        "License Chosen"
+        "License Chosen",
+        "Journal Bucket"
         ]
 
 open_access_publication_titles = [
@@ -61,18 +63,25 @@ open_access_publication_titles = [
 
 def transform(publisher, input_filename, output_filename):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
-    writer = DictWriter(output_file, fieldnames=fieldnames_output)
+    writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
 
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         if publisher == "ACM":
             fieldnames = acm_transformer.source_fieldnames
+        elif publisher == "Elsevier":
+            fieldnames = elsevier_transformer.source_fieldnames
+
         reader = DictReader(csvfile, fieldnames=fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
             if publisher == "ACM":
                 output_row = acm_transformer.source_to_output_mapping(row)
                 transform_acm(output_row)
+            elif publisher == "Elsevier":
+                output_row = elsevier_transformer.source_to_output_mapping(row)
+                transform_elsevier(output_row)
+
             writer.writerow(output_row)
 
     output_file.close()
@@ -83,6 +92,9 @@ def transform_acm(row):
     row['UC Institution'] = get_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Access Type'] =  get_journal_access_type(row['Journal Name'])
+    return row
+
+def transform_elsevier(row):
     return row
 
 def get_institution_name(name):
@@ -152,6 +164,10 @@ def main():
     input_filename = "./indata/ACM/ACM_UC_Report_Input.csv"
     output_filename = "./outputs/ACM/ACM_output.csv"
     transform("ACM", input_filename, output_filename)
+
+    input_filename = "./indata/Elsevier/Elsevier_202107_Input.csv"
+    output_filename = "./outputs/Elsevier/Elsevier_output.csv"
+    transform("Elsevier", input_filename, output_filename)
 
 if __name__ == "__main__":
     main()
