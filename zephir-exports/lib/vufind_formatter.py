@@ -30,10 +30,13 @@ class VufindFormatter:
             """
 
         base_sdr = None
+        base_ocn = None
         base_record = None
         holdings = []
         sdrs = []
+        ocns = []
         incl_sdrs = set()
+        incl_ocns = set()
 
         if len(records) == 0:
             raise ValueError("Record list may not be empty")
@@ -61,12 +64,18 @@ class VufindFormatter:
                         if field.value().startswith("sdr-"):
                             incl_sdrs.add(field.value())
                             base_sdr = field
+                        if field.value().startswith("(OCoLC)"):
+                            incl_ocns.add(field.value())
+                            if base_ocn == None:
+                                base_ocn = field
                 else:
-                    # prepare 947 holdings, and holding 035 sdr
+                    # prepare 947 holdings, and holding 035 sdr and ocn
                     holdings.append(marc_record["974"])
                     for field in marc_record.get_fields("035"):
                         if field.value().startswith("sdr-"):
                             sdrs.append(field)
+                        if field.value().startswith("(OCoLC)"):
+                            ocns.append(field)
 
         for holding in holdings:
             base_record.add_field(holding)
@@ -79,6 +88,20 @@ class VufindFormatter:
                 idx_offset = len(incl_sdrs)
                 base_record.fields.insert(base_sdr_idx + idx_offset, sdr_field)
                 incl_sdrs.add(sdr_field.value())
+
+        for ocn_field in ocns:
+            # only include new ocn (different holdings can share ocn)
+            if ocn_field.value() not in incl_ocns:
+                # insert ocn below ocn sdr
+                if base_ocn == None:
+                    # use current ocn as base ocn, insert based on sdr
+                    base_ocn = ocn_field
+                    base_record.fields.insert(base_record.fields.index(base_sdr) + len(incl_sdrs), ocn_field)
+                else:
+                    base_ocn_idx = base_record.fields.index(base_ocn)
+                    idx_offset = len(incl_ocns)
+                    base_record.fields.insert(base_ocn_idx + idx_offset, ocn_field)
+                incl_ocns.add(ocn_field.value())
 
         return base_record
 

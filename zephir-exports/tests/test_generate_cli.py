@@ -2,6 +2,7 @@ import datetime
 import filecmp
 import os
 import sys
+import shutil
 
 from freezegun import freeze_time
 import pytest
@@ -42,10 +43,12 @@ def test_required_arguments_enforced(td_tmpdir, env_setup, capsys):
 
 
 @freeze_time("2019-02-18")
-def test_exports_complete(td_tmpdir, env_setup, capsys, pytestconfig):
+def test_exports_complete(td_tmpdir, env_setup, capsys, pytestconfig, request):
     arg_sets = [
         {"export-type": "ht-bib-full", "merge-version": "v2", "name": "full"},
         {"export-type": "ht-bib-incr", "merge-version": "v3", "name": "incr"},
+        {"export-type": "ht-bib-full", "merge-version": "v3", "name": "full"},
+        {"export-type": "ht-bib-incr", "merge-version": "v2", "name": "incr"},
     ]
     for arg_set in arg_sets:
         with pytest.raises(SystemExit) as pytest_e:
@@ -60,6 +63,7 @@ def test_exports_complete(td_tmpdir, env_setup, capsys, pytestconfig):
             ]
 
             generate_cli()
+        print(os.listdir(td_tmpdir))
 
         assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
         # compare cache created to reference cache
@@ -79,6 +83,7 @@ def test_exports_complete(td_tmpdir, env_setup, capsys, pytestconfig):
         export_filename = "ht_bib_export_{}_{}.json".format(
             arg_set["name"], datetime.datetime.today().strftime("%Y-%m-%d")
         )
+
         assert filecmp.cmp(
             os.path.join(td_tmpdir, export_filename),
             os.path.join(
@@ -89,9 +94,11 @@ def test_exports_complete(td_tmpdir, env_setup, capsys, pytestconfig):
             ),
         )
 
+        os.remove(os.path.join(td_tmpdir, export_filename))
+
 
 def test_export_with_alternate_cache_and_output(
-    td_tmpdir, env_setup, capsys, pytestconfig
+    request, td_tmpdir, env_setup, capsys, pytestconfig
 ):
     # SETUP TODO (cscollett: there may be a better place to put this)
     # set temp current working directory
@@ -116,6 +123,7 @@ def test_export_with_alternate_cache_and_output(
         generate_cli()
 
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
+
     # compare cache created to reference cache
     new_cache = ExportCache(td_tmpdir, "my_custom_cache")
     ref_cache = ExportCache(td_tmpdir, "cache-v3-ref")
@@ -159,6 +167,6 @@ def test_use_existing_cache(td_tmpdir, env_setup, capsys, pytestconfig):
         os.path.join(td_tmpdir, "my_custom_output.json"),
         os.path.join(td_tmpdir, "v3-ht_bib_export_full_ref.json"),
     )
-    # CLEANUP
-    # unset temp current working directory
+    #     # CLEANUP
+    #     # unset temp current working directory
     os.chdir(real_cwd)
