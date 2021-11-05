@@ -98,15 +98,20 @@ def transform(publisher, input_filename, output_filename):
 
 def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
-    row['UC Institution'] = get_institution_name(row['UC Institution'])
+    row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
-    row['Journal Access Type'] =  get_journal_access_type(row['Journal Name'])
+    row['Journal Access Type'] =  get_journal_access_type_by_title(row['Journal Name'])
     return row
 
 def transform_elsevier(row):
+    row['UC Institution'] = normalized_institution_name(row['UC Institution'])
+    row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['Article Access Type'] = get_article_access_type(row['Article Access Type'])
+    row['Journal Access Type'] = get_journal_access_type(row['Journal Access Type'])
+    row['Grant Participation'] = "Yes" if (row['Grant Participation'] == "Y") else "No"
     return row
 
-def get_institution_name(name):
+def normalized_institution_name(name):
     """Institution Look-up:
     University of California, Davis => "UC Davis"
     University of California Davis => "UC Davis"
@@ -123,7 +128,7 @@ def get_institution_name(name):
 
     return name
 
-def get_journal_access_type(publication_title):
+def get_journal_access_type_by_title(publication_title):
     """Open Access look-up based on publication title.
 
     Normalize publication_title to change punctuation to space, change multiple spaces to single space before match. 
@@ -137,6 +142,27 @@ def get_journal_access_type(publication_title):
         return "Fully OA"
     else:
         return "Hybrid"
+
+def get_journal_access_type(journal_access_type):
+    """If string contains Hybrid, then Hybrid; If string contains Fully Gold, then Fully OA
+    """
+    if "Hybrid" in journal_access_type:
+        return "Hybrid"
+    elif "Fully Gold" in journal_access_type:
+        return "Fully OA"
+    else:
+        return ""
+
+def get_article_access_type(article_access_type):
+    if article_access_type == "Hybrid Open Access":
+        return "OA"
+    elif article_access_type == "Full Open Access":
+        return "OA"
+    elif article_access_type == "Subscription":
+        return "Subscription"
+    else:
+        return ""
+
 
 def normalized_publication_title(title):
     title = title.replace('-', ' ')
