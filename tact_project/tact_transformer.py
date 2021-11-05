@@ -61,26 +61,35 @@ open_access_publication_titles = [
         "PACMPL"
         ]
 
+def define_variables(publisher):
+    if publisher == "ACM":
+        source_fieldnames = acm_transformer.source_fieldnames
+        mapping_function = getattr(acm_transformer, "source_to_output_mapping")
+        transform_function = globals()['transform_acm']
+    elif publisher == "Elsevier":
+        source_fieldnames = elsevier_transformer.source_fieldnames
+        mapping_function = getattr(elsevier_transformer, "source_to_output_mapping")
+        transform_function = globals()['transform_elsevier']
+
+    print(source_fieldnames)
+    print(mapping_function)
+    print(transform_function)
+    return source_fieldnames, mapping_function, transform_function
+
 def transform(publisher, input_filename, output_filename):
+
+    source_fieldnames, mapping_function, transform_function = define_variables(publisher)
+
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
 
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
-        if publisher == "ACM":
-            fieldnames = acm_transformer.source_fieldnames
-        elif publisher == "Elsevier":
-            fieldnames = elsevier_transformer.source_fieldnames
-
-        reader = DictReader(csvfile, fieldnames=fieldnames)
+        reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
-            if publisher == "ACM":
-                output_row = acm_transformer.source_to_output_mapping(row)
-                transform_acm(output_row)
-            elif publisher == "Elsevier":
-                output_row = elsevier_transformer.source_to_output_mapping(row)
-                transform_elsevier(output_row)
+            output_row = mapping_function(row)
+            transform_function(output_row)
 
             writer.writerow(output_row)
 
