@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 
 from lib.export_cache import ExportCache
-from lib.utils import zephir_config
+from lib.utils_refactor import zephir_config
 
 print(datetime.datetime.time(datetime.datetime.now()))
 

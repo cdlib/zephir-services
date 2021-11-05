@@ -1,8 +1,16 @@
+from datetime import datetime
+import os
+import glob
+import sys
+
 import click
 
-from compare_cache_cli import compare_cache_cli
+from cid_repo_status_cli import cid_repo_status_cli
 from compare_file_cli import compare_file_cli
+from compare_cache_cli import compare_cache_cli
 from generate_cli import generate_cli
+
+import lib.utils as utils
 
 
 @click.group()
@@ -12,9 +20,11 @@ def entry_point(ctx):
     formats for use by HathiTrust and contributors. It is designed to be used mainly by cron for daily exports."""
 
 
-entry_point.add_command(generate_cli, name="generate")
-entry_point.add_command(compare_cache_cli, name="compare-cache")
+# ZEPHIR-EXPORT COMMANDS
+entry_point.add_command(cid_repo_status_cli, "cid-repo-status")
 entry_point.add_command(compare_file_cli, name="compare-file")
+entry_point.add_command(compare_cache_cli, name="compare-cache")
+entry_point.add_command(generate_cli, name="generate")
 
 if __name__ == "__main__":
     entry_point()

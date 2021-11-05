@@ -5,7 +5,7 @@ import sys
 
 import click
 
-import lib.utils_refactor as utils
+import lib.utils as utils
 
 
 # COMMON OPTION BLOCK

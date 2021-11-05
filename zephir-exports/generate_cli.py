@@ -5,31 +5,26 @@ import click
 from exports.ht_bib_cache import ht_bib_cache
 from exports.ht_bib_full import ht_bib_full
 from exports.ht_bib_incr import ht_bib_incr
-from lib.utils import ConsoleMessenger
+import lib.utils as utils
 
+# load and run block for shared cli functions, like verbosity
+root_dir = os.path.join(os.path.dirname(__file__))
+exec(
+    compile(
+        source=open(os.path.join(os.path.dirname(__file__), "shared_cli.py")).read(),
+        filename="shared_cli.py",
+        mode="exec",
+    )
+)
 
-@click.command()
+# create command name
+@click.command("generate")
+# pass state variable used in verbose options
+@pass_state
+# include verbose options defined in shared_cli
+@common_verbose_options
+# include arguments here
 @click.argument("export-type")
-@click.option(
-    "-q", "--quiet", "verbosity", flag_value=1, help="Only emit error messages"
-)
-@click.option(
-    "-v",
-    "--verbose",
-    "verbosity",
-    flag_value=1,
-    help="Emit messages dianostic messages",
-)
-@click.option(
-    "-vv",
-    "--very-verbose",
-    "verbosity",
-    flag_value=2,
-    help="Emit messages excessive debugging messages",
-)
-@click.option(
-    "-vb", "--verbosity", "verbosity", default=0, help="Set the verbosity of messages"
-)
 @click.option(
     "-mv",
     "--merge-version",
@@ -53,34 +48,47 @@ from lib.utils import ConsoleMessenger
     default=False,
     help="Remove and rewrite over existing cache",
 )
-@click.pass_context
-def generate_cli(
-    ctx, export_type, verbosity, merge_version, output_path, cache_path, force
-):
+def generate_cli(state, **kwargs):
     """Generate Zephir exports files for HathiTrust."""
-    console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=verbosity)
 
-    if cache_path and os.path.exists(cache_path):
-        console.debug("Using existing cache {}".format(cache_path))
-        cache = cache_path
+    try:
+        # setup an application given state and kwargs
+        app = utils.application_setup(
+            root_dir=os.path.join(os.path.dirname(__file__)), state=state, kwargs=kwargs
+        )
+        # run command with application context, and argument
+        return_code = generate_cmd(app)
+    except Exception as err:
+        return_code = 1
+        raise click.ClickException(err)
+
+
+def generate_cmd(app):
+    if app.args["cache_path"] and os.path.exists(app.args["cache_path"]):
+        app.console.debug("Using existing cache {}".format(app.args["cache_path"]))
+        cache = app.args["cache_path"]
     else:
         cache = ht_bib_cache(
-            console=console,
-            cache_path=cache_path,
-            merge_version=merge_version,
-            force=force,
+            console=app.console,
+            cache_path=app.args["cache_path"],
+            merge_version=app.args["merge_version"],
+            force=app.args["force"],
         )
-    if export_type == "ht-bib-full":
+    if app.args["export_type"] == "ht-bib-full":
         ht_bib_full(
-            console=console,
+            console=app.console,
             cache_path=cache,
-            output_path=output_path,
-            merge_version=merge_version,
-            force=force,
+            output_path=app.args["output_path"],
+            merge_version=app.args["merge_version"],
+            force=app.args["force"],
         )
-    elif export_type == "ht-bib-incr":
+    elif app.args["export_type"] == "ht-bib-incr":
         ht_bib_incr(
-            console=console, cache_path=cache, merge_version=merge_version, force=force
+            console=app.console,
+            cache_path=cache,
+            output_path=app.args["output_path"],
+            merge_version=app.args["merge_version"],
+            force=app.args["force"],
         )
 
 
