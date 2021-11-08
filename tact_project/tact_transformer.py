@@ -5,6 +5,8 @@ import string
 from datetime import datetime
 from csv import DictReader
 from csv import DictWriter
+from pathlib import Path
+from pathlib import PurePosixPath
 
 import acm_transformer
 import elsevier_transformer
@@ -63,11 +65,12 @@ open_access_publication_titles = [
         ]
 
 def define_variables(publisher):
-    if publisher == "ACM":
+    publisher = publisher.lower()
+    if publisher == "acm":
         source_fieldnames = acm_transformer.source_fieldnames
         mapping_function = getattr(acm_transformer, "source_to_output_mapping")
         transform_function = globals()['transform_acm']
-    elif publisher == "Elsevier":
+    elif publisher == "elsevier":
         source_fieldnames = elsevier_transformer.source_fieldnames
         mapping_function = getattr(elsevier_transformer, "source_to_output_mapping")
         transform_function = globals()['transform_elsevier']
@@ -201,17 +204,35 @@ def test_remove_punctuation():
     assert(converted == normalized_publication_title(title))
 
 def process_one_publisher(publisher):
-    pass
+    publisher = publisher.strip()
+
+    input_dir = Path(os.path.join(os.getcwd(), "./indata/{}".format(publisher)))
+    output_dir = Path(os.path.join(os.getcwd(), "./outputs/{}".format(publisher)))
+    input_files = (entry for entry in input_dir.iterdir() if entry.is_file())
+    for input_file in input_files:
+        file_extension = PurePosixPath(input_file).suffix
+        filename_wo_ext = PurePosixPath(input_file).stem
+        if file_extension == ".csv":
+            print(input_file.name)
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
+            input_filename = os.path.join(input_dir, input_file.name)
+            output_filename = os.path.join(output_dir, "{}_output_{}.csv".format(filename_wo_ext, timestamp))
+            transform(publisher, input_filename, output_filename)
+
 
 def process_all_publishers():
     pass
 
 def usage():
     print("Parameter error.")
-    print("Usage: {} optional_publisher_name".format(sys.argv[0]))
+    print("Usage: {} publisher_name(optional)".format(sys.argv[0]))
+    print("For example: {} Elsevier".format(sys.argv[0]))
+    print("For example: {}".format(sys.argv[0]))
+    print("Processing files from specified publisher when publisher name is provided")
+    print("Otherwise processing files from all publishers")
+    print("Publisher name is case insensitive")
 
 def main():
-    print(len(sys.argv))
     publisher = None
     if (len(sys.argv) == 2):
         publisher = sys.argv[1]
@@ -220,8 +241,8 @@ def main():
         exit(1)
 
     if publisher:
-        print(publisher)
         process_one_publisher(publisher)
+        exit()
     else:
         process_all_publisehrs()
 
