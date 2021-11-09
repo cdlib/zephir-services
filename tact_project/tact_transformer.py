@@ -10,6 +10,7 @@ from pathlib import PurePosixPath
 
 import acm_transformer
 import elsevier_transformer
+import springer_transformer
 
 publishers = [
         "ACM",
@@ -87,6 +88,10 @@ def define_variables(publisher):
         source_fieldnames = elsevier_transformer.source_fieldnames
         mapping_function = getattr(elsevier_transformer, "source_to_output_mapping")
         transform_function = globals()['transform_elsevier']
+    elif publisher == "springer":
+        source_fieldnames = springer_transformer.source_fieldnames
+        mapping_function = getattr(springer_transformer, "source_to_output_mapping")
+        transform_function = globals()['transform_springer']
 
     return source_fieldnames, mapping_function, transform_function
 
@@ -123,6 +128,9 @@ def transform_elsevier(row):
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = normalized_gournal_access_type(row['Journal Access Type'])
     row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
+    return row
+
+def transform_springer(row):
     return row
 
 def normalized_institution_name(name):
