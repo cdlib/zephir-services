@@ -131,11 +131,18 @@ def transform_elsevier(row):
     return row
 
 def transform_springer(row):
+    row['UC Institution'] = normalized_institution_name(row['UC Institution'])
+    row['Eligible'] = "Yes" if row['Eligible'].lower() in ["approved", "opt-out"] else "No"
+    row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
+    row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
+    row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
     return row
 
 def normalized_institution_name(name):
     """Institution Look-up:
     University of California, Davis => "UC Davis"
+    University of California - Davis => "UC Davis"
     University of California Davis => "UC Davis"
     Lawrence Berkeley National Laboratory => LBNL
     Lawrence Livermore National Laboratory => LLNL
@@ -146,15 +153,13 @@ def normalized_institution_name(name):
     elif name == "Lawrence Livermore National Laboratory":
         return "LLNL"
     else:
-        return name.replace("University of California,", "UC").replace("University of California", "UC")
+        return name.replace("University of California,", "UC").replace("University of California -", "UC").replace("University of California", "UC")
 
     return name
 
 def normalized_gournal_access_type_by_title(publication_title):
     """Open Access look-up based on publication title.
-
     Normalize publication_title to change punctuation to space, change multiple spaces to single space before match. 
-
     Returns:
         "Fully OA": when publication_title is listed in open_access_publication_titles.
         "Hybrid": other cases.
@@ -176,11 +181,9 @@ def normalized_gournal_access_type(journal_access_type):
         return ""
 
 def normalized_article_access_type(article_access_type):
-    if article_access_type == "Hybrid Open Access":
+    if article_access_type in ["Hybrid Open Access", "Full Open Access", "Approved"]:
         return "OA"
-    elif article_access_type == "Full Open Access":
-        return "OA"
-    elif article_access_type == "Subscription":
+    elif article_access_type in ["Subscription", "Opt-Out"]:
         return "Subscription"
     else:
         return ""
@@ -197,25 +200,30 @@ def normalized_article_title(title):
     normalized_title = title.replace('\\"', '').replace('&#34;', '')
     return normalized_title
 
-def normalized_date(date, doi):
+def normalized_date(date_str, doi):
     # 1/31/21 => 01/31/2021
     # 01/31/2021: keep as is
+    # 2021-06-24 21:18:29 => 06/24/2021
     normalized_date = ''
-    if date.strip():
+    if date_str:
+        date_str = date_str.strip()
         try:
-            normalized_date = datetime.strptime(date.strip() , '%m/%d/%y').strftime('%m/%d/%Y')
+            normalized_date = datetime.strptime(date_str , '%m/%d/%y').strftime('%m/%d/%Y')
         except ValueError:
             try:
-                normalized_date = datetime.strptime(date.strip() , '%m/%d/%Y').strftime('%m/%d/%Y')
+                normalized_date = datetime.strptime(date_str, '%m/%d/%Y').strftime('%m/%d/%Y')
             except ValueError:
-                print("Date format error: {} - {} ".format(date, doi))
+                try:
+                    normalized_date = datetime.strptime(date_str[0:10] , '%Y-%m-%d').strftime('%m/%d/%Y')
+                except ValueError:
+                    print("Date format error: {} - {} ".format(date_str, doi))
     
     return normalized_date
 
 def normalized_grant_participation(grant_participation):
-    if grant_participation == 'Y':
+    if grant_participation in ["Y", "Yes", "Partially Covered"]:
         return "Yes"
-    elif grant_participation == 'N':
+    elif grant_participation in ["N", "No", "Fully Covered"]:
         return "No"
     return ""
 
