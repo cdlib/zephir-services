@@ -11,6 +11,19 @@ from pathlib import PurePosixPath
 import acm_transformer
 import elsevier_transformer
 
+publishers = [
+        "ACM",
+        "CoB",
+        "CSP",
+        "CUP",
+        "Elsevier",
+        "JMIR",
+        "RoyalS",
+        "Springer",
+        "PNAS"
+        ]
+
+
 output_fieldnames = [
         "Publisher",
         "DOI",
@@ -206,18 +219,21 @@ def test_remove_punctuation():
 def process_one_publisher(publisher):
     publisher = publisher.strip()
 
-    input_dir = Path(os.path.join(os.getcwd(), "./indata/{}".format(publisher)))
-    output_dir = Path(os.path.join(os.getcwd(), "./outputs/{}".format(publisher)))
+    input_dir = Path(os.getcwd()).joinpath("./indata/{}".format(publisher))
+    output_dir = Path(os.getcwd()).joinpath("./outputs/{}".format(publisher))
+    processed_dir = Path(os.getcwd()).joinpath("./processed/{}".format(publisher))
     input_files = (entry for entry in input_dir.iterdir() if entry.is_file())
     for input_file in input_files:
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
         if file_extension == ".csv":
+            print(input_file)
             print(input_file.name)
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
-            input_filename = os.path.join(input_dir, input_file.name)
-            output_filename = os.path.join(output_dir, "{}_output_{}.csv".format(filename_wo_ext, timestamp))
-            transform(publisher, input_filename, output_filename)
+            output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
+            transform(publisher, input_file, output_filename)
+
+            input_file.rename(processed_dir.joinpath(input_file.name))
 
 
 def process_all_publishers():
