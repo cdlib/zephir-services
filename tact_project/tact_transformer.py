@@ -217,7 +217,7 @@ def test_remove_punctuation():
     assert(converted == normalized_publication_title(title))
 
 def process_one_publisher(publisher):
-    publisher = publisher.strip()
+    publisher = publisher.strip().lower()
 
     input_dir = Path(os.getcwd()).joinpath("./indata/{}".format(publisher))
     output_dir = Path(os.getcwd()).joinpath("./outputs/{}".format(publisher))
@@ -237,7 +237,9 @@ def process_one_publisher(publisher):
 
 
 def process_all_publishers():
-    pass
+    for publisher in publishers:
+        print(publisher)
+        process_one_publisher(publisher)
 
 def usage():
     print("Parameter error.")
@@ -249,6 +251,7 @@ def usage():
     print("Publisher name is case insensitive")
 
 def main():
+
     publisher = None
     if (len(sys.argv) == 2):
         publisher = sys.argv[1]
@@ -258,18 +261,8 @@ def main():
 
     if publisher:
         process_one_publisher(publisher)
-        exit()
     else:
-        process_all_publisehrs()
-
-    input_filename = "./indata/ACM/ACM_UC_Report_Input.csv"
-    output_filename = "./outputs/ACM/ACM_output.csv"
-    transform(publisher, input_filename, output_filename)
-
-    publisher = "Elsevier"
-    input_filename = "./indata/Elsevier/Elsevier_202107_Input.csv"
-    output_filename = "./outputs/Elsevier/Elsevier_output.csv"
-    transform("Elsevier", input_filename, output_filename)
+        process_all_publishers()
 
 if __name__ == "__main__":
     main()
