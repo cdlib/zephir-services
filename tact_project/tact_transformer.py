@@ -126,17 +126,23 @@ def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
-    row['Journal Access Type'] =  normalized_gournal_access_type_by_title(row['Journal Name'])
+    row['Journal Access Type'] =  normalized_journal_access_type_by_title(row['Journal Name'])
     return row
 
 def transform_cup(row):
+    row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
+    row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
+    row['Grant Participation'] = normalized_grant_participation_cup(row['Grant Participation'])
+    if "I have research funds available to pay the remaining balance due (you will be asked to pay the Additional Charge on a later screen)" in row['Full Coverage Reason']:
+        row['Full Coverage Reason'] = ""
+
     return row
 
 def transform_elsevier(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
-    row['Journal Access Type'] = normalized_gournal_access_type(row['Journal Access Type'])
+    row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
     row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
     return row
 
@@ -167,7 +173,7 @@ def normalized_institution_name(name):
 
     return name
 
-def normalized_gournal_access_type_by_title(publication_title):
+def normalized_journal_access_type_by_title(publication_title):
     """Open Access look-up based on publication title.
     Normalize publication_title to change punctuation to space, change multiple spaces to single space before match. 
     Returns:
@@ -180,20 +186,23 @@ def normalized_gournal_access_type_by_title(publication_title):
     else:
         return "Hybrid"
 
-def normalized_gournal_access_type(journal_access_type):
+def normalized_journal_access_type(journal_access_type):
     """If string contains Hybrid, then Hybrid; If string contains Fully Gold, then Fully OA
     """
     if "Hybrid" in journal_access_type:
         return "Hybrid"
-    elif "Fully Gold" in journal_access_type:
+    elif "Gold" in journal_access_type: 
         return "Fully OA"
+    elif journal_access_type == "No OA":
+        return "Subscription"
     else:
         return ""
 
 def normalized_article_access_type(article_access_type):
-    if article_access_type in ["Hybrid Open Access", "Full Open Access", "Approved"]:
+    article_access_type = article_access_type.capitalize()
+    if article_access_type in ["Hybrid Open Access", "Full Open Access", "Approved", "Yes"]:
         return "OA"
-    elif article_access_type in ["Subscription", "Opt-Out"]:
+    elif article_access_type in ["Subscription", "Opt-Out", "No"]:
         return "Subscription"
     else:
         return ""
@@ -234,6 +243,13 @@ def normalized_grant_participation(grant_participation):
     if grant_participation in ["Y", "Yes", "Partially Covered"]:
         return "Yes"
     elif grant_participation in ["N", "No", "Fully Covered"]:
+        return "No"
+    return ""
+
+def normalized_grant_participation_cup(grant_participation):
+    if "I have research funds" in grant_participation:
+        return "Yes"
+    elif "I do not have research funds" in grant_participation:
         return "No"
     return ""
 
