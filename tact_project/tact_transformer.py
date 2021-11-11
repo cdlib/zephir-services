@@ -130,6 +130,7 @@ def transform_acm(row):
     return row
 
 def transform_cup(row):
+    row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
     row['Grant Participation'] = normalized_grant_participation_cup(row['Grant Participation'])
@@ -157,21 +158,61 @@ def transform_springer(row):
 
 def normalized_institution_name(name):
     """Institution Look-up:
+    University of California => UC System
+    University of California System => UC System
+
+    UCLA => UC Los Angeles
+    UCSF => UC San Francisco
+
+    Department of Psychological and Brain Sciences,University of California => UC Santa Barbara
+    National Center for Ecological Analysis and Synthesis => UC Santa Barbara
+
+    University of California,Institute for Integrative Genome Biology => UC Riverside
+
+    University of California Division of Agriculture and Natural Resources => UC Davis
+    USDA Agricultural Research Service => UC Davis
+
+    University of California - San Diego School of Medicine => UC San Diego
+
+    Zuckerberg San Francisco General Hospital and Trauma Center => UC San Francisco
+    Gladstone Institutes => UC San Francisco
+    Chao Family Comprehensive Cancer Center => UC San Francisco
+    
+    Lawrence Berkeley National Laboratory => LBNL
+    E O Lawrence Berkeley National Laboratory => LBNL
+    Lawrence Livermore National Laboratory => LLNL
+
+    General patterns:
     University of California, Davis => "UC Davis"
     University of California - Davis => "UC Davis"
     University of California Davis => "UC Davis"
-    Lawrence Berkeley National Laboratory => LBNL
-    Lawrence Livermore National Laboratory => LLNL
     """
-
-    if name == "Lawrence Berkeley National Laboratory":
+    name = name.strip()
+    if name == "University of California":
+        return "UC System"
+    elif "UCLA" in name:
+        return "UC Los Angeles"
+    elif "UCSF" in name:
+        return "UC San Francisco"
+    elif "Department of Psychological and Brain Sciences" in name or "National Center for Ecological Analysis and Synthesis" in name:
+        return "UC Santa Barbara"
+    elif "Institute for Integrative Genome Biology" in name:
+        return "UC Riverside"
+    elif "Division of Agriculture and Natural Resources" in name or "USDA Agricultural Research Service" in name:
+        return "UC Davis"
+    elif "San Diego School of Medicine => UC San Diego" in name:
+        return "UC San Diego"
+    elif name in ["Zuckerberg San Francisco General Hospital and Trauma Center", 
+            "Gladstone Institutes", 
+            "Chao Family Comprehensive Cancer Center"]:
+        return "UC San Francisco"
+    elif "Lawrence Berkeley National Laboratory" in name:
        return "LBNL"
-    elif name == "Lawrence Livermore National Laboratory":
+    elif "Lawrence Livermore National Laboratory" in name:
         return "LLNL"
     else:
         return name.replace("University of California,", "UC").replace("University of California -", "UC").replace("University of California", "UC")
 
-    return name
 
 def normalized_journal_access_type_by_title(publication_title):
     """Open Access look-up based on publication title.
