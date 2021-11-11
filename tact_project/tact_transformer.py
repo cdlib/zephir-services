@@ -200,7 +200,7 @@ def normalized_institution_name(name):
         return "UC Riverside"
     elif "Division of Agriculture and Natural Resources" in name or "USDA Agricultural Research Service" in name:
         return "UC Davis"
-    elif "San Diego School of Medicine => UC San Diego" in name:
+    elif "San Diego School of Medicine" in name:
         return "UC San Diego"
     elif name in ["Zuckerberg San Francisco General Hospital and Trauma Center", 
             "Gladstone Institutes", 
