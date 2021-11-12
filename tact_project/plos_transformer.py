@@ -32,6 +32,7 @@ source_fieldnames = [
 
 def source_to_output_mapping(row):
     output = {
+        'Publisher': "PLOS",
         'DOI': row['DOI'],
         'Article Title': row['Dtitle'],
         'Corresponding Author': row['First Name'] + " " + row['Last Name'],
