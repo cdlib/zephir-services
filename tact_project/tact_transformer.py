@@ -175,21 +175,27 @@ def transform_springer(row):
 def normalized_institution_name(name):
     """Institution Look-up:
     University of California => UC System
-    University of California System => UC System
+    University of California System => "UC System"
+
+    University of California Berkeley School of Public Health => UC Berkeley
+
+    University of California Division of Agriculture and Natural Resources => UC Davis
+    USDA Agricultural Research Service => UC Davis
+    Univeristy of California, Davis School of Veterinary Medicine => UC Davis
+    University of California Davis School of Medicine => UC Davis
+
+    University of California Irvine Medical Center => UC Irvine
 
     Containing UCLA => UC Los Angeles
-    Containing UCSF => UC San Francisco
+
+    University of California,Institute for Integrative Genome Biology => UC Riverside
 
     Department of Psychological and Brain Sciences,University of California => UC Santa Barbara
     National Center for Ecological Analysis and Synthesis => UC Santa Barbara
 
-    University of California,Institute for Integrative Genome Biology => UC Riverside
-
-    University of California Division of Agriculture and Natural Resources => UC Davis
-    USDA Agricultural Research Service => UC Davis
-
     University of California - San Diego School of Medicine => UC San Diego
 
+    Containing UCSF => UC San Francisco
     Zuckerberg San Francisco General Hospital and Trauma Center => UC San Francisco
     Gladstone Institutes => UC San Francisco
     Chao Family Comprehensive Cancer Center => UC San Francisco
@@ -204,21 +210,27 @@ def normalized_institution_name(name):
     University of California Davis => "UC Davis"
     """
     name = name.strip()
-    if name == "University of California":
+    if name == "University of California" or name =="University of California System":
         return "UC System"
-    elif "UCLA" in name:
-        return "UC Los Angeles"
-    elif "UCSF" in name:
-        return "UC San Francisco"
-    elif "Department of Psychological and Brain Sciences" in name or "National Center for Ecological Analysis and Synthesis" in name:
-        return "UC Santa Barbara"
-    elif "Institute for Integrative Genome Biology" in name:
-        return "UC Riverside"
-    elif "Division of Agriculture and Natural Resources" in name or "USDA Agricultural Research Service" in name:
+    elif school_name_matches(name, "Berkeley"):
+        return "UC Berkeley"
+    elif school_name_matches(name, "Davis") or "Division of Agriculture and Natural Resources" in name or "USDA Agricultural Research Service" in name:
         return "UC Davis"
-    elif "San Diego School of Medicine" in name:
+    elif school_name_matches(name,"Irvine"):
+        return "UC Irvine"
+    elif school_name_matches(name,"Los Angeles") or "UCLA" in name:
+        return "UC Los Angeles"
+    elif school_name_matches(name,"Merced"):
+        return "UC Merced"
+    elif school_name_matches(name,"Riverside") or "Institute for Integrative Genome Biology" in name:
+        return "UC Riverside"
+    elif school_name_matches(name,"Santa Barbara") or "Department of Psychological and Brain Sciences" in name or "National Center for Ecological Analysis and Synthesis" in name:
+        return "UC Santa Barbara"
+    elif school_name_matches(name,"Santa Cruz"):
+        return "UC Santa Cruz"
+    elif school_name_matches(name,"San Diego"):
         return "UC San Diego"
-    elif name in ["Zuckerberg San Francisco General Hospital and Trauma Center", 
+    elif school_name_matches(name,"San Francisco") or "UCSF" in name or name in ["Zuckerberg San Francisco General Hospital and Trauma Center", 
             "Gladstone Institutes", 
             "Chao Family Comprehensive Cancer Center"]:
         return "UC San Francisco"
@@ -227,8 +239,11 @@ def normalized_institution_name(name):
     elif "Lawrence Livermore National Laboratory" in name:
         return "LLNL"
     else:
-        return name.replace("University of California,", "UC").replace("University of California -", "UC").replace("University of California", "UC")
+        return name
 
+
+def school_name_matches(name, keyword):
+    return ("University of California" in name or "UC" in name) and keyword in name
 
 def normalized_journal_access_type_by_title(publication_title):
     """Open Access look-up based on publication title.
@@ -333,8 +348,6 @@ def process_one_publisher(publisher):
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
         if file_extension == ".csv":
-            print(input_file)
-            print(input_file.name)
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             transform(publisher, input_file, output_filename)
@@ -344,7 +357,6 @@ def process_one_publisher(publisher):
 
 def process_all_publishers():
     for publisher in publishers:
-        print(publisher)
         process_one_publisher(publisher)
 
 def usage():
