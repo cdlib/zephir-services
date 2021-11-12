@@ -12,6 +12,7 @@ import acm_transformer
 import elsevier_transformer
 import springer_transformer
 import cup_transformer
+import plos_transformer
 
 publishers = [
         "ACM",
@@ -20,9 +21,10 @@ publishers = [
         "CUP",
         "Elsevier",
         "JMIR",
+        "PLOS",
+        "PNAS"
         "RoyalS",
         "Springer",
-        "PNAS"
         ]
 
 
@@ -95,6 +97,10 @@ def define_variables(publisher):
         source_fieldnames = elsevier_transformer.source_fieldnames
         mapping_function = getattr(elsevier_transformer, "source_to_output_mapping")
         transform_function = globals()['transform_elsevier']
+    elif publisher == "plos":
+        source_fieldnames = plos_transformer.source_fieldnames
+        mapping_function = getattr(plos_transformer, "source_to_output_mapping")
+        transform_function = globals()['transform_plos']
     elif publisher == "springer":
         source_fieldnames = springer_transformer.source_fieldnames
         mapping_function = getattr(springer_transformer, "source_to_output_mapping")
@@ -147,6 +153,9 @@ def transform_elsevier(row):
     row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
     return row
 
+def transform_plos(row):
+    return row
+
 def transform_springer(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Eligible'] = "Yes" if row['Eligible'].lower() in ["approved", "opt-out"] else "No"
@@ -161,8 +170,8 @@ def normalized_institution_name(name):
     University of California => UC System
     University of California System => UC System
 
-    UCLA => UC Los Angeles
-    UCSF => UC San Francisco
+    Containing UCLA => UC Los Angeles
+    Containing UCSF => UC San Francisco
 
     Department of Psychological and Brain Sciences,University of California => UC Santa Barbara
     National Center for Ecological Analysis and Synthesis => UC Santa Barbara

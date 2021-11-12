@@ -1,5 +1,5 @@
 # Elsevier transformer
-from decimal import Decimal
+from utils import *
 
 source_fieldnames = [
         "Corr. Author Name",
@@ -55,17 +55,11 @@ def source_to_output_mapping(row):
         'Full Coverage Reason': row['Reason Author Chose Not to Pay the Remainder'],
         'Original APC (USD)': row['APC List Price'],
         'Contractual APC (USD)': row['APC After Discount'],
-        'Library APC Portion (USD)': to_decimal(row['UC Subvention']) + to_decimal(row['Library Portion of Remainder']),
+        'Library APC Portion (USD)': str_to_decimal(row['UC Subvention']) + str_to_decimal(row['Library Portion of Remainder']),
         'Author APC Portion (USD)': row['Author Portion of Remainder'],
         'Payment Note': "",
         'CDL Notes': "",
         'Journal Bucket': row['Journal Buckets'],
         }
     return output
-
-def to_decimal(a_str):
-    if a_str:
-        return Decimal(a_str)
-    else:
-        return 0
 

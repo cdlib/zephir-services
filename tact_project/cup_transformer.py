@@ -1,5 +1,5 @@
 # CUP transformer
-from decimal import Decimal
+from utils import *
 
 source_fieldnames = [
         "Institution",
@@ -53,7 +53,7 @@ def source_to_output_mapping(row):
         'Full Coverage Reason': row['Reason Given for Requesting Full Funding'],
         'Original APC (USD)': row['APC USD/AUD/EUR'],
         'Contractual APC (USD)': row['Total Transaction Value'],
-        'Library APC Portion (USD)': to_decimal(row['Transaction value before discount']) + to_decimal(row['Additional APC Paid by CDL']),
+        'Library APC Portion (USD)': str_to_decimal(row['Transaction value before discount']) + str_to_decimal(row['Additional APC Paid by CDL']),
         'Author APC Portion (USD)': row['Additional APC Paid by Author'],
         'Payment Note': row['Notes'],
         'CDL Notes': '',
@@ -62,8 +62,3 @@ def source_to_output_mapping(row):
         }
     return output
 
-def to_decimal(a_str):
-    if a_str:
-        return Decimal(a_str)
-    else:
-        return 0
