@@ -7,7 +7,7 @@ import click
 import mysql.connector
 from sqlalchemy import create_engine
 
-import lib.utils_refactor as utils
+import lib.utils as utils
 
 root_dir = os.path.join(os.path.dirname(__file__))
 exec(
@@ -117,8 +117,10 @@ def cid_repo_status_cmd(app):
                 db_cursor = db_connection.cursor()
 
                 # select cids that have only holdings/items with a NULL ingest date using subquery
-                CLUSTERS_THAT_EXIST_STMT = "select distinct cid from zephir_records where cid in ({0})".format(
-                    ",".join(("'{0}'".format(cid) for cid in cids))
+                CLUSTERS_THAT_EXIST_STMT = (
+                    "select distinct cid from zephir_records where cid in ({0})".format(
+                        ",".join(("'{0}'".format(cid) for cid in cids))
+                    )
                 )
                 # select cids that have only holdings/items with a NULL ingest date using subquery
                 POPULATED_CLUSTERS_STMT = "select distinct cid from zephir_records where attr_ingest_date is null and cid in ({0}) and cid not in (select distinct cid from zephir_records as is_not_null where attr_ingest_date is not null and cid in ({0}))".format(

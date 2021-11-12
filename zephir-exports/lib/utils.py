@@ -12,7 +12,7 @@ import yaml
 
 
 class AppEnv:
-    """ AppEnv Class provides an easy helper for loading enviroment variables with
+    """AppEnv Class provides an easy helper for loading enviroment variables with
     default values and yaml configuration files into an object for Zephir Services.
     Enviroment variables include: ROOT_PATH, CONFIG_PATH, CACHE_PATH, IMPORT_PATH,
     and OUTPUT_PATH. OVERRIDE_CONFIG_PATH is a special environment variable that
@@ -25,6 +25,7 @@ class AppEnv:
 
     def __init__(self, name, root_dir=os.path.dirname(__file__)):
         self.name = name
+        self.console = None
 
         # load enviroment variables from .env file
         app_env = environs.Env()
@@ -34,21 +35,16 @@ class AppEnv:
             self.ROOT_PATH = app_env("ROOT_PATH", False) or root_dir
             self.ENV = app_env("ENV", False)
             self.CONFIG_PATH = app_env("CONFIG_PATH", False) or os.path.join(
-                self.ROOT_PATH, "config"
+                self.ROOT_PATH, "config/"
             )
             self.OVERRIDE_CONFIG_PATH = app_env("OVERRIDE_CONFIG_PATH", False)
+
             self.CACHE_PATH = app_env("CACHE_PATH", False) or os.path.join(
-                self.ROOT_PATH, "cache"
+                self.ROOT_PATH, "cache/"
             )
-            self.IMPORT_PATH = app_env("IMPORT_PATH", False) or os.path.join(
-                self.ROOT_PATH
-            )
+            self.INPUT_PATH = app_env("INPUT_PATH", False) or os.path.join(self.ROOT_PATH)
             self.OUTPUT_PATH = app_env("OUTPUT_PATH", False) or os.path.join(
-                self.ROOT_PATH, "export"
-            )
-            # TODO(ccollett): Refactor this to output path
-            self.EXPORT_PATH = app_env("EXPORT_PATH", False) or os.path.join(
-                self.ROOT_PATH, "export"
+                self.ROOT_PATH
             )
         # Load application config
         config = AppEnv._load_config(self.CONFIG_PATH)
@@ -58,6 +54,7 @@ class AppEnv:
             self.OVERRIDE_CONFIG_PATH
         ):
             config = AppEnv._load_config(self.OVERRIDE_CONFIG_PATH, config)
+        # return configuration (loaded or overide)
         self.CONFIG = config
 
     @staticmethod
@@ -76,7 +73,7 @@ class AppEnv:
             A configuration dictionary populated with the contents of the
             configuration files.
 
-            """
+        """
         for entry in os.scandir(path):
             if entry.is_file() and entry.name.endswith(".yml"):
                 section = os.path.splitext(entry.name)[0]
@@ -100,7 +97,7 @@ class DatabaseHelper:
     Returns:
         A database connection string compatable with sqlalchemy.
 
-            """
+    """
 
     def __init__(self, config, env_prefix):
         self.drivername = os.environ.get(
@@ -167,6 +164,24 @@ class DatabaseHelper:
         return args
 
 
+def application_setup(root_dir=None, state=None, kwargs={}):
+    # LOAD: environment, configuration
+    default_root_dir = os.path.join(os.path.dirname(__file__))
+    app = AppEnv(
+        name="ZEPHIR",
+        root_dir=root_dir,
+    )
+    app.state = state
+    app.args = kwargs
+
+    app.console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=int(state.verbosity))
+    app.console.debug("Loading application...")
+    app.console.debug("Environment: {}".format(app.ENV))
+    app.console.debug("Configuration: {}".format(app.CONFIG_PATH))
+
+    return app
+
+
 class ConsoleMessenger:
     """ConsoleMessenger Class provides utility functions for outputing
     messages to the console, which can be configured for verbosity.
@@ -176,12 +191,13 @@ class ConsoleMessenger:
     Args:
         app: The name of the application (to prepend stderr messages)
         verbosity: verbosity level of application
+            * -2: silent [No stdout, No stderr]
             * -1: quiet [No stdout, ERROR stderr]
             * 0: default [stdout, ERROR stderr]
             * 1: verbose [stdout, INFO stderr]
             * 2: very_verbose [stdout, DEBUG stderr]
 
-        """
+    """
 
     def __init__(self, app=None, verbosity=0):
         self.app = app
@@ -203,7 +219,7 @@ class ConsoleMessenger:
 
     # standard output for use by chained applications
     def out(self, message):
-        if not self.quiet():
+        if not self.silent():
             click.secho(message, file=sys.stdout)
 
     def send_error(self, message, level=None):
@@ -217,6 +233,9 @@ class ConsoleMessenger:
         line += message
         click.secho(line, file=sys.stderr)
 
+    def silent(self):
+        return self.verbosity == -2
+
     def quiet(self):
         return self.verbosity == -1
 
@@ -228,3 +247,10 @@ class ConsoleMessenger:
 
     def very_verbose(self):
         return self.verbosity >= 2
+
+
+def replace_key(dictionary, key, value):
+    new_dict = dict(dictionary)
+    if key in new_dict:
+        new_dict[key] = value
+    return new_dict

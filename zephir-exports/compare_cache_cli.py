@@ -3,47 +3,49 @@ import os
 import click
 
 from lib.export_cache import ExportCache
-from lib.utils import ConsoleMessenger
+import lib.utils as utils
+
+root_dir = os.path.join(os.path.dirname(__file__))
+exec(
+    compile(
+        source=open(os.path.join(os.path.dirname(__file__), "shared_cli.py")).read(),
+        filename="shared_cli.py",
+        mode="exec",
+    )
+)
 
 
-@click.command()
+@click.command("compare-cache")
+@pass_state
+@common_verbose_options
 @click.argument("files", nargs=2, required="true")
-@click.option(
-    "-q", "--quiet", "verbosity", flag_value=0, help="Only emit error messages"
-)
-@click.option(
-    "-v",
-    "--verbose",
-    "verbosity",
-    flag_value=1,
-    help="Emit messages dianostic messages",
-)
-@click.option(
-    "-vv",
-    "--very-verbose",
-    "verbosity",
-    flag_value=2,
-    help="Emit messages excessive debugging messages",
-)
-@click.option(
-    "-vb", "--verbosity", "verbosity", default=0, help="Set the verbosity of messages"
-)
-@click.pass_context
-def compare_cache_cli(ctx, files, verbosity):
+def compare_cache_cli(state, files, **kwargs):
     """Compare export caches for content differences. Ignores datetime of cache creation."""
-    console = ConsoleMessenger(app="ZEPHIR-EXPORT", verbosity=verbosity)
+    try:
+        app = utils.application_setup(
+            root_dir=os.path.join(os.path.dirname(__file__)), state=state, kwargs=kwargs
+        )
+        return_code = compare_cache_cmd(app, files)
+    except Exception as err:
+        return_code = 1
+        raise click.ClickException(err)
+    click.Context.exit(return_code)
+
+
+def compare_cache_cmd(app, files):
     f1_cache = ExportCache(path=set_abs_filepath(files[0]))
     f1_set = f1_cache.frozen_content_set()
     f2_cache = ExportCache(path=set_abs_filepath(files[1]))
     f2_set = f2_cache.frozen_content_set()
     if hash(f1_set) != hash(f2_set):
         for line in f1_set - f2_set:
-            console.out("-(cid:{},key:{})".format(line[0], line[1]))
+            app.console.out("-(cid:{},key:{})".format(line[0], line[1]))
         for line in f2_set - f1_set:
-            console.out("+(cid:{},key:{})".format(line[0], line[1]))
-        console.info("Differences found between cache files")
+            app.console.out("+(cid:{},key:{})".format(line[0], line[1]))
+        app.console.info("Differences found between cache files")
     else:
-        console.info("No differences found between cache files")
+        app.console.info("No differences found between cache files")
+    return 0
 
 
 def set_abs_filepath(file):
