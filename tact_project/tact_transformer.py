@@ -2,11 +2,14 @@ import os
 import sys
 
 import string
+import re
 from datetime import datetime
 from csv import DictReader
 from csv import DictWriter
 from pathlib import Path
 from pathlib import PurePosixPath
+
+from utils import *
 
 import acm_transformer
 import elsevier_transformer
@@ -120,10 +123,10 @@ def transform(publisher, input_filename, output_filename):
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
-            output_row = mapping_function(row)
-            transform_function(output_row)
-
-            writer.writerow(output_row)
+            if row['DOI'].strip():
+                output_row = mapping_function(row)
+                transform_function(output_row)
+                writer.writerow(output_row)
 
     output_file.close()
 
@@ -154,6 +157,10 @@ def transform_elsevier(row):
     return row
 
 def transform_plos(row):
+    row['UC Institution'] = normalized_institution_name(row['UC Institution'])
+    row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['Journal Name'] = normalized_journal_name_plos(row['Journal Name'])
+    row['Grant Participation'] = "Yes" if str_to_decimal(row['Grant Participation']) > 0 else "No"
     return row
 
 def transform_springer(row):
@@ -302,6 +309,13 @@ def normalized_grant_participation_cup(grant_participation):
     elif "I do not have research funds" in grant_participation:
         return "No"
     return ""
+
+def normalized_journal_name_plos(journal_name):
+    journal_name = journal_name.strip()
+    # drop leading three digit numerics + space "ddd "
+    if re.search(r'^\d{3} ', journal_name):
+        return journal_name[4:]
+    return journal_name
 
 def test_remove_punctuation():
     title = " Thank you Human-Robot!  -- You're welcome. "
