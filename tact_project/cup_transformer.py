@@ -51,7 +51,7 @@ def source_to_output_mapping(row):
         'Grant Participation': row['Author Choice for Additional APC'],
         'Funder Information': '',
         'Full Coverage Reason': row['Reason Given for Requesting Full Funding'],
-        'Original APC (USD)': row['APC USD/AUD/EUR'],
+        'Original APC (USD)': str_to_decimal(row['APC USD/AUD/EUR']),
         'Contractual APC (USD)': row['Total Transaction Value'],
         'Library APC Portion (USD)': str_to_decimal(row['Transaction value before discount']) + str_to_decimal(row['Additional APC Paid by CDL']),
         'Author APC Portion (USD)': row['Additional APC Paid by Author'],
