@@ -16,6 +16,7 @@ import elsevier_transformer
 import springer_transformer
 import cup_transformer
 import plos_transformer
+import trs_transformer
 
 publishers = [
         "ACM",
@@ -26,7 +27,7 @@ publishers = [
         "JMIR",
         "PLOS",
         "PNAS"
-        "RoyalS",
+        "TRS",
         "Springer",
         ]
 
@@ -108,6 +109,10 @@ def define_variables(publisher):
         source_fieldnames = springer_transformer.source_fieldnames
         mapping_function = getattr(springer_transformer, "source_to_output_mapping")
         transform_function = globals()['transform_springer']
+    elif publisher == "trs":
+        source_fieldnames = trs_transformer.source_fieldnames
+        mapping_function = getattr(trs_transformer, "source_to_output_mapping")
+        transform_function = globals()['transform_trs']
 
     return source_fieldnames, mapping_function, transform_function
 
@@ -123,8 +128,8 @@ def transform(publisher, input_filename, output_filename):
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
-            if row['DOI'].strip():
-                output_row = mapping_function(row)
+            output_row = mapping_function(row)
+            if output_row['DOI'].strip():
                 transform_function(output_row)
                 writer.writerow(output_row)
 
@@ -171,6 +176,10 @@ def transform_springer(row):
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
     return row
+
+def transform_trs(row):
+    row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
 
 def normalized_institution_name(name):
     """Institution Look-up:
@@ -259,11 +268,9 @@ def normalized_journal_access_type_by_title(publication_title):
         return "Hybrid"
 
 def normalized_journal_access_type(journal_access_type):
-    """If string contains Hybrid, then Hybrid; If string contains Fully Gold, then Fully OA
-    """
-    if "Hybrid" in journal_access_type:
+    if "Hybrid".lower() in journal_access_type.lower():
         return "Hybrid"
-    elif "Gold" in journal_access_type: 
+    elif "Gold" in journal_access_type or "pure OA" in journal_access_type: 
         return "Fully OA"
     elif journal_access_type == "No OA":
         return "Subscription"
