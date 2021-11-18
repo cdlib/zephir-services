@@ -178,6 +178,7 @@ def transform_springer(row):
     return row
 
 def transform_trs(row):
+    row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
 
@@ -268,11 +269,12 @@ def normalized_journal_access_type_by_title(publication_title):
         return "Hybrid"
 
 def normalized_journal_access_type(journal_access_type):
-    if "Hybrid".lower() in journal_access_type.lower():
+    journal_access_type = journal_access_type.lower()
+    if "Hybrid".lower() in journal_access_type:
         return "Hybrid"
-    elif "Gold" in journal_access_type or "pure OA" in journal_access_type: 
+    elif "Gold".lower() in journal_access_type or "pure OA".lower() in journal_access_type: 
         return "Fully OA"
-    elif journal_access_type == "No OA":
+    elif journal_access_type == "No OA".lower():
         return "Subscription"
     else:
         return ""
