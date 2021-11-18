@@ -220,7 +220,7 @@ def normalized_institution_name(name):
     University of California Davis => "UC Davis"
     """
     name = name.strip()
-    if name == "University of California" or name =="University of California System":
+    if name.lower() == "University of California".lower() or name.lower() == "University of California System".lower():
         return "UC System"
     elif school_name_matches(name, "Berkeley"):
         return "UC Berkeley"
