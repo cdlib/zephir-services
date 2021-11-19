@@ -13,6 +13,7 @@ from utils import *
 
 import acm_transformer
 import elsevier_transformer
+import cob_transformer
 import springer_transformer
 import cup_transformer
 import plos_transformer
@@ -93,10 +94,14 @@ def define_variables(publisher):
         source_fieldnames = acm_transformer.source_fieldnames
         mapping_function = getattr(acm_transformer, "source_to_output_mapping")
         transform_function = globals()['transform_acm']
+    elif publisher == "cob":
+        source_fieldnames = cob_transformer.source_fieldnames
+        mapping_function = getattr(cob_transformer, "source_to_output_mapping")
+        transform_function = globals()['transform_cob']
     elif publisher == "cup":
         source_fieldnames = cup_transformer.source_fieldnames
         mapping_function = getattr(cup_transformer, "source_to_output_mapping")
-        transform_function = globals()['transform_cup']
+        transform_function = globals()['transform_cob']
     elif publisher == "elsevier":
         source_fieldnames = elsevier_transformer.source_fieldnames
         mapping_function = getattr(elsevier_transformer, "source_to_output_mapping")
@@ -141,6 +146,9 @@ def transform_acm(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Access Type'] =  normalized_journal_access_type_by_title(row['Journal Name'])
+    return row
+
+def transform_cob(row):
     return row
 
 def transform_cup(row):
