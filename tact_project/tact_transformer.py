@@ -67,7 +67,7 @@ output_fieldnames = [
         ]
 
 open_access_publication_titles = [
-        "Disease Models & Mechanisms",
+        "Disease Models Mechanisms",
         "Biology Open",
         "ACM Transactions on Architecture and Code Optimization",
         "ACM Transactions on Human Robot Interaction",
@@ -85,8 +85,16 @@ open_access_publication_titles = [
         "TDS",
         "DGOV",
         "DTRAP",
-        "PACMPL"
+        "PACMPL",
         ]
+
+institution_id = {
+        "UC Santa Cruz": "8787",
+        "UC San Francisco": "8785",
+        "UC Davis": "8789",
+        "UC San Diego": "8784",
+        "UC Berkeley": "1438",
+        }
 
 def define_variables(publisher):
     publisher = publisher.lower()
@@ -149,13 +157,18 @@ def transform_acm(row):
     return row
 
 def transform_cob(row):
+    row['UC Institution'] = get_institution_by_email(row['Corresponding Author Email'])
+    row['Institution Identifier'] = get_institution_id_by_name(row['UC Institution'])
+    row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['Journal Access Type'] = normalized_journal_access_type_by_title(row['Journal Name']) 
+    row['Grant Participation'] = normalized_grant_participation_2(row['Grant Participation']) 
     return row
 
 def transform_cup(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
-    row['Grant Participation'] = normalized_grant_participation_cup(row['Grant Participation'])
+    row['Grant Participation'] = normalized_grant_participation_2(row['Grant Participation'])
     if "I have research funds available to pay the remaining balance due (you will be asked to pay the Additional Charge on a later screen)" in row['Full Coverage Reason']:
         row['Full Coverage Reason'] = ""
 
@@ -312,6 +325,7 @@ def normalized_date(date_str, doi):
     # 1/31/21 => 01/31/2021
     # 01/31/2021: keep as is
     # 2021-06-24 21:18:29 => 06/24/2021
+    # 10-Jun-2021 - 10.1242/jeb.237628 => 06/10/2021
     normalized_date = ''
     if date_str:
         date_str = date_str.strip()
@@ -324,7 +338,10 @@ def normalized_date(date_str, doi):
                 try:
                     normalized_date = datetime.strptime(date_str[0:10] , '%Y-%m-%d').strftime('%m/%d/%Y')
                 except ValueError:
-                    print("Date format error: {} - {} ".format(date_str, doi))
+                    try:
+                        normalized_date = datetime.strptime(date_str[0:11] , '%d-%b-%Y').strftime('%m/%d/%Y')
+                    except ValueError:
+                        print("Date format error: {} - {} ".format(date_str, doi))
     
     return normalized_date
 
@@ -335,7 +352,7 @@ def normalized_grant_participation(grant_participation):
         return "No"
     return ""
 
-def normalized_grant_participation_cup(grant_participation):
+def normalized_grant_participation_2(grant_participation):
     if "I have research funds" in grant_participation:
         return "Yes"
     elif "I do not have research funds" in grant_participation:
@@ -348,6 +365,43 @@ def normalized_journal_name_plos(journal_name):
     if re.search(r'^\d{3} ', journal_name):
         return journal_name[4:]
     return journal_name
+
+def get_institution_by_email(email):
+    email = email.lower()
+    if "ucsc.edu" in email:
+        return "UC Santa Cruz"
+    elif "ucsf.edu" in email:
+        return "UC San Francisco"
+    elif "ucdavis.edu" in email:
+        return "UC Davis"
+    elif "ucd.edu" in email:
+        return "UC Davis"
+    elif "ucsd.edu" in email:
+        return "UC San Diego"
+    elif "berkeley.edu" in email:
+        return "UC Berkeley"
+    elif "uci.edu" in email:
+        return "UC Irvine"
+    elif "ucr.edu" in email:
+        return "UC Riverside"
+    elif "ucb.edu" in email:
+        return "UC Berkeley"
+    elif "ucla.edu" in email:
+        return "UC Los Angeles"
+    elif "ucm.edu" in email:
+        return "UC Merced"
+    elif "ucsb.edu" in email:
+        return "UC Santa Barbara"
+    else:
+        return ""
+
+def get_institution_id_by_name(name):
+    try:
+        return institution_id[name]
+    except:
+        return ""
+
+    
 
 def test_remove_punctuation():
     title = " Thank you Human-Robot!  -- You're welcome. "
