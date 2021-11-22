@@ -14,6 +14,7 @@ from utils import *
 import acm_transformer
 import elsevier_transformer
 import cob_transformer
+import csp_mapper
 import springer_transformer
 import cup_transformer
 import plos_transformer
@@ -106,6 +107,10 @@ def define_variables(publisher):
         source_fieldnames = cob_transformer.source_fieldnames
         mapping_function = getattr(cob_transformer, "source_to_output_mapping")
         transform_function = globals()['transform_cob']
+    elif publisher == "csp":
+        source_fieldnames = csp_mapper.source_fieldnames
+        mapping_function = getattr(csp_mapper, "source_to_output_mapping")
+        transform_function = globals()['transform_csp']
     elif publisher == "cup":
         source_fieldnames = cup_transformer.source_fieldnames
         mapping_function = getattr(cup_transformer, "source_to_output_mapping")
@@ -153,6 +158,7 @@ def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Journal Access Type'] =  normalized_journal_access_type_by_title(row['Journal Name'])
     return row
 
@@ -160,12 +166,28 @@ def transform_cob(row):
     row['UC Institution'] = get_institution_by_email(row['Corresponding Author Email'])
     row['Institution Identifier'] = get_institution_id_by_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Journal Access Type'] = normalized_journal_access_type_by_title(row['Journal Name']) 
     row['Grant Participation'] = normalized_grant_participation_2(row['Grant Participation']) 
     return row
 
+def transform_csp(row):
+    row['UC Institution'] = normalized_institution_name(row['UC Institution'])
+    row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
+
+    if row['Grant Participation'].strip() and row['Funder Information'].strip():
+        row['Funder Information'] = row['Grant Participation'].strip() + ", " + row['Funder Information'].strip()
+    else:
+        row['Funder Information'] = row['Grant Participation'].strip() + row['Funder Information'].strip()
+
+    row['Grant Participation'] = "Yes" if str_to_decimal(row['Author APC Portion (USD)']) > 0 else "No"
+    return row
+
 def transform_cup(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
+    row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
     row['Grant Participation'] = normalized_grant_participation_2(row['Grant Participation'])
@@ -177,6 +199,7 @@ def transform_cup(row):
 def transform_elsevier(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
     row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
@@ -185,6 +208,7 @@ def transform_elsevier(row):
 def transform_plos(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Journal Name'] = normalized_journal_name_plos(row['Journal Name'])
     row['Grant Participation'] = "Yes" if str_to_decimal(row['Grant Participation']) > 0 else "No"
     return row
@@ -201,6 +225,7 @@ def transform_springer(row):
 def transform_trs(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
+    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
 
 def normalized_institution_name(name):
@@ -274,7 +299,7 @@ def normalized_institution_name(name):
 
 
 def school_name_matches(name, keyword):
-    return ("University of California" in name or "UC" in name) and keyword in name
+    return ("University of California" in name or "UC " in name) and keyword in name
 
 def normalized_journal_access_type_by_title(publication_title):
     """Open Access look-up based on publication title.
@@ -326,6 +351,7 @@ def normalized_date(date_str, doi):
     # 01/31/2021: keep as is
     # 2021-06-24 21:18:29 => 06/24/2021
     # 10-Jun-2021 - 10.1242/jeb.237628 => 06/10/2021
+    # Jan 25, 2021 - cjfas-2020-0398.R1 => 01/25/2021
     normalized_date = ''
     if date_str:
         date_str = date_str.strip()
@@ -341,7 +367,10 @@ def normalized_date(date_str, doi):
                     try:
                         normalized_date = datetime.strptime(date_str[0:11] , '%d-%b-%Y').strftime('%m/%d/%Y')
                     except ValueError:
-                        print("Date format error: {} - {} ".format(date_str, doi))
+                        try:
+                            normalized_date = datetime.strptime(date_str[0:12] , '%b %d, %Y').strftime('%m/%d/%Y')
+                        except ValueError:
+                            print("Date format error: {} - {} ".format(date_str, doi))
     
     return normalized_date
 
