@@ -11,14 +11,14 @@ from pathlib import PurePosixPath
 
 from utils import *
 
-import acm_transformer
-import elsevier_transformer
-import cob_transformer
+import acm_mapper
+import elsevier_mapper
+import cob_mapper
 import csp_mapper
-import springer_transformer
-import cup_transformer
-import plos_transformer
-import trs_transformer
+import springer_mapper
+import cup_mapper
+import plos_mapper
+import trs_mapper
 
 publishers = [
         "ACM",
@@ -100,36 +100,36 @@ institution_id = {
 def define_variables(publisher):
     publisher = publisher.lower()
     if publisher == "acm":
-        source_fieldnames = acm_transformer.source_fieldnames
-        mapping_function = getattr(acm_transformer, "source_to_output_mapping")
+        source_fieldnames = acm_mapper.source_fieldnames
+        mapping_function = getattr(acm_mapper, "source_to_output_mapping")
         transform_function = globals()['transform_acm']
     elif publisher == "cob":
-        source_fieldnames = cob_transformer.source_fieldnames
-        mapping_function = getattr(cob_transformer, "source_to_output_mapping")
+        source_fieldnames = cob_mapper.source_fieldnames
+        mapping_function = getattr(cob_mapper, "source_to_output_mapping")
         transform_function = globals()['transform_cob']
     elif publisher == "csp":
         source_fieldnames = csp_mapper.source_fieldnames
         mapping_function = getattr(csp_mapper, "source_to_output_mapping")
         transform_function = globals()['transform_csp']
     elif publisher == "cup":
-        source_fieldnames = cup_transformer.source_fieldnames
-        mapping_function = getattr(cup_transformer, "source_to_output_mapping")
-        transform_function = globals()['transform_cob']
+        source_fieldnames = cup_mapper.source_fieldnames
+        mapping_function = getattr(cup_mapper, "source_to_output_mapping")
+        transform_function = globals()['transform_cup']
     elif publisher == "elsevier":
-        source_fieldnames = elsevier_transformer.source_fieldnames
-        mapping_function = getattr(elsevier_transformer, "source_to_output_mapping")
+        source_fieldnames = elsevier_mapper.source_fieldnames
+        mapping_function = getattr(elsevier_mapper, "source_to_output_mapping")
         transform_function = globals()['transform_elsevier']
     elif publisher == "plos":
-        source_fieldnames = plos_transformer.source_fieldnames
-        mapping_function = getattr(plos_transformer, "source_to_output_mapping")
+        source_fieldnames = plos_mapper.source_fieldnames
+        mapping_function = getattr(plos_mapper, "source_to_output_mapping")
         transform_function = globals()['transform_plos']
     elif publisher == "springer":
-        source_fieldnames = springer_transformer.source_fieldnames
-        mapping_function = getattr(springer_transformer, "source_to_output_mapping")
+        source_fieldnames = springer_mapper.source_fieldnames
+        mapping_function = getattr(springer_mapper, "source_to_output_mapping")
         transform_function = globals()['transform_springer']
     elif publisher == "trs":
-        source_fieldnames = trs_transformer.source_fieldnames
-        mapping_function = getattr(trs_transformer, "source_to_output_mapping")
+        source_fieldnames = trs_mapper.source_fieldnames
+        mapping_function = getattr(trs_mapper, "source_to_output_mapping")
         transform_function = globals()['transform_trs']
 
     return source_fieldnames, mapping_function, transform_function
@@ -166,13 +166,13 @@ def transform_cob(row):
     row['UC Institution'] = get_institution_by_email(row['Corresponding Author Email'])
     row['Institution Identifier'] = get_institution_id_by_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
-    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Journal Access Type'] = normalized_journal_access_type_by_title(row['Journal Name']) 
     row['Grant Participation'] = normalized_grant_participation_2(row['Grant Participation']) 
     return row
 
 def transform_csp(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
+    row['Institution Identifier'] = get_institution_id_by_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
     row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
 
@@ -181,13 +181,18 @@ def transform_csp(row):
     else:
         row['Funder Information'] = row['Grant Participation'].strip() + row['Funder Information'].strip()
 
-    row['Grant Participation'] = "Yes" if str_to_decimal(row['Author APC Portion (USD)']) > 0 else "No"
+    if str_to_decimal(row['Author APC Portion (USD)']) > 0:
+        row['Grant Participation'] = "Yes"
+    elif str_to_decimal(row['Author APC Portion (USD)']) ==0 and row['Payment Note'] != "":
+        row['Grant Participation'] = "No"
+    else:
+        row['Grant Participation'] = ""
+
     return row
 
 def transform_cup(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
-    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
     row['Grant Participation'] = normalized_grant_participation_2(row['Grant Participation'])
@@ -199,7 +204,6 @@ def transform_cup(row):
 def transform_elsevier(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
-    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
     row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
@@ -208,7 +212,6 @@ def transform_elsevier(row):
 def transform_plos(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
-    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Journal Name'] = normalized_journal_name_plos(row['Journal Name'])
     row['Grant Participation'] = "Yes" if str_to_decimal(row['Grant Participation']) > 0 else "No"
     return row
@@ -225,7 +228,6 @@ def transform_springer(row):
 def transform_trs(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
-    row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
 
 def normalized_institution_name(name):
@@ -316,20 +318,20 @@ def normalized_journal_access_type_by_title(publication_title):
 
 def normalized_journal_access_type(journal_access_type):
     journal_access_type = journal_access_type.lower()
-    if "Hybrid".lower() in journal_access_type:
+    if "hybrid" in journal_access_type:
         return "Hybrid"
-    elif "Gold".lower() in journal_access_type or "pure OA".lower() in journal_access_type: 
+    elif "gold" in journal_access_type or "pure oa" in journal_access_type: 
         return "Fully OA"
-    elif journal_access_type == "No OA".lower():
+    elif journal_access_type == "no oa":
         return "Subscription"
     else:
         return ""
 
 def normalized_article_access_type(article_access_type):
-    article_access_type = article_access_type.capitalize()
-    if article_access_type in ["Hybrid Open Access", "Full Open Access", "Approved", "Yes"]:
+    article_access_type = article_access_type.lower()
+    if article_access_type in ["hybrid open access", "full open access", "approved", "yes"]:
         return "OA"
-    elif article_access_type in ["Subscription", "Opt-Out", "No"]:
+    elif article_access_type in ["subscription", "opt-out", "no"]:
         return "Subscription"
     else:
         return ""
