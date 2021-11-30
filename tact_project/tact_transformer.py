@@ -235,14 +235,8 @@ def normalized_institution_name(name):
     University of California => UC System
     University of California System => "UC System"
 
-    University of California Berkeley School of Public Health => UC Berkeley
-
     University of California Division of Agriculture and Natural Resources => UC Davis
     USDA Agricultural Research Service => UC Davis
-    Univeristy of California, Davis School of Veterinary Medicine => UC Davis
-    University of California Davis School of Medicine => UC Davis
-
-    University of California Irvine Medical Center => UC Irvine
 
     Containing UCLA => UC Los Angeles
 
@@ -250,8 +244,6 @@ def normalized_institution_name(name):
 
     Department of Psychological and Brain Sciences,University of California => UC Santa Barbara
     National Center for Ecological Analysis and Synthesis => UC Santa Barbara
-
-    University of California - San Diego School of Medicine => UC San Diego
 
     Containing UCSF => UC San Francisco
     Zuckerberg San Francisco General Hospital and Trauma Center => UC San Francisco
@@ -266,6 +258,11 @@ def normalized_institution_name(name):
     University of California, Davis => "UC Davis"
     University of California - Davis => "UC Davis"
     University of California Davis => "UC Davis"
+    Univeristy of California, Davis School of Veterinary Medicine => UC Davis
+    University of California Davis School of Medicine => UC Davis
+    University of California Berkeley School of Public Health => UC Berkeley
+    University of California Irvine Medical Center => UC Irvine
+    University of California - San Diego School of Medicine => UC San Diego
     """
     name = name.strip()
     if name.lower() == "University of California".lower() or name.lower() == "University of California System".lower():
