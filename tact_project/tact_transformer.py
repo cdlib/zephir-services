@@ -28,7 +28,7 @@ publishers = [
         "Elsevier",
         "JMIR",
         "PLOS",
-        "PNAS"
+        "PNAS",
         "TRS",
         "Springer",
         ]
