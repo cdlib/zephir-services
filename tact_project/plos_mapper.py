@@ -52,10 +52,10 @@ def source_to_output_mapping(row):
         'Grant Participation': row['PLOS Paid by Author'],
         'Funder Information': row['Funding Disclosure'],
         'Full Coverage Reason': "",
-        'Original APC (USD)': row['Gross Amount'],
+        'Original APC (USD)': str_to_decimal(row['Gross Amount']),
         'Contractual APC (USD)': str_to_decimal(row['Gross Amount']) - str_to_decimal(row['Discount']),
-        'Library APC Portion (USD)': row['Paid by Institution'],
-        'Author APC Portion (USD)': row['PLOS Paid by Author'],
+        'Library APC Portion (USD)': str_to_decimal(row['Paid by Institution']),
+        'Author APC Portion (USD)': str_to_decimal(row['PLOS Paid by Author']),
         'Payment Note': "",
         'CDL Notes': "",
         }
