@@ -183,7 +183,7 @@ def transform_csp(row):
 
     if str_to_decimal(row['Author APC Portion (USD)']) > 0:
         row['Grant Participation'] = "Yes"
-    elif str_to_decimal(row['Author APC Portion (USD)']) ==0 and row['Payment Note'] != "":
+    elif str_to_decimal(row['Author APC Portion (USD)']) == 0 and row['Payment Note'].lower() != "awaiting payment form":
         row['Grant Participation'] = "No"
     else:
         row['Grant Participation'] = ""
