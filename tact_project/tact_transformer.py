@@ -8,17 +8,9 @@ from csv import DictReader
 from csv import DictWriter
 from pathlib import Path
 from pathlib import PurePosixPath
+import importlib
 
 from utils import *
-
-import acm_mapper
-import elsevier_mapper
-import cob_mapper
-import csp_mapper
-import springer_mapper
-import cup_mapper
-import plos_mapper
-import trs_mapper
 
 publishers = [
         "ACM",
@@ -99,38 +91,11 @@ institution_id = {
 
 def define_variables(publisher):
     publisher = publisher.lower()
-    if publisher == "acm":
-        source_fieldnames = acm_mapper.source_fieldnames
-        mapping_function = getattr(acm_mapper, "source_to_output_mapping")
-        transform_function = globals()['transform_acm']
-    elif publisher == "cob":
-        source_fieldnames = cob_mapper.source_fieldnames
-        mapping_function = getattr(cob_mapper, "source_to_output_mapping")
-        transform_function = globals()['transform_cob']
-    elif publisher == "csp":
-        source_fieldnames = csp_mapper.source_fieldnames
-        mapping_function = getattr(csp_mapper, "source_to_output_mapping")
-        transform_function = globals()['transform_csp']
-    elif publisher == "cup":
-        source_fieldnames = cup_mapper.source_fieldnames
-        mapping_function = getattr(cup_mapper, "source_to_output_mapping")
-        transform_function = globals()['transform_cup']
-    elif publisher == "elsevier":
-        source_fieldnames = elsevier_mapper.source_fieldnames
-        mapping_function = getattr(elsevier_mapper, "source_to_output_mapping")
-        transform_function = globals()['transform_elsevier']
-    elif publisher == "plos":
-        source_fieldnames = plos_mapper.source_fieldnames
-        mapping_function = getattr(plos_mapper, "source_to_output_mapping")
-        transform_function = globals()['transform_plos']
-    elif publisher == "springer":
-        source_fieldnames = springer_mapper.source_fieldnames
-        mapping_function = getattr(springer_mapper, "source_to_output_mapping")
-        transform_function = globals()['transform_springer']
-    elif publisher == "trs":
-        source_fieldnames = trs_mapper.source_fieldnames
-        mapping_function = getattr(trs_mapper, "source_to_output_mapping")
-        transform_function = globals()['transform_trs']
+    mapper = importlib.import_module("{}_mapper".format(publisher))
+
+    source_fieldnames = mapper.source_fieldnames
+    mapping_function = getattr(mapper, "source_to_output_mapping")
+    transform_function = globals()["transform_{}".format(publisher)]
 
     return source_fieldnames, mapping_function, transform_function
 
