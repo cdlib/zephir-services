@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   `corresponding_author_email` varchar(50) NOT NULL DEFAULT '',
   `uc_institution` varchar(50) NOT NULL DEFAULT '',
   `institution_identifier` varchar(50) NOT NULL DEFAULT '',
-  `document Type` varchar(50) NOT NULL DEFAULT '',
+  `document_type` varchar(50) NOT NULL DEFAULT '',
   `eligible` varchar(50) NOT NULL DEFAULT '',
   `inclusion_date` varchar(50) NOT NULL DEFAULT '',
   `uc_approval_date` varchar(50) NOT NULL DEFAULT '',
