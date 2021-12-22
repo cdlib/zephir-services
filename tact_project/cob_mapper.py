@@ -1,4 +1,5 @@
 # COB transformer
+from utils import *
 
 source_fieldnames = [
         "Manuscript Name",
@@ -171,10 +172,10 @@ def source_to_output_mapping(row):
         'Grant Participation': row['Product 1 Option 2 Value'],
         'Funder Information': row['Funder 1 Name'],
         'Full Coverage Reason': row['Product 1 Option 3 Value'],
-        'Original APC (USD)': "",
-        'Contractual APC (USD)': "",
-        'Library APC Portion (USD)': row['Total Discount'],
-        'Author APC Portion (USD)': "",
+        'Original APC (USD)': 0,
+        'Contractual APC (USD)': 0,
+        'Library APC Portion (USD)': str_to_decimal(row['Total Discount']),
+        'Author APC Portion (USD)': 0,
         'Payment Note': "",
         }
     return output

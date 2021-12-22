@@ -1,4 +1,5 @@
 # Springer transformer
+from utils import *
 
 source_fieldnames = [
         "Agreement",
@@ -51,10 +52,10 @@ def source_to_output_mapping(row):
         'Grant Participation': row['Fee Model'],
         'Funder Information': row['Funder Name'],
         'Full Coverage Reason': row['Full Coverage Reason'],
-        'Original APC (USD)': row['List APC (USD)'],
-        'Contractual APC (USD)': row['Licensee APC (USD)'],
-        'Library APC Portion (USD)': row['Insitutional APC Share (USD)'],
-        'Author APC Portion (USD)': row['Author APC Share (USD)'],
+        'Original APC (USD)': str_to_decimal(row['List APC (USD)']),
+        'Contractual APC (USD)': str_to_decimal(row['Licensee APC (USD)']),
+        'Library APC Portion (USD)': str_to_decimal(row['Insitutional APC Share (USD)']),
+        'Author APC Portion (USD)': str_to_decimal(row['Author APC Share (USD)']),
         'Payment Note': row['Comments'],
         'CDL Notes': "",
         }

@@ -1,4 +1,5 @@
 # Royal Society transformer
+from utils import *
 
 source_fieldnames = [
         "id",
@@ -62,10 +63,10 @@ def source_to_output_mapping(row):
         'Grant Participation': "",
         'Funder Information': row['funders'],
         'Full Coverage Reason': "",
-        'Original APC (USD)': "",
-        'Contractual APC (USD)': "",
-        'Library APC Portion (USD)': "",
-        'Author APC Portion (USD)': "",
+        'Original APC (USD)': 0,
+        'Contractual APC (USD)': 0,
+        'Library APC Portion (USD)': 0,
+        'Author APC Portion (USD)': 0,
         'Payment Note': "",
         'CDL Notes': "",
 
