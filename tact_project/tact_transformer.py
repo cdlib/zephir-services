@@ -402,6 +402,7 @@ def test_remove_punctuation():
     assert(converted == normalized_publication_title(title))
 
 def process_one_publisher(publisher):
+    print("Processing files from {}".format(publisher))
     publisher = publisher.strip().lower()
 
     input_dir = Path(os.getcwd()).joinpath("./indata/{}".format(publisher))
@@ -412,11 +413,13 @@ def process_one_publisher(publisher):
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
         if file_extension == ".csv":
+            print("  File: {}".format(input_file))
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             transform(publisher, input_file, output_filename)
 
             input_file.rename(processed_dir.joinpath(input_file.name))
+            print("  Processed.")
 
 
 def process_all_publishers():
@@ -441,10 +444,13 @@ def main():
         usage()
         exit(1)
 
+    print("Processing started: {}".format(datetime.now()))
     if publisher:
         process_one_publisher(publisher)
     else:
         process_all_publishers()
+
+    print("Processing finished: {}".format(datetime.now()))
 
 if __name__ == "__main__":
     main()
