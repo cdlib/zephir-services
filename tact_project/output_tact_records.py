@@ -9,8 +9,8 @@ from sqlalchemy import create_engine
 from sqlalchemy import text
 
 import lib.utils as utils
-from tact_db_utils import find_tact_transactions_by_id
-from tact_db_utils import insert_tact_transactions
+from tact_db_utils import find_tact_publisher_reports_by_id
+from tact_db_utils import insert_tact_publisher_reports
 
 def test_read_write_tact_records():
 
@@ -23,7 +23,7 @@ def test_read_write_tact_records():
 
     print(db_connect_str)
 
-    results = find_tact_transactions_by_id(db_connect_str, 1)
+    results = find_tact_publisher_reports_by_id(db_connect_str, 1)
     print("read id=1")
     print(results)
     for result in results:
@@ -57,11 +57,11 @@ def test_read_write_tact_records():
             'uc_institution': "UCD",
             }
 
-    print("write one value")
-    insert_tact_transactions(db_connect_str, trans_dict)
+    #print("write one value")
+    #insert_tact_publisher_reports(db_connect_str, trans_dict)
 
     print("write multiple values")
-    insert_tact_transactions(db_connect_str, trans_dict_list)
+    insert_tact_publisher_reports(db_connect_str, trans_dict_list)
 
 if __name__ == '__main__':
     test_read_write_tact_records()

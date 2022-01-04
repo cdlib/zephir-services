@@ -12,12 +12,12 @@ from sqlalchemy import insert
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import SQLAlchemyError 
 
-SELECT_TACT_BY_ID = "SELECT id, publisher, doi FROM transactions WHERE id=:id"
+SELECT_TACT_BY_ID = "SELECT id, publisher, doi FROM publisher_reports WHERE id=:id"
 
 Base = declarative_base()
 
 class Transactions(Base):
-    __tablename__ = "transactions"
+    __tablename__ = "publisher_reports"
     id = Column(Integer, primary_key=True)
     publisher = Column(String(50))
     doi = Column(String(50))
@@ -92,13 +92,13 @@ def find_records(db_connect_str, select_query, params=None):
     return None
 
 
-def find_tact_transactions_by_id(db_connect_str, id):
+def find_tact_publisher_reports_by_id(db_connect_str, id):
     params = {"id": id}
     return find_records(db_connect_str, SELECT_TACT_BY_ID, params)
 
 
-def insert_tact_transactions(db_connect_str, values):
-    """Insert rows to the transactions table
+def insert_tact_publisher_reports(db_connect_str, values):
+    """Insert rows to the publisher_reports table
     Args:
         db_connect_str: database connection string
         values: list of dictionary
@@ -106,13 +106,13 @@ def insert_tact_transactions(db_connect_str, values):
     if values:
         try:
             db = Database(db_connect_str)
-            db.insert(get_transactions_table(), values)
+            db.insert(get_publisher_reports_table(), values)
             db.close
         except SQLAlchemyError as e:
             print("DB insert error: {}".format(e))
 
-def get_transactions_table():
-    return table("transactions",
+def get_publisher_reports_table():
+    return table("publisher_reports",
       column("publisher"),
       column("doi"),
       column("article_title"),
