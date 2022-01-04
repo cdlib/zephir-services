@@ -12,7 +12,7 @@ from sqlalchemy import insert
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import SQLAlchemyError 
 
-SELECT_TACT = "SELECT id, publisher, doi FROM transactions WHERE id=:id"
+SELECT_TACT_BY_ID = "SELECT id, publisher, doi FROM transactions WHERE id=:id"
 
 Base = declarative_base()
 
@@ -92,16 +92,15 @@ def find_records(db_connect_str, select_query, params=None):
     return None
 
 
-def find_tact_transactions(db_connect_str, id):
+def find_tact_transactions_by_id(db_connect_str, id):
     params = {"id": id}
-    return find_records(db_connect_str, SELECT_TACT, params)
+    return find_records(db_connect_str, SELECT_TACT_BY_ID, params)
 
 
-def insert_tact_transactions(db_connect_str, table_name, values):
-    """
+def insert_tact_transactions(db_connect_str, values):
+    """Insert rows to the transactions table
     Args:
         db_connect_str: database connection string
-        table_name: table name
         values: list of dictionary
     """
     if values:
