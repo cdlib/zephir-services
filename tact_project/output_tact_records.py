@@ -33,7 +33,7 @@ def test_read_write_tact_records():
             {
             'publisher': "ACM",
             'doi': "111",
-            'article_title': "test title 1",
+            'article_title': "test title 1 updated",
             'uc_institution': "UCD",
             },
             {
@@ -50,15 +50,16 @@ def test_read_write_tact_records():
             },
         ]
 
-    trans_dict = {
+    trans_dict = [{
             'publisher': "ACM",
             'doi': "111",
             'article_title': "test title 1",
             'uc_institution': "UCD",
             }
+            ]
 
-    #print("write one value")
-    #insert_tact_publisher_reports(db_connect_str, trans_dict)
+    print("write one value")
+    insert_tact_publisher_reports(db_connect_str, trans_dict)
 
     print("write multiple values")
     insert_tact_publisher_reports(db_connect_str, trans_dict_list)

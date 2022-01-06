@@ -8,47 +8,12 @@ from sqlalchemy import Integer
 from sqlalchemy import Column
 from sqlalchemy import column
 from sqlalchemy import table 
-from sqlalchemy import insert 
+#from sqlalchemy import insert 
+from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import SQLAlchemyError 
 
 SELECT_TACT_BY_ID = "SELECT id, publisher, doi FROM publisher_reports WHERE id=:id"
-
-Base = declarative_base()
-
-class Transactions(Base):
-    __tablename__ = "publisher_reports"
-    id = Column(Integer, primary_key=True)
-    publisher = Column(String(50))
-    doi = Column(String(50))
-    article_title = Column(String(150))
-    corresponding_author = Column(String(50))
-    corresponding_author_email = Column(String(50))
-    uc_institution = Column(String(50))
-    institution_identifier = Column(String(50))
-    document_type = Column(String(50))
-    eligible = Column(String(50))
-    inclusion_date = Column(String(50))
-    uc_approval_date = Column(String(50))
-    article_access_type = Column(String(50))
-    article_license = Column(String(50))
-    journal_name = Column(String(50))
-    issn_eissn = Column(String(50))
-    journal_access_type = Column(String(50))
-    journal_subject = Column(String(50))
-    grant_participation = Column(String(50))
-    funder_information = Column(String(150))
-    full_coverage_reason = Column(String(150))
-    original_apc_usd = Column(String(50))
-    contractual_apc_usd = Column(String(50))
-    library_apc_portion_usd = Column(String(50))
-    author_apc_portion_usd = Column(String(50))
-    payment_note = Column(String(150))
-    cdl_notes = Column(String(150))
-    license_chosen = Column(String(50))
-    journal_bucket = Column(String(50))
-    agreement_manager_profile_name = Column(String(50))
-    publisher_status = Column(String(50))
 
 class Database:
     def __init__(self, db_connect_str):
@@ -60,13 +25,23 @@ class Database:
             results_dict = [dict(row) for row in results.fetchall()]
             return results_dict
 
-    def insert(self, db_table, values):
-        """insert multiple rows to a db table
+    def insert(self, db_table, records):
+        """insert multiple records to a db table
+           insert when record is new, otherwise update
+           Args:
+               db_table: table name in string
+               records: list of records in dictionary
         """ 
         with self.engine.connect() as conn:
-            print(values)
-            #result = conn.execute(db_table.insert().values(values))
-            result = conn.execute(insert(db_table, values))
+            for record in records:
+                print(record)
+                insert_stmt = insert(db_table).values(record)
+                print(insert_stmt)
+                on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(record)
+                print(on_duplicate_key_stmt)
+
+                result = conn.execute(on_duplicate_key_stmt)
+                print(result)
 
 
     def close(self):
@@ -143,4 +118,5 @@ def get_publisher_reports_table():
       column("journal_bucket"),
       column("agreement_manager_profile_name"),
       column("publisher_status")
-            )
+      )
+
