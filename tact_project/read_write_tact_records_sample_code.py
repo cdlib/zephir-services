@@ -31,7 +31,15 @@ def test_read_write_tact_records():
     for result in results:
         print("{},{}\n".format(result['id'], result['doi']))
 
-    trans_dict_list = [
+    publisher_report_list_1 = [{
+            'publisher': "ACM",
+            'doi': "111",
+            'article_title': "test title 1",
+            'uc_institution': "UCD",
+            }
+            ]
+
+    publisher_report_list_2 = [
             {
             'publisher': "ACM",
             'doi': "111",
@@ -52,19 +60,13 @@ def test_read_write_tact_records():
             },
         ]
 
-    trans_dict = [{
-            'publisher': "ACM",
-            'doi': "111",
-            'article_title': "test title 1",
-            'uc_institution': "UCD",
-            }
-            ]
-
     print("write one value")
-    insert_tact_publisher_reports(db_connect_str, trans_dict)
+    print(publisher_report_list_1)
+    insert_tact_publisher_reports(db_connect_str, publisher_report_list_1)
 
     print("write multiple values")
-    insert_tact_publisher_reports(db_connect_str, trans_dict_list)
+    print(publisher_report_list_2)
+    insert_tact_publisher_reports(db_connect_str, publisher_report_list_2)
 
 if __name__ == '__main__':
     test_read_write_tact_records()

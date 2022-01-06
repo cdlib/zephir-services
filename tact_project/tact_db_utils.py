@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import text
 from sqlalchemy import String
 from sqlalchemy import Integer
-from sqlalchemy import Column
+#from sqlalchemy import Column
 from sqlalchemy import column
 from sqlalchemy import table 
 from sqlalchemy.dialects.mysql import insert
@@ -21,21 +21,33 @@ class Database:
 
     def findall(self, sql, params=None):
         with self.engine.connect() as conn:
-            results = conn.execute(sql, params or ())
-            results_dict = [dict(row) for row in results.fetchall()]
-            return results_dict
+            try:
+                results = conn.execute(sql, params or ())
+                results_dict = [dict(row) for row in results.fetchall()]
+                return results_dict
+            except SQLAlchemyError as e:
+                error = str(e.__dict__['orig'])
+                print("DB error: {}".format(error))
+                return None
+            
 
     def insert(self, db_table, records):
         """insert multiple records to a db table
            Args:
                db_table: table name in string
                records: list of records in dictionary
+            Returns: None
+               Idealy the of affected rows. However sqlalchemy does not support this feature.
+               The CursorResult.rowcount suppose to return the number of rows matched, 
+               which is not necessarily the same as the number of rows that were actually modified.
+               However, the result.rowcount here always returns -1.
         """ 
         with self.engine.connect() as conn:
             for record in records:
                 try:
                     insert_stmt = insert(db_table).values(record)
                     result = conn.execute(insert_stmt)
+                    print("{}".format(result.rowcount()))
                 except SQLAlchemyError as e:
                     error = str(e.__dict__['orig'])
                     print("DB insert error: {}".format(error))
@@ -47,6 +59,11 @@ class Database:
            Args:
                db_table: table name in string
                records: list of records in dictionary
+            Returns: None
+               Idealy the of affected rows. However sqlalchemy does not support this feature.
+               The CursorResult.rowcount suppose to return the number of rows matched, 
+               which is not necessarily the same as the number of rows that were actually modified.
+               However, the result.rowcount here always returns -1.
         """
         with self.engine.connect() as conn:
             for record in records:
@@ -70,15 +87,10 @@ def find_records(db_connect_str, select_query, params=None):
         list of dict with selected field names as keys
     """
     if select_query:
-        try:
-            db = Database(db_connect_str)
-            records = db.findall(text(select_query), params)
-            db.close()
-            return records
-        except SQLAlchemyError as e:
-            print("DB Select error: {}".format(e))
-            return None
-    return None
+        db = Database(db_connect_str)
+        records = db.findall(text(select_query), params)
+        db.close()
+        return records
 
 
 def find_tact_publisher_reports_by_id(db_connect_str, id):
@@ -97,11 +109,11 @@ def insert_tact_publisher_reports(db_connect_str, records):
     """
     if records:
         db = Database(db_connect_str)
-        db.insert_update_on_duplicate_key(get_publisher_reports_table(), records)
-        #db.insert(get_publisher_reports_table(), records)
+        db.insert_update_on_duplicate_key(define_publisher_reports_table(), records)
+        #db.insert(define_publisher_reports_table(), records)
         db.close
 
-def get_publisher_reports_table():
+def define_publisher_reports_table():
     return table("publisher_reports",
       column("publisher"),
       column("doi"),
