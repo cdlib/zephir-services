@@ -13,6 +13,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import SQLAlchemyError 
 
 SELECT_TACT_BY_ID = "SELECT id, publisher, doi FROM publisher_reports WHERE id=:id"
+SELECT_TACT_BY_PUBLISHER = "SELECT id, publisher, doi FROM publisher_reports WHERE publisher=:publisher"
 
 class Database:
     def __init__(self, db_connect_str):
@@ -26,18 +27,36 @@ class Database:
 
     def insert(self, db_table, records):
         """insert multiple records to a db table
-           insert when record is new, otherwise update
            Args:
                db_table: table name in string
                records: list of records in dictionary
         """ 
         with self.engine.connect() as conn:
             for record in records:
-                insert_stmt = insert(db_table).values(record)
-                on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(record)
+                try:
+                    insert_stmt = insert(db_table).values(record)
+                    result = conn.execute(insert_stmt)
+                except SQLAlchemyError as e:
+                    error = str(e.__dict__['orig'])
+                    print("DB insert error: {}".format(error))
 
-                result = conn.execute(on_duplicate_key_stmt)
-
+    def insert_update_on_duplicate_key(self, db_table, records):
+        """insert multiple records to a db table
+           insert when record is new
+           update on duplicate key - update only when the content is changed 
+           Args:
+               db_table: table name in string
+               records: list of records in dictionary
+        """
+        with self.engine.connect() as conn:
+            for record in records:
+                try:
+                    insert_stmt = insert(db_table).values(record)
+                    on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(record)
+                    result = conn.execute(on_duplicate_key_stmt)
+                except SQLAlchemyError as e:
+                    error = str(e.__dict__['orig'])
+                    print("DB insert error: {}".format(error))
 
     def close(self):
         self.engine.dispose()
@@ -66,20 +85,21 @@ def find_tact_publisher_reports_by_id(db_connect_str, id):
     params = {"id": id}
     return find_records(db_connect_str, SELECT_TACT_BY_ID, params)
 
+def find_tact_publisher_reports_by_publisher(db_connect_str, publisher):
+    params = {"publisher": publisher}
+    return find_records(db_connect_str, SELECT_TACT_BY_PUBLISHER, params)
 
-def insert_tact_publisher_reports(db_connect_str, values):
-    """Insert rows to the publisher_reports table
+def insert_tact_publisher_reports(db_connect_str, records):
+    """Insert records to the publisher_reports table
     Args:
         db_connect_str: database connection string
-        values: list of dictionary
+        records: list of dictionaries
     """
-    if values:
-        try:
-            db = Database(db_connect_str)
-            db.insert(get_publisher_reports_table(), values)
-            db.close
-        except SQLAlchemyError as e:
-            print("DB insert error: {}".format(e))
+    if records:
+        db = Database(db_connect_str)
+        db.insert_update_on_duplicate_key(get_publisher_reports_table(), records)
+        #db.insert(get_publisher_reports_table(), records)
+        db.close
 
 def get_publisher_reports_table():
     return table("publisher_reports",

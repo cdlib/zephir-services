@@ -10,6 +10,7 @@ from sqlalchemy import text
 
 import lib.utils as utils
 from tact_db_utils import find_tact_publisher_reports_by_id
+from tact_db_utils import find_tact_publisher_reports_by_publisher
 from tact_db_utils import insert_tact_publisher_reports
 
 def test_read_write_tact_records():
@@ -23,8 +24,9 @@ def test_read_write_tact_records():
 
     print(db_connect_str)
 
-    results = find_tact_publisher_reports_by_id(db_connect_str, 1)
-    print("read id=1")
+    #results = find_tact_publisher_reports_by_id(db_connect_str, 1)
+    results = find_tact_publisher_reports_by_publisher(db_connect_str, "ACM")
+    print("read publisher=ACM")
     print(results)
     for result in results:
         print("{},{}\n".format(result['id'], result['doi']))
