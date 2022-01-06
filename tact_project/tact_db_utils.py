@@ -8,7 +8,6 @@ from sqlalchemy import Integer
 from sqlalchemy import Column
 from sqlalchemy import column
 from sqlalchemy import table 
-#from sqlalchemy import insert 
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import SQLAlchemyError 
@@ -34,14 +33,10 @@ class Database:
         """ 
         with self.engine.connect() as conn:
             for record in records:
-                print(record)
                 insert_stmt = insert(db_table).values(record)
-                print(insert_stmt)
                 on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(record)
-                print(on_duplicate_key_stmt)
 
                 result = conn.execute(on_duplicate_key_stmt)
-                print(result)
 
 
     def close(self):
