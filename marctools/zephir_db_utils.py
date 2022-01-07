@@ -16,6 +16,7 @@ SELECT_ZEPHIR_IDS = """select CAST(cid as UNSIGNED) cid, identifier as oclc,
   inner join zephir_identifiers zi on zir.identifier_autoid = zi.autoid
   where zr.autoid between :start_autoid and :end_autoid
   and zi.type = 'oclc'
+  and zr.shadow_date is null
   order by cid, id, identifier
 """
 
