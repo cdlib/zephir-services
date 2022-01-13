@@ -11,6 +11,10 @@ from pathlib import PurePosixPath
 import importlib
 
 from utils import *
+import lib.utils as utils
+from tact_db_utils import insert_tact_publisher_reports
+from tact_db_utils import find_tact_publisher_reports_by_id
+from tact_db_utils import find_tact_publisher_reports_by_publisher
 
 publishers = [
         "ACM",
@@ -107,6 +111,8 @@ def transform(publisher, input_filename, output_filename):
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
 
+    db_conn_str = get_db_conn_str()
+
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
@@ -115,6 +121,9 @@ def transform(publisher, input_filename, output_filename):
             if output_row['DOI'].strip():
                 transform_function(output_row)
                 writer.writerow(output_row)
+
+                db_record = convert_row_to_record(output_row)
+                insert_tact_publisher_reports(db_conn_str, [db_record])
 
     output_file.close()
 
@@ -125,7 +134,6 @@ def transform_acm(row):
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
     row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Journal Access Type'] =  normalized_journal_access_type_by_title(row['Journal Name'])
-    return row
 
 def transform_cob(row):
     row['UC Institution'] = get_institution_by_email(row['Corresponding Author Email'])
@@ -133,7 +141,6 @@ def transform_cob(row):
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Access Type'] = normalized_journal_access_type_by_title(row['Journal Name']) 
     row['Grant Participation'] = normalized_grant_participation_2(row['Grant Participation']) 
-    return row
 
 def transform_csp(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
@@ -153,7 +160,6 @@ def transform_csp(row):
     else:
         row['Grant Participation'] = ""
 
-    return row
 
 def transform_cup(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
@@ -164,7 +170,6 @@ def transform_cup(row):
     if "I have research funds available to pay the remaining balance due (you will be asked to pay the Additional Charge on a later screen)" in row['Full Coverage Reason']:
         row['Full Coverage Reason'] = ""
 
-    return row
 
 def transform_elsevier(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
@@ -172,14 +177,12 @@ def transform_elsevier(row):
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = normalized_journal_access_type(row['Journal Access Type'])
     row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
-    return row
 
 def transform_plos(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Name'] = normalized_journal_name_plos(row['Journal Name'])
     row['Grant Participation'] = "Yes" if str_to_decimal(row['Grant Participation']) > 0 else "No"
-    return row
 
 def transform_springer(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
@@ -188,7 +191,6 @@ def transform_springer(row):
     row['UC Approval Date'] = normalized_date(row['UC Approval Date'], row['DOI'])
     row['Article Access Type'] = normalized_article_access_type(row['Article Access Type'])
     row['Grant Participation'] = normalized_grant_participation(row['Grant Participation'])
-    return row
 
 def transform_trs(row):
     row['UC Institution'] = normalized_institution_name(row['UC Institution'])
@@ -431,6 +433,50 @@ def usage():
     print("Processing files from specified publisher when publisher name is provided")
     print("Otherwise processing files from all publishers")
     print("Publisher name is case insensitive")
+
+
+def get_db_conn_str():
+    env="dev"
+    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    CONFIG_PATH = os.path.join(ROOT_PATH, "config")
+    CONFIG_FILE = "tact_db"
+    configs= utils.get_configs_by_filename(CONFIG_PATH, CONFIG_FILE)
+    return str(utils.db_connect_url(configs[env]))
+
+def convert_row_to_record(row):
+    record = {
+        "publisher": row.get("Publisher", ''),
+        "doi": row.get("DOI", ''),
+        "article_title": row.get("Article Title", ''),
+        "corresponding_author": row.get("Corresponding Author", ''),
+        "corresponding_author_email": row.get("Corresponding Author Email", ''),
+        "uc_institution": row.get("UC Institution", ''),
+        "institution_identifier": row.get("Institution Identifier", ''),
+        "document_type": row.get("Document Type", ''),
+        "eligible": row.get("Eligible", ''),
+        "inclusion_date": row.get("Inclusion Date", ''),
+        "uc_approval_date": row.get("UC Approval Date", ''),
+        "article_access_type": row.get("Article Access Type", ''),
+        "article_license": row.get("Article License", ''),
+        "journal_name": row.get("Journal Name", ''),
+        "issn_eissn": row.get("ISSN/eISSN", ''),
+        "journal_access_type": row.get("Journal Access Type", ''),
+        "journal_subject": row.get("Journal Subject", ''),
+        "grant_participation": row.get("Grant Participation", ''),
+        "funder_information": row.get("Funder Information", ''),
+        "full_coverage_reason": row.get("Full Coverage Reason", ''),
+        "original_apc_usd": row.get("Original APC (USD)", ''),
+        "contractual_apc_usd": row.get("Contractual APC (USD)", ''),
+        "library_apc_portion_usd": row.get("Library APC Portion (USD)", ''),
+        "author_apc_portion_usd": row.get("Author APC Portion (USD)", ''),
+        "payment_note": row.get("Payment Note", ''),
+        "cdl_notes": row.get("CDL Notes", ''),
+        "license_chosen": row.get("License Chosen", ''),
+        "journal_bucket": row.get("Journal Bucket", ''),
+        "agreement_manager_profile_name": row.get("Agreement Manager Profile Name", ''),
+        "publisher_status": row.get("Publisher Status", ''),
+        }
+    return record
 
 def main():
 
