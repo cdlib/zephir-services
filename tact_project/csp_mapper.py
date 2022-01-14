@@ -1,4 +1,5 @@
 # CSP mapper 
+from utils import *
 
 source_fieldnames = [
                 "DOI",
@@ -51,10 +52,10 @@ def source_to_output_mapping(row):
         'Grant Participation': row['Grant Participation'],
         'Funder Information': row['Funder Information'],
         'Full Coverage Reason': row['Full Coverage Reason'] if row['Full Coverage Reason'].upper() != "N/A" else "",
-        'Original APC (USD)': row['Original APC (USD)'],
-        'Contractual APC (USD)': row['Contractual APC (USD)'],
-        'Library APC Portion (USD)': row['Library APC Portion (USD)'],
-        'Author APC Portion (USD)': row['Author APC Portion (USD)'],
+        'Original APC (USD)': str_to_decimal(row['Original APC (USD)']),
+        'Contractual APC (USD)': str_to_decimal(row['Contractual APC (USD)']),
+        'Library APC Portion (USD)': str_to_decimal(row['Library APC Portion (USD)']),
+        'Author APC Portion (USD)': str_to_decimal(row['Author APC Portion (USD)']),
         'Payment Note': row['Payment Note'], 
         'Publisher Status': row['Status'],
         'CDL Notes': '',
