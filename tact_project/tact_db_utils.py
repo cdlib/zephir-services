@@ -26,8 +26,7 @@ class Database:
                 results_dict = [dict(row) for row in results.fetchall()]
                 return results_dict
             except SQLAlchemyError as e:
-                error = str(e.__dict__['orig'])
-                print("DB error: {}".format(error))
+                print("DB error: {}".format(e))
                 return None
             
 
@@ -49,8 +48,7 @@ class Database:
                     result = conn.execute(insert_stmt)
                     print("{}".format(result.rowcount()))
                 except SQLAlchemyError as e:
-                    error = str(e.__dict__['orig'])
-                    print("DB insert error: {}".format(error))
+                    print("DB insert error: {}".format(e))
 
     def insert_update_on_duplicate_key(self, db_table, records):
         """insert multiple records to a db table
@@ -72,8 +70,7 @@ class Database:
                     on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(record)
                     result = conn.execute(on_duplicate_key_stmt)
                 except SQLAlchemyError as e:
-                    error = str(e.__dict__['orig'])
-                    print("DB insert error: {}".format(error))
+                    print("DB insert error: {}".format(e))
 
     def close(self):
         self.engine.dispose()
