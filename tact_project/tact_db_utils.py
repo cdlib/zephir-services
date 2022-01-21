@@ -75,6 +75,9 @@ class Database:
     def close(self):
         self.engine.dispose()
 
+def init_database(db_connect_str):
+    return Database(db_connect_str)
+
 def find_records(db_connect_str, select_query, params=None):
     """
     Args:
@@ -98,17 +101,15 @@ def find_tact_publisher_reports_by_publisher(db_connect_str, publisher):
     params = {"publisher": publisher}
     return find_records(db_connect_str, SELECT_TACT_BY_PUBLISHER, params)
 
-def insert_tact_publisher_reports(db_connect_str, records):
+def insert_tact_publisher_reports(database, records):
     """Insert records to the publisher_reports table
     Args:
-        db_connect_str: database connection string
+        database: a Database object
         records: list of dictionaries
     """
     if records:
-        db = Database(db_connect_str)
-        db.insert_update_on_duplicate_key(define_publisher_reports_table(), records)
-        #db.insert(define_publisher_reports_table(), records)
-        db.close
+        database.insert_update_on_duplicate_key(define_publisher_reports_table(), records)
+        database.close
 
 def define_publisher_reports_table():
     return table("publisher_reports",

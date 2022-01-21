@@ -12,6 +12,7 @@ import importlib
 
 from utils import *
 import lib.utils as utils
+from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
 from tact_db_utils import find_tact_publisher_reports_by_id
 from tact_db_utils import find_tact_publisher_reports_by_publisher
@@ -112,6 +113,7 @@ def transform(publisher, input_filename, output_filename):
     writer.writeheader()
 
     db_conn_str = get_db_conn_str()
+    database = init_database(db_conn_str)
 
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
@@ -124,7 +126,7 @@ def transform(publisher, input_filename, output_filename):
                 writer.writerow(output_row)
 
                 db_record = convert_row_to_record(output_row)
-                insert_tact_publisher_reports(db_conn_str, [db_record])
+                insert_tact_publisher_reports(database, [db_record])
 
     output_file.close()
 
