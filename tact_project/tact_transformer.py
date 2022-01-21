@@ -512,8 +512,8 @@ def convert_row_to_record(row):
         "cdl_notes": row.get("CDL Notes", ''),
         "license_chosen": row.get("License Chosen", ''),
         "journal_bucket": row.get("Journal Bucket", ''),
-        "agreement_manager_profile_name": row["Agreement Manager Profile Name"],
-        "publisher_status": row["Publisher Status"],
+        "agreement_manager_profile_name": row.get("Agreement Manager Profile Name", ''),
+        "publisher_status": row.get("Publisher Status", ''),
         }
     return record
 
