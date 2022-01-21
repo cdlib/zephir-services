@@ -29,36 +29,29 @@ source_fieldnames = [
         ]
 
 
-def source_to_output_mapping(row):
-    output = {
-        'Publisher': "CUP",
-        'DOI': row['DOI'],
-        'Article Title': row['Manuscript Title'],
-        'Corresponding Author': row['Corresponding Author'],
-        'Corresponding Author Email': row['Corresponding Author Email'],
-        'UC Institution': row['Institution'],
-        'Institution Identifier': row['Grid ID'],
-        'Document Type': row['Core Article Type'],
-        'Eligible': row['Eligible'],
-        'Inclusion Date': row['Copy Received Date'],
-        'UC Approval Date': '',
-        'Article Access Type': row['Open Access'],
-        'Article License': row['Creative Commons License Type'],
-        'Journal Name': row['Publication Name'],
-        'ISSN/eISSN': row['Online ISSN'],
-        'Journal Access Type': row['Journal Status'],
-        'Journal Subject': row['HSS/STM'],
-        'Grant Participation': row['Author Choice for Additional APC'],
-        'Funder Information': '',
-        'Full Coverage Reason': row['Reason Given for Requesting Full Funding'],
-        'Original APC (USD)': str_to_decimal(row['APC USD/AUD/EUR']),
-        'Contractual APC (USD)': str_to_decimal(row['Total Transaction Value']),
-        'Library APC Portion (USD)': str_to_decimal(row['Transaction value before discount']) + str_to_decimal(row['Additional APC Paid by CDL']),
-        'Author APC Portion (USD)': str_to_decimal(row['Additional APC Paid by Author']),
-        'Payment Note': row['Notes'],
-        'CDL Notes': '',
-        'Agreement Manager Profile Name': row['Agreement Manager Profile Name'],
-        'Publisher Status': '',
-        }
-    return output
+def source_to_output_mapping(src_row, output_row):
+    output_row['Publisher'] = "CUP"
+    output_row['DOI'] = src_row['DOI']
+    output_row['Article Title'] = src_row['Manuscript Title']
+    output_row['Corresponding Author'] = src_row['Corresponding Author']
+    output_row['Corresponding Author Email'] = src_row['Corresponding Author Email']
+    output_row['UC Institution'] = src_row['Institution']
+    output_row['Institution Identifier'] = src_row['Grid ID']
+    output_row['Document Type'] = src_row['Core Article Type']
+    output_row['Eligible'] = src_row['Eligible']
+    output_row['Inclusion Date'] = src_row['Copy Received Date']
+    output_row['Article Access Type'] = src_row['Open Access']
+    output_row['Article License'] = src_row['Creative Commons License Type']
+    output_row['Journal Name'] = src_row['Publication Name']
+    output_row['ISSN/eISSN'] = src_row['Online ISSN']
+    output_row['Journal Access Type'] = src_row['Journal Status']
+    output_row['Journal Subject'] = src_row['HSS/STM']
+    output_row['Grant Participation'] = src_row['Author Choice for Additional APC']
+    output_row['Full Coverage Reason'] = src_row['Reason Given for Requesting Full Funding']
+    output_row['Original APC (USD)'] = str_to_decimal(src_row['APC USD/AUD/EUR'])
+    output_row['Contractual APC (USD)'] = str_to_decimal(src_row['Total Transaction Value'])
+    output_row['Library APC Portion (USD)'] = str_to_decimal(src_row['Transaction value before discount']) + str_to_decimal(src_row['Additional APC Paid by CDL'])
+    output_row['Author APC Portion (USD)'] = str_to_decimal(src_row['Additional APC Paid by Author'])
+    output_row['Payment Note'] = src_row['Notes']
+    output_row['Agreement Manager Profile Name'] = src_row['Agreement Manager Profile Name']
 

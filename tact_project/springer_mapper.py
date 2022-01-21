@@ -30,34 +30,27 @@ source_fieldnames = [
         ]
 
 
-def source_to_output_mapping(row):
-    output = {
-        'Publisher': "Springer",
-        'DOI': row['DOI'],
-        'Article Title': row['Article Title'],
-        'Corresponding Author': row['Corresponding Author Name'],
-        'Corresponding Author Email': "",
-        'UC Institution': row['Corresponding Author Affiliation'],
-        'Institution Identifier': "",
-        'Document Type': row['Article Type'],
-        'Eligible': row['Approval Status'],
-        'Inclusion Date': row['Approval Date'],
-        'UC Approval Date': row['Approval Date'],
-        'Article Access Type': row['Approval Status'],
-        'Article License': row['OA License Type'],
-        'Journal Name': row['Journal Title'],
-        'ISSN/eISSN': row['Journal ISSN'],
-        'Journal Access Type': row['Agreement'],
-        'Journal Subject': "",
-        'Grant Participation': row['Fee Model'],
-        'Funder Information': row['Funder Name'],
-        'Full Coverage Reason': row['Full Coverage Reason'],
-        'Original APC (USD)': str_to_decimal(row['List APC (USD)']),
-        'Contractual APC (USD)': str_to_decimal(row['Licensee APC (USD)']),
-        'Library APC Portion (USD)': str_to_decimal(row['Insitutional APC Share (USD)']),
-        'Author APC Portion (USD)': str_to_decimal(row['Author APC Share (USD)']),
-        'Payment Note': row['Comments'],
-        'CDL Notes': "",
-        }
-    return output
+def source_to_output_mapping(src_row, output_row):
+    output_row['Publisher'] = "Springer"
+    output_row['DOI'] = src_row['DOI']
+    output_row['Article Title'] = src_row['Article Title']
+    output_row['Corresponding Author'] = src_row['Corresponding Author Name']
+    output_row['UC Institution'] = src_row['Corresponding Author Affiliation']
+    output_row['Document Type'] = src_row['Article Type']
+    output_row['Eligible'] = src_row['Approval Status']
+    output_row['Inclusion Date'] = src_row['Approval Date']
+    output_row['UC Approval Date'] = src_row['Approval Date']
+    output_row['Article Access Type'] = src_row['Approval Status']
+    output_row['Article License'] = src_row['OA License Type']
+    output_row['Journal Name'] = src_row['Journal Title']
+    output_row['ISSN/eISSN'] = src_row['Journal ISSN']
+    output_row['Journal Access Type'] = src_row['Agreement']
+    output_row['Grant Participation'] = src_row['Fee Model']
+    output_row['Funder Information'] = src_row['Funder Name']
+    output_row['Full Coverage Reason'] = src_row['Full Coverage Reason']
+    output_row['Original APC (USD)'] = str_to_decimal(src_row['List APC (USD)'])
+    output_row['Contractual APC (USD)'] = str_to_decimal(src_row['Licensee APC (USD)'])
+    output_row['Library APC Portion (USD)'] = str_to_decimal(src_row['Insitutional APC Share (USD)'])
+    output_row['Author APC Portion (USD)'] = str_to_decimal(src_row['Author APC Share (USD)'])
+    output_row['Payment Note'] = src_row['Comments']
 

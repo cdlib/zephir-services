@@ -41,35 +41,19 @@ source_fieldnames = [
         ]
 
 
-def source_to_output_mapping(row):
-    output = {
-        'Publisher': "Royal Society",
-        'DOI': row['article doi'],
-        'Article Title': row['manuscript / article title'],
-        'Corresponding Author': row['corresponding author'],
-        'Corresponding Author Email': "",
-        'UC Institution': row['corresponding author affiliations'],
-        'Institution Identifier': "",
-        'Document Type': row['article type'],
-        'Eligible': "Yes",
-        'Inclusion Date': row['manuscript acceptance date'],
-        'UC Approval Date': "",
-        'Article Access Type': "OA",
-        'Article License': row['VoR license'],
-        'Journal Name': row['journal'],
-        'ISSN/eISSN': row['journal id'],
-        'Journal Access Type': row['journal type'],
-        'Journal Subject': "",
-        'Grant Participation': "",
-        'Funder Information': row['funders'],
-        'Full Coverage Reason': "",
-        'Original APC (USD)': 0,
-        'Contractual APC (USD)': 0,
-        'Library APC Portion (USD)': 0,
-        'Author APC Portion (USD)': 0,
-        'Payment Note': "",
-        'CDL Notes': "",
-
-        }
-    return output
+def source_to_output_mapping(src_row, output_row):
+    output_row['Publisher'] = "Royal Society"
+    output_row['DOI'] = src_row['article doi']
+    output_row['Article Title'] = src_row['manuscript / article title']
+    output_row['Corresponding Author'] = src_row['corresponding author']
+    output_row['UC Institution'] = src_row['corresponding author affiliations']
+    output_row['Document Type'] = src_row['article type']
+    output_row['Eligible'] = "Yes"
+    output_row['Inclusion Date'] = src_row['manuscript acceptance date']
+    output_row['Article Access Type'] = "OA"
+    output_row['Article License'] = src_row['VoR license']
+    output_row['Journal Name'] = src_row['journal']
+    output_row['ISSN/eISSN'] = src_row['journal id']
+    output_row['Journal Access Type'] = src_row['journal type']
+    output_row['Funder Information'] = src_row['funders']
 

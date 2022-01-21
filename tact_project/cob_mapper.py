@@ -150,33 +150,21 @@ source_fieldnames = [
         ]
 
 
-def source_to_output_mapping(row):
-    output = {
-        'Publisher': "CoB",
-        'DOI': row['Manuscript DOI'],
-        'Article Title': row['Manuscript Name'],
-        'Corresponding Author': "{} {} {}".format(row['Primary Author First Name'], row['Primary Author Middle Name'], row['Primary Author Last Name']),
-        'Corresponding Author Email': row['Primary Author Email Address'],
-        'UC Institution': "",
-        'Institution Identifier': "",
-        'Document Type': row['Manuscript Type'],
-        'Eligible': "Yes",
-        'Inclusion Date': row['Date Manuscript Accepted'],
-        'UC Approval Date': "",
-        'Article Access Type': "OA",
-        'Article License': row['Creative Commons License Type'],
-        'Journal Name': row['Publication Name'],
-        'ISSN/eISSN': row['Publication ID'],
-        'Journal Access Type': "",
-        'Journal Subject': "",
-        'Grant Participation': row['Product 1 Option 2 Value'],
-        'Funder Information': row['Funder 1 Name'],
-        'Full Coverage Reason': row['Product 1 Option 3 Value'],
-        'Original APC (USD)': 0,
-        'Contractual APC (USD)': 0,
-        'Library APC Portion (USD)': str_to_decimal(row['Total Discount']),
-        'Author APC Portion (USD)': 0,
-        'Payment Note': "",
-        }
-    return output
+def source_to_output_mapping(src_row, output_row):
+    output_row['Publisher'] = "CoB"
+    output_row['DOI'] = src_row['Manuscript DOI']
+    output_row['Article Title'] = src_row['Manuscript Name']
+    output_row['Corresponding Author'] = "{} {} {}".format(src_row['Primary Author First Name'], src_row['Primary Author Middle Name'], src_row['Primary Author Last Name'])
+    output_row['Corresponding Author Email'] = src_row['Primary Author Email Address']
+    output_row['Document Type'] = src_row['Manuscript Type']
+    output_row['Eligible'] = "Yes"
+    output_row['Inclusion Date'] = src_row['Date Manuscript Accepted']
+    output_row['Article Access Type'] = "OA"
+    output_row['Article License'] = src_row['Creative Commons License Type']
+    output_row['Journal Name'] = src_row['Publication Name']
+    output_row['ISSN/eISSN'] = src_row['Publication ID']
+    output_row['Grant Participation'] = src_row['Product 1 Option 2 Value']
+    output_row['Funder Information'] = src_row['Funder 1 Name']
+    output_row['Full Coverage Reason'] = src_row['Product 1 Option 3 Value']
+    output_row['Library APC Portion (USD)'] = str_to_decimal(src_row['Total Discount'])
 

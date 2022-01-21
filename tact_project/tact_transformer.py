@@ -117,7 +117,8 @@ def transform(publisher, input_filename, output_filename):
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
-            output_row = mapping_function(row)
+            output_row = init_output_row()
+            mapping_function(row, output_row)
             if output_row['DOI'].strip():
                 transform_function(output_row)
                 writer.writerow(output_row)
@@ -446,6 +447,41 @@ def get_db_conn_str():
     configs= utils.get_configs_by_filename(CONFIG_PATH, CONFIG_FILE)
     return str(utils.db_connect_url(configs[env]))
 
+def init_output_row():
+    return {
+        "Publisher": '',
+        "DOI": '',
+        "Article Title": '',
+        "Corresponding Author": '',
+        "Corresponding Author Email": '',
+        "UC Institution": '',
+        "Institution Identifier": '',
+        "Document Type": '',
+        "Eligible": '',
+        "Inclusion Date": '',
+        "UC Approval Date": '',
+        "Article Access Type": '',
+        "Article License": '',
+        "Journal Name": '',
+        "ISSN/eISSN": '',
+        "Journal Access Type": '',
+        "Journal Subject": '',
+        "Grant Participation": '',
+        "Funder Information": '',
+        "Full Coverage Reason": '',
+        "Original APC (USD)": 0,
+        "Contractual APC (USD)": 0,
+        "Library APC Portion (USD)": 0,
+        "Author APC Portion (USD)": 0,
+        "Payment Note": '',
+        "CDL Notes": '',
+        "License Chosen": '',
+        "Journal Bucket": '',
+        "Agreement Manager Profile Name": '',
+        "Publisher Status": '',
+    }
+
+
 def convert_row_to_record(row):
     record = {
         "publisher": row.get("Publisher", ''),
@@ -476,8 +512,8 @@ def convert_row_to_record(row):
         "cdl_notes": row.get("CDL Notes", ''),
         "license_chosen": row.get("License Chosen", ''),
         "journal_bucket": row.get("Journal Bucket", ''),
-        "agreement_manager_profile_name": row.get("Agreement Manager Profile Name", ''),
-        "publisher_status": row.get("Publisher Status", ''),
+        "agreement_manager_profile_name": row["Agreement Manager Profile Name"],
+        "publisher_status": row["Publisher Status"],
         }
     return record
 
