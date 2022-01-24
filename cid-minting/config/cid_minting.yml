@@ -13,8 +13,8 @@ test:
     database: database/zephir_test.db
     drivername: sqlite
 
-primary_db_path: /apps/htmm/leveldb/primary-lookup 
-cluster_db_path: /apps/htmm/leveldb/cluster-lookup
+primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
+cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
 
 logpath: /apps/htmm/log/cid_minting/cid_minting.log
 
