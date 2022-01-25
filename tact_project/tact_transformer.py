@@ -12,6 +12,7 @@ import importlib
 
 from utils import *
 import lib.utils as utils
+from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
 from tact_db_utils import find_tact_publisher_reports_by_id
 from tact_db_utils import find_tact_publisher_reports_by_publisher
@@ -112,18 +113,20 @@ def transform(publisher, input_filename, output_filename):
     writer.writeheader()
 
     db_conn_str = get_db_conn_str()
+    database = init_database(db_conn_str)
 
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
-            output_row = mapping_function(row)
+            output_row = init_output_row()
+            mapping_function(row, output_row)
             if output_row['DOI'].strip():
                 transform_function(output_row)
                 writer.writerow(output_row)
 
                 db_record = convert_row_to_record(output_row)
-                insert_tact_publisher_reports(db_conn_str, [db_record])
+                insert_tact_publisher_reports(database, [db_record])
 
     output_file.close()
 
@@ -445,6 +448,41 @@ def get_db_conn_str():
     CONFIG_FILE = "tact_db"
     configs= utils.get_configs_by_filename(CONFIG_PATH, CONFIG_FILE)
     return str(utils.db_connect_url(configs[env]))
+
+def init_output_row():
+    return {
+        "Publisher": '',
+        "DOI": '',
+        "Article Title": '',
+        "Corresponding Author": '',
+        "Corresponding Author Email": '',
+        "UC Institution": '',
+        "Institution Identifier": '',
+        "Document Type": '',
+        "Eligible": '',
+        "Inclusion Date": '',
+        "UC Approval Date": '',
+        "Article Access Type": '',
+        "Article License": '',
+        "Journal Name": '',
+        "ISSN/eISSN": '',
+        "Journal Access Type": '',
+        "Journal Subject": '',
+        "Grant Participation": '',
+        "Funder Information": '',
+        "Full Coverage Reason": '',
+        "Original APC (USD)": 0,
+        "Contractual APC (USD)": 0,
+        "Library APC Portion (USD)": 0,
+        "Author APC Portion (USD)": 0,
+        "Payment Note": '',
+        "CDL Notes": '',
+        "License Chosen": '',
+        "Journal Bucket": '',
+        "Agreement Manager Profile Name": '',
+        "Publisher Status": '',
+    }
+
 
 def convert_row_to_record(row):
     record = {
