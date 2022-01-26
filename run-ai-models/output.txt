@@ -1,0 +1,11 @@
+# encoding
+    "The quick brown fox jumps over the lazy dog.",
+    "I am a sentence for which I would like to get its embedding"
+
+tf.Tensor(
+[[ 0.01305105  0.02235124 -0.03263279 ... -0.00565093 -0.04793028
+  -0.11492762]
+ [ 0.0583339  -0.08185012  0.06890939 ... -0.00923877 -0.08695352
+  -0.0141574 ]], shape=(2, 512), dtype=float32)
+
+
