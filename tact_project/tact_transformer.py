@@ -116,33 +116,42 @@ def transform(publisher, input_filename, output_filename):
     db_conn_str = get_db_conn_str()
     database = init_database(db_conn_str)
 
-    with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
-        reader = DictReader(csvfile, fieldnames=source_fieldnames)
-        next(reader, None)  # skip the headers
-        line_no = 1 
-        for row in reader:
-            line_no += 1
-            for key in row:
-                if key:
-                    row[key] = row[key].rstrip("\n").strip()  # remove leading and trailing whitespaces and trailing newline
+    input_rows = get_input_rows(input_filename, source_fieldnames)
 
-            output_row = init_output_row()
-            mapping_function(row, output_row)
-            if output_row['DOI'].strip() and not multiple_doi(output_row['DOI']):
-                transform_function(output_row)
-                writer.writerow(output_row)
+    line_no = 1 
+    for row in input_rows:
+        line_no += 1
+        for key in row:
+            if key:
+                row[key] = row[key].rstrip("\n").strip()  # remove leading and trailing whitespaces and trailing newline
 
-                db_record = convert_row_to_record(output_row)
-                insert_tact_publisher_reports(database, [db_record])
+        output_row = init_output_row()
+        mapping_function(row, output_row)
+        if output_row['DOI'].strip() and not multiple_doi(output_row['DOI']):
+            transform_function(output_row)
+            writer.writerow(output_row)
+
+            db_record = convert_row_to_record(output_row)
+            insert_tact_publisher_reports(database, [db_record])
+        else:
+            if output_row['DOI'].strip():
+                print("Wrong or multiple DOIs: {}".format(output_row['DOI']))
+                print("publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
             else:
-                if output_row['DOI'].strip():
-                    print("Wrong or multiple DOIs: {}".format(output_row['DOI']))
-                    print("publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-                else:
-                    print("No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+                print("No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
 
     output_file.close()
 
+
+def get_input_rows(input_filename, source_fieldnames):
+    input_rows = []
+    with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
+        reader = DictReader(csvfile, fieldnames=source_fieldnames)
+        next(reader, None)  # skip the headers
+        for row in reader:
+            input_rows.append(row)
+
+    return input_rows 
 
 def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
