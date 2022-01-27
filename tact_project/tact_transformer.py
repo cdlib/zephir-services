@@ -10,7 +10,8 @@ from pathlib import Path
 from pathlib import PurePosixPath
 import importlib
 
-from utils import *
+from utils import str_to_decimal
+from utils import multiple_doi
 import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
@@ -118,15 +119,27 @@ def transform(publisher, input_filename, output_filename):
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
+        line_no = 1 
         for row in reader:
+            line_no += 1
+            for key in row:
+                if key:
+                    row[key] = row[key].rstrip("\n").strip()  # remove leading and trailing whitespaces and trailing newline
+
             output_row = init_output_row()
             mapping_function(row, output_row)
-            if output_row['DOI'].strip():
+            if output_row['DOI'].strip() and not multiple_doi(output_row['DOI']):
                 transform_function(output_row)
                 writer.writerow(output_row)
 
                 db_record = convert_row_to_record(output_row)
                 insert_tact_publisher_reports(database, [db_record])
+            else:
+                if output_row['DOI'].strip():
+                    print("Wrong or multiple DOIs: {}".format(output_row['DOI']))
+                    print("publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+                else:
+                    print("No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
 
     output_file.close()
 

@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS publisher_reports;
 CREATE TABLE IF NOT EXISTS publisher_reports (
   id int(11) NOT NULL AUTO_INCREMENT,
   publisher varchar(20) NOT NULL DEFAULT '',
-  doi varchar(50) NOT NULL DEFAULT '',
+  doi varchar(150) NOT NULL DEFAULT '',
   article_title varchar(500) NOT NULL DEFAULT '',
   corresponding_author varchar(150) NOT NULL DEFAULT '',
   corresponding_author_email varchar(100) NOT NULL DEFAULT '',
