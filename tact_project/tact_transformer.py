@@ -112,8 +112,7 @@ def transform(publisher, input_filename, output_filename):
     input_rows = get_input_rows(input_filename, source_fieldnames)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
 
-    #output_rows = remove_entry_with_empty_or_multiple_dois(output_rows, publisher, input_filename)
-    output_rows = remove_entry_with_dup_dois(output_rows, publisher, input_filename)
+    output_rows = remove_rejected_entries(output_rows, publisher, input_filename)
 
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
@@ -163,25 +162,6 @@ def map_input_to_output(input_rows, mapping_function, transform_function):
 
     return output_rows
 
-def remove_entry_with_empty_or_multiple_dois(rows, publisher, input_filename):
-    """DOI field should only contain one DOI.
-       Reject the data entry if there are multiple DOIs or no DOI in the DOI data field.
-    """
-    modified_rows = []
-    line_no = 1  # header
-    for row in rows:
-        line_no += 1
-        if row['DOI'].strip() and not multiple_doi(row['DOI']):
-            modified_rows.append(row)
-        else:
-            if row['DOI'].strip():
-                print("ERROR: Wrong or multiple DOIs: {}".format(row['DOI']))
-                print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-            else:
-                print("ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-
-    return modified_rows
-
 def get_dup_doi_list(rows):
     doi_list = []
     dup_doi_list = []  # duplicated dois
@@ -199,9 +179,12 @@ def get_dup_doi_list(rows):
     return dup_doi_list
 
 
-def remove_entry_with_dup_dois(rows, publisher, input_filename):
-    """There should be no duplicated DOIs in the input file.
-       Reject all data entries which has the same DOI.
+def remove_rejected_entries(rows, publisher, input_filename):
+    """Remove rejected data entries.
+
+      - Reject the data entry if there are multiple DOIs in the DOI data field.
+      - Reject all data entries which has the same DOI.
+      - Reject data entries without a DOI value.
     """
     dup_doi_list = get_dup_doi_list(rows) 
 
