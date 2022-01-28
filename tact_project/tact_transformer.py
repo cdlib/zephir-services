@@ -109,6 +109,12 @@ def transform(publisher, input_filename, output_filename):
 
     source_fieldnames, mapping_function, transform_function = define_variables(publisher)
 
+    input_rows = get_input_rows(input_filename, source_fieldnames)
+    output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
+
+    output_rows = remove_entry_with_empty_or_multiple_dois(output_rows, publisher, input_filename)
+    output_rows = remove_entry_with_dup_dois(output_rows, publisher, input_filename)
+
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
@@ -116,42 +122,92 @@ def transform(publisher, input_filename, output_filename):
     db_conn_str = get_db_conn_str()
     database = init_database(db_conn_str)
 
-    input_rows = get_input_rows(input_filename, source_fieldnames)
+    for row in output_rows:
+        writer.writerow(row)
 
-    line_no = 1 
-    for row in input_rows:
-        line_no += 1
-        for key in row:
-            if key:
-                row[key] = row[key].rstrip("\n").strip()  # remove leading and trailing whitespaces and trailing newline
-
-        output_row = init_output_row()
-        mapping_function(row, output_row)
-        if output_row['DOI'].strip() and not multiple_doi(output_row['DOI']):
-            transform_function(output_row)
-            writer.writerow(output_row)
-
-            db_record = convert_row_to_record(output_row)
-            insert_tact_publisher_reports(database, [db_record])
-        else:
-            if output_row['DOI'].strip():
-                print("Wrong or multiple DOIs: {}".format(output_row['DOI']))
-                print("publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-            else:
-                print("No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+        db_record = convert_row_to_record(row)
+        insert_tact_publisher_reports(database, [db_record])
 
     output_file.close()
 
-
 def get_input_rows(input_filename, source_fieldnames):
     input_rows = []
+
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
+            for key in row:
+                if key:
+                    row[key] = row[key].rstrip("\n").strip()  # remove leading and trailing whitespaces and trailing newline
             input_rows.append(row)
 
-    return input_rows 
+    return input_rows
+
+def map_input_to_output(input_rows, mapping_function, transform_function):
+    """Convert input data to output data format.
+
+    Args:
+      input_rows: list of dictionary representing data entries of the input file 
+      mapping_function: reference to the mapping function 
+      transform_function: reference to the transorm function 
+
+    Return: list of dictionary representing transformed data entries
+    """
+    output_rows = []
+    for row in input_rows:
+        output_row = init_output_row()
+        mapping_function(row, output_row)
+        transform_function(output_row)
+        output_rows.append(output_row)
+
+    return output_rows
+
+def remove_entry_with_empty_or_multiple_dois(rows, publisher, input_filename):
+    """DOI field should only contain one DOI.
+       Reject the data entry if there are multiple DOIs or no DOI in the DOI data field.
+    """
+    modified_rows = []
+    line_no = 1  # header
+    for row in rows:
+        line_no += 1
+        if row['DOI'].strip() and not multiple_doi(row['DOI']):
+            modified_rows.append(row)
+        else:
+            if row['DOI'].strip():
+                print("ERROR: Wrong or multiple DOIs: {}".format(row['DOI']))
+                print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+            else:
+                print("ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+
+    return modified_rows
+
+def remove_entry_with_dup_dois(rows, publisher, input_filename):
+    """There should be no duplicated DOIs in the input file.
+       Reject all data entries which has the same DOI.
+    """
+    dois = []
+    dup_dois = []
+    for row in rows:
+        if row['DOI'] in dois:
+            if row['DOI'] not in dup_dois:
+                dup_dois.append(row['DOI'])
+        else:
+            dois.append(row['DOI'])
+
+    print("dup dois: {}".format(dup_dois))
+
+    line_no = 1  # header
+    modified_rows = []
+    for row in rows:
+        line_no += 1
+        if row['DOI'] in dup_dois:
+            print("ERROR: Duplicated DOI: {}".format(row['DOI']))
+            print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+        else:
+            modified_rows.append(row)
+
+    return modified_rows 
 
 def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
