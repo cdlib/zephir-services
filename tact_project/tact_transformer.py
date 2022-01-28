@@ -112,7 +112,7 @@ def transform(publisher, input_filename, output_filename):
     input_rows = get_input_rows(input_filename, source_fieldnames)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
 
-    output_rows = remove_entry_with_empty_or_multiple_dois(output_rows, publisher, input_filename)
+    #output_rows = remove_entry_with_empty_or_multiple_dois(output_rows, publisher, input_filename)
     output_rows = remove_entry_with_dup_dois(output_rows, publisher, input_filename)
 
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
@@ -182,29 +182,52 @@ def remove_entry_with_empty_or_multiple_dois(rows, publisher, input_filename):
 
     return modified_rows
 
+def get_dup_doi_list(rows):
+    doi_list = []
+    dup_doi_list = []  # duplicated dois
+
+    for row in rows:
+        if not row['DOI'].strip():
+            continue  # skip if empty
+
+        if row['DOI'] in doi_list:
+            if row['DOI'] not in dup_doi_list:
+                dup_doi_list.append(row['DOI'])
+        else:
+            doi_list.append(row['DOI'])
+
+    return dup_doi_list
+
+
 def remove_entry_with_dup_dois(rows, publisher, input_filename):
     """There should be no duplicated DOIs in the input file.
        Reject all data entries which has the same DOI.
     """
-    dois = []
-    dup_dois = []
-    for row in rows:
-        if row['DOI'] in dois:
-            if row['DOI'] not in dup_dois:
-                dup_dois.append(row['DOI'])
-        else:
-            dois.append(row['DOI'])
+    dup_doi_list = get_dup_doi_list(rows) 
 
-    print("dup dois: {}".format(dup_dois))
+    print("dup dois: {}".format(dup_doi_list))
 
     line_no = 1  # header
     modified_rows = []
     for row in rows:
         line_no += 1
-        if row['DOI'] in dup_dois:
+        reject = False
+
+        if not row['DOI'].strip():
+            print("ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+            continue
+
+        if row['DOI'] in dup_doi_list:
+            reject = True
             print("ERROR: Duplicated DOI: {}".format(row['DOI']))
             print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-        else:
+       
+        if multiple_doi(row['DOI']):
+            reject = True
+            print("ERROR: Wrong or multiple DOIs: {}".format(row['DOI']))
+            print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+
+        if not reject:
             modified_rows.append(row)
 
     return modified_rows 
