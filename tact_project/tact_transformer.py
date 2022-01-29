@@ -12,6 +12,7 @@ import importlib
 
 from utils import str_to_decimal
 from utils import multiple_doi
+from utils import normalized_date
 import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
@@ -398,34 +399,6 @@ def normalized_article_title(title):
     # change any "\"" to ""; change any "&#34;" to ""
     normalized_title = title.replace('\\"', '').replace('&#34;', '')
     return normalized_title
-
-def normalized_date(date_str, doi):
-    # 1/31/21 => 01/31/2021
-    # 01/31/2021: keep as is
-    # 2021-06-24 21:18:29 => 06/24/2021
-    # 10-Jun-2021 - 10.1242/jeb.237628 => 06/10/2021
-    # Jan 25, 2021 - cjfas-2020-0398.R1 => 01/25/2021
-    normalized_date = ''
-    if date_str:
-        date_str = date_str.strip()
-        try:
-            normalized_date = datetime.strptime(date_str , '%m/%d/%y').strftime('%m/%d/%Y')
-        except ValueError:
-            try:
-                normalized_date = datetime.strptime(date_str, '%m/%d/%Y').strftime('%m/%d/%Y')
-            except ValueError:
-                try:
-                    normalized_date = datetime.strptime(date_str[0:10] , '%Y-%m-%d').strftime('%m/%d/%Y')
-                except ValueError:
-                    try:
-                        normalized_date = datetime.strptime(date_str[0:11] , '%d-%b-%Y').strftime('%m/%d/%Y')
-                    except ValueError:
-                        try:
-                            normalized_date = datetime.strptime(date_str[0:12] , '%b %d, %Y').strftime('%m/%d/%Y')
-                        except ValueError:
-                            print("Date format error: {} - {} ".format(date_str, doi))
-    
-    return normalized_date
 
 def normalized_grant_participation(grant_participation):
     if grant_participation in ["Y", "Yes", "Partially Covered"]:
