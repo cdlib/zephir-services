@@ -106,21 +106,18 @@ def define_variables(publisher):
 
     return source_fieldnames, mapping_function, transform_function
 
-def transform(publisher, input_filename, output_filename):
+def transform(publisher, input_filename):
 
     source_fieldnames, mapping_function, transform_function = define_variables(publisher)
 
     input_rows = get_input_rows(input_filename, source_fieldnames)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
+    return remove_rejected_entries(output_rows, publisher, input_filename)
 
-    output_rows = remove_rejected_entries(output_rows, publisher, input_filename)
-
+def write_to_outputs(output_rows, output_filename, database):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
-
-    db_conn_str = get_db_conn_str()
-    database = init_database(db_conn_str)
 
     for row in output_rows:
         writer.writerow(row)
@@ -188,8 +185,6 @@ def remove_rejected_entries(rows, publisher, input_filename):
       - Reject data entries without a DOI value.
     """
     dup_doi_list = get_dup_doi_list(rows) 
-
-    print("dup dois: {}".format(dup_doi_list))
 
     line_no = 1  # header
     modified_rows = []
@@ -463,7 +458,7 @@ def test_remove_punctuation():
     converted = "Thank you Human Robot You're welcome"
     assert(converted == normalized_publication_title(title))
 
-def process_one_publisher(publisher):
+def process_one_publisher(publisher, database):
     print("Processing files from {}".format(publisher))
     publisher = publisher.strip().lower()
 
@@ -478,15 +473,20 @@ def process_one_publisher(publisher):
             print("  File: {}".format(input_file))
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
-            transform(publisher, input_file, output_filename)
+            try:
+                transformed_rows = transform(publisher, input_file)
+                write_to_outputs(transformed_rows, output_filename, database)
 
-            input_file.rename(processed_dir.joinpath(input_file.name))
-            print("  Processed.")
+                input_file.rename(processed_dir.joinpath(input_file.name))
+                print("  Processed.")
+            except Exception as e:
+                print("Failed to process file: {}".format(e))
 
 
-def process_all_publishers():
+def process_all_publishers(database):
     for publisher in publishers:
-        process_one_publisher(publisher)
+        process_one_publisher(publisher, database)
+
 
 def usage():
     print("Parameter error.")
@@ -586,10 +586,14 @@ def main():
         exit(1)
 
     print("Processing started: {}".format(datetime.now()))
+
+    db_conn_str = get_db_conn_str()
+    database = init_database(db_conn_str)
+
     if publisher:
-        process_one_publisher(publisher)
+        process_one_publisher(publisher, database)
     else:
-        process_all_publishers()
+        process_all_publishers(database)
 
     print("Processing finished: {}".format(datetime.now()))
 
