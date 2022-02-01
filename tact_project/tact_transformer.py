@@ -10,7 +10,9 @@ from pathlib import Path
 from pathlib import PurePosixPath
 import importlib
 
-from utils import *
+from utils import str_to_decimal
+from utils import multiple_doi
+from utils import normalized_date
 import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
@@ -104,32 +106,110 @@ def define_variables(publisher):
 
     return source_fieldnames, mapping_function, transform_function
 
-def transform(publisher, input_filename, output_filename):
+def transform(publisher, input_filename):
 
     source_fieldnames, mapping_function, transform_function = define_variables(publisher)
 
+    input_rows = get_input_rows(input_filename, source_fieldnames)
+    output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
+    return remove_rejected_entries(output_rows, publisher, input_filename)
+
+def write_to_outputs(output_rows, output_filename, database):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
 
-    db_conn_str = get_db_conn_str()
-    database = init_database(db_conn_str)
+    for row in output_rows:
+        writer.writerow(row)
+
+        db_record = convert_row_to_record(row)
+        insert_tact_publisher_reports(database, [db_record])
+
+    output_file.close()
+
+def get_input_rows(input_filename, source_fieldnames):
+    input_rows = []
 
     with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
         reader = DictReader(csvfile, fieldnames=source_fieldnames)
         next(reader, None)  # skip the headers
         for row in reader:
-            output_row = init_output_row()
-            mapping_function(row, output_row)
-            if output_row['DOI'].strip():
-                transform_function(output_row)
-                writer.writerow(output_row)
+            for key in row:
+                if key:
+                    row[key] = row[key].rstrip("\n").strip()  # remove leading and trailing whitespaces and trailing newline
+            input_rows.append(row)
 
-                db_record = convert_row_to_record(output_row)
-                insert_tact_publisher_reports(database, [db_record])
+    return input_rows
 
-    output_file.close()
+def map_input_to_output(input_rows, mapping_function, transform_function):
+    """Convert input data to output data format.
 
+    Args:
+      input_rows: list of dictionary representing data entries of the input file 
+      mapping_function: reference to the mapping function 
+      transform_function: reference to the transorm function 
+
+    Return: list of dictionary representing transformed data entries
+    """
+    output_rows = []
+    for row in input_rows:
+        output_row = init_output_row()
+        mapping_function(row, output_row)
+        transform_function(output_row)
+        output_rows.append(output_row)
+
+    return output_rows
+
+def get_dup_doi_list(rows):
+    doi_list = []
+    dup_doi_list = []  # duplicated dois
+
+    for row in rows:
+        if not row['DOI'].strip():
+            continue  # skip if empty
+
+        if row['DOI'] in doi_list:
+            if row['DOI'] not in dup_doi_list:
+                dup_doi_list.append(row['DOI'])
+        else:
+            doi_list.append(row['DOI'])
+
+    return dup_doi_list
+
+
+def remove_rejected_entries(rows, publisher, input_filename):
+    """Remove rejected data entries.
+
+      - Reject the data entry if there are multiple DOIs in the DOI data field.
+      - Reject all data entries which has the same DOI.
+      - Reject data entries without a DOI value.
+    """
+    dup_doi_list = get_dup_doi_list(rows) 
+
+    line_no = 1  # header
+    modified_rows = []
+    for row in rows:
+        line_no += 1
+        reject = False
+
+        if not row['DOI'].strip():
+            print("ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+            continue
+
+        if row['DOI'] in dup_doi_list:
+            reject = True
+            print("ERROR: Duplicated DOI: {}".format(row['DOI']))
+            print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+       
+        if multiple_doi(row['DOI']):
+            reject = True
+            print("ERROR: Wrong or multiple DOIs: {}".format(row['DOI']))
+            print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+
+        if not reject:
+            modified_rows.append(row)
+
+    return modified_rows 
 
 def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
@@ -315,34 +395,6 @@ def normalized_article_title(title):
     normalized_title = title.replace('\\"', '').replace('&#34;', '')
     return normalized_title
 
-def normalized_date(date_str, doi):
-    # 1/31/21 => 01/31/2021
-    # 01/31/2021: keep as is
-    # 2021-06-24 21:18:29 => 06/24/2021
-    # 10-Jun-2021 - 10.1242/jeb.237628 => 06/10/2021
-    # Jan 25, 2021 - cjfas-2020-0398.R1 => 01/25/2021
-    normalized_date = ''
-    if date_str:
-        date_str = date_str.strip()
-        try:
-            normalized_date = datetime.strptime(date_str , '%m/%d/%y').strftime('%m/%d/%Y')
-        except ValueError:
-            try:
-                normalized_date = datetime.strptime(date_str, '%m/%d/%Y').strftime('%m/%d/%Y')
-            except ValueError:
-                try:
-                    normalized_date = datetime.strptime(date_str[0:10] , '%Y-%m-%d').strftime('%m/%d/%Y')
-                except ValueError:
-                    try:
-                        normalized_date = datetime.strptime(date_str[0:11] , '%d-%b-%Y').strftime('%m/%d/%Y')
-                    except ValueError:
-                        try:
-                            normalized_date = datetime.strptime(date_str[0:12] , '%b %d, %Y').strftime('%m/%d/%Y')
-                        except ValueError:
-                            print("Date format error: {} - {} ".format(date_str, doi))
-    
-    return normalized_date
-
 def normalized_grant_participation(grant_participation):
     if grant_participation in ["Y", "Yes", "Partially Covered"]:
         return "Yes"
@@ -406,7 +458,7 @@ def test_remove_punctuation():
     converted = "Thank you Human Robot You're welcome"
     assert(converted == normalized_publication_title(title))
 
-def process_one_publisher(publisher):
+def process_one_publisher(publisher, database):
     print("Processing files from {}".format(publisher))
     publisher = publisher.strip().lower()
 
@@ -421,15 +473,20 @@ def process_one_publisher(publisher):
             print("  File: {}".format(input_file))
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
-            transform(publisher, input_file, output_filename)
+            try:
+                transformed_rows = transform(publisher, input_file)
+                write_to_outputs(transformed_rows, output_filename, database)
 
-            input_file.rename(processed_dir.joinpath(input_file.name))
-            print("  Processed.")
+                input_file.rename(processed_dir.joinpath(input_file.name))
+                print("  Processed.")
+            except Exception as e:
+                print("Failed to process file: {}".format(e))
 
 
-def process_all_publishers():
+def process_all_publishers(database):
     for publisher in publishers:
-        process_one_publisher(publisher)
+        process_one_publisher(publisher, database)
+
 
 def usage():
     print("Parameter error.")
@@ -529,10 +586,14 @@ def main():
         exit(1)
 
     print("Processing started: {}".format(datetime.now()))
+
+    db_conn_str = get_db_conn_str()
+    database = init_database(db_conn_str)
+
     if publisher:
-        process_one_publisher(publisher)
+        process_one_publisher(publisher, database)
     else:
-        process_all_publishers()
+        process_all_publishers(database)
 
     print("Processing finished: {}".format(datetime.now()))
 

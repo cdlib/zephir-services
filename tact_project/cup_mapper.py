@@ -54,4 +54,5 @@ def source_to_output_mapping(src_row, output_row):
     output_row['Author APC Portion (USD)'] = str_to_decimal(src_row['Additional APC Paid by Author'])
     output_row['Payment Note'] = src_row['Notes']
     output_row['Agreement Manager Profile Name'] = src_row['Agreement Manager Profile Name']
+    output_row['Publisher Status'] = src_row['Status']
 
