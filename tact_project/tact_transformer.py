@@ -100,17 +100,16 @@ def define_variables(publisher):
     publisher = publisher.lower()
     mapper = importlib.import_module("{}_mapper".format(publisher))
 
-    source_fieldnames = mapper.source_fieldnames
     mapping_function = getattr(mapper, "source_to_output_mapping")
     transform_function = globals()["transform_{}".format(publisher)]
 
-    return source_fieldnames, mapping_function, transform_function
+    return mapping_function, transform_function
 
 def transform(publisher, input_filename):
 
-    source_fieldnames, mapping_function, transform_function = define_variables(publisher)
+    mapping_function, transform_function = define_variables(publisher)
 
-    input_rows = get_input_rows(input_filename, source_fieldnames)
+    input_rows = get_input_rows(input_filename)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
     return remove_rejected_entries(output_rows, publisher, input_filename)
 
@@ -134,7 +133,7 @@ def check_file_encoding(input_filename, encoding):
         for row in reader:
             pass
 
-def get_input_rows(input_filename, source_fieldnames):
+def get_input_rows(input_filename):
     input_rows = []
     Encoding = '' 
     try:
@@ -153,8 +152,6 @@ def get_input_rows(input_filename, source_fieldnames):
 
     with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
         reader = DictReader(csvfile)
-
-        #next(reader, None)  # skip the headers
 
         i=0
         for row in reader:
@@ -175,7 +172,7 @@ def get_input_rows(input_filename, source_fieldnames):
                 print("empty line")
                 continue    # skip empty lines
 
-            if i < 3 or i > 9975:
+            if i < 3:
                 print(row) 
 
             if new_row:
@@ -185,7 +182,7 @@ def get_input_rows(input_filename, source_fieldnames):
             else:
                 input_rows.append(row)
 
-    print("lines: {}".format(i))
+    print("Number of lines: {}".format(i))
     return input_rows
 
 def map_input_to_output(input_rows, mapping_function, transform_function):
