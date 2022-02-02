@@ -127,18 +127,65 @@ def write_to_outputs(output_rows, output_filename, database):
 
     output_file.close()
 
+def check_file_encoding(input_filename, encoding):
+    print("in decode file")
+    with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
+        reader = DictReader(csvfile)
+        for row in reader:
+            pass
+
 def get_input_rows(input_filename, source_fieldnames):
     input_rows = []
+    Encoding = '' 
+    try:
+        print("decode file by utf-8-sig")
+        check_file_encoding(input_filename, 'utf-8-sig')
+        encoding = 'utf-8-sig'
+    except Exception as e:
+        print("decode by utf-8-sig failed: {}".format(e))
+        try:
+            print("decode file by cp1252")
+            check_file_encoding(input_filename, 'cp1252')
+            encoding = 'cp1252'
+        except Exception as e:
+            print("decode file by cp1252 failed: {}".format(e))
+            raise e
 
-    with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
-        reader = DictReader(csvfile, fieldnames=source_fieldnames)
-        next(reader, None)  # skip the headers
+    with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
+        reader = DictReader(csvfile)
+
+        #next(reader, None)  # skip the headers
+
+        i=0
         for row in reader:
-            for key in row:
+            i +=1
+            new_row = {}
+            values = ''
+            for key, val in row.items():
                 if key:
-                    row[key] = row[key].rstrip("\n").strip()  # remove leading and trailing whitespaces and trailing newline
-            input_rows.append(row)
+                    # remove leading and trailing whitespaces and trailing newline
+                    row[key] = val.rstrip("\n").strip()
+                    values += val.rstrip("\n").strip()
 
+                    # if a key has spaces and newline, create a new key
+                    if key.rstrip("\n").strip() != key:
+                        new_row[key.rstrip("\n").strip()] = row[key]
+
+            if not values.strip():
+                print("empty line")
+                continue    # skip empty lines
+
+            if i < 3 or i > 9975:
+                print(row) 
+
+            if new_row:
+                print("new keys: {}".format(new_row))
+                new_row.update(row)
+                input_rows.append(new_row)
+            else:
+                input_rows.append(row)
+
+    print("lines: {}".format(i))
     return input_rows
 
 def map_input_to_output(input_rows, mapping_function, transform_function):
@@ -466,6 +513,7 @@ def process_one_publisher(publisher, database):
     output_dir = Path(os.getcwd()).joinpath("./outputs/{}".format(publisher))
     processed_dir = Path(os.getcwd()).joinpath("./processed/{}".format(publisher))
     input_files = (entry for entry in input_dir.iterdir() if entry.is_file())
+
     for input_file in input_files:
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
