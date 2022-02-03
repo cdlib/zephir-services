@@ -1,33 +1,5 @@
-# CUP transformer
-from utils import *
-
-source_fieldnames = [
-        "Institution",
-        "Grid ID",
-        "Manuscript Title",
-        "DOI",
-        "Corresponding Author",
-        "Corresponding Author Email",
-        "Core Article Type",
-        "Copy Received Date",
-        "Creative Commons License Type",
-        "Open Access",
-        "Eligible",
-        "Notes",
-        "Agreement Manager Profile Name",
-        "Total Transaction Value",
-        "Transaction value before discount",
-        "Author Choice for Additional APC",
-        "Reason Given for Requesting Full Funding",
-        "Additional APC Paid by CDL",
-        "Additional APC Paid by Author",
-        "Publication Name",
-        "Online ISSN",
-        "HSS/STM",
-        "Journal Status",
-        "APC USD/AUD/EUR"
-        ]
-
+# CUP mapper 
+from utils import str_to_decimal 
 
 def source_to_output_mapping(src_row, output_row):
     output_row['Publisher'] = "CUP"

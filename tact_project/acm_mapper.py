@@ -1,21 +1,4 @@
-# ACM transformer
-
-source_fieldnames = [
-        "DOI",
-        "Title",
-        "License Chosen",
-        "CC License",
-        "Date Published",
-        "name",
-        "Publication Title",
-        "Publication ISSN/ISBN",
-        "First Name",
-        "Last Name",
-        "Email",
-        "Affiliation",
-        "Notes"
-        ]
-
+# ACM mapper
 
 def source_to_output_mapping(src_row, output_row):
     output_row['Publisher'] = "ACM"

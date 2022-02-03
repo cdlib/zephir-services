@@ -1,34 +1,5 @@
-# PLOS transformer
-from utils import * 
-
-source_fieldnames = [
-        "Document Number",
-        "Name",
-        "Account",
-        "Gross Amount",
-        "Discount",
-        "Paid by Institution",
-        "PLOS Paid by Author",
-        "Item",
-        "Author Details",
-        "First Name",
-        "Last Name",
-        "Institution",
-        "Organization Department",
-        "Billing Address",
-        "Phone",
-        "Email",
-        "Manuscript Number",
-        "Dtitle",
-        "Issn",
-        "DOI",
-        "Product",
-        "Original Submission Date",
-        "Final Decision Date",
-        "Funding Disclosure",
-        "Memo",
-        ]
-
+# PLOS mapper
+from utils import str_to_decimal 
 
 def source_to_output_mapping(src_row, output_row):
     output_row['Publisher'] = "PLOS"
