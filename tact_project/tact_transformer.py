@@ -127,7 +127,6 @@ def write_to_outputs(output_rows, output_filename, database):
     output_file.close()
 
 def check_file_encoding(input_filename, encoding):
-    print("in decode file")
     with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
         reader = DictReader(csvfile)
         for row in reader:
@@ -137,17 +136,17 @@ def get_input_rows(input_filename):
     input_rows = []
     Encoding = '' 
     try:
-        print("decode file by utf-8-sig")
+        print("decoding file using utf-8-sig")
         check_file_encoding(input_filename, 'utf-8-sig')
         encoding = 'utf-8-sig'
     except Exception as e:
-        print("decode by utf-8-sig failed: {}".format(e))
+        print("decoding file using utf-8-sig failed: {}".format(e))
         try:
-            print("decode file by cp1252")
+            print("decoding file using cp1252")
             check_file_encoding(input_filename, 'cp1252')
             encoding = 'cp1252'
         except Exception as e:
-            print("decode file by cp1252 failed: {}".format(e))
+            print("decoding file using cp1252 failed: {}".format(e))
             raise e
 
     with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
@@ -169,7 +168,7 @@ def get_input_rows(input_filename):
                         new_row[key.rstrip("\n").strip()] = row[key]
 
             if not values.strip():
-                print("empty line")
+                print("Skip empty line ({})".format(i))
                 continue    # skip empty lines
 
             if i < 3:
@@ -182,7 +181,7 @@ def get_input_rows(input_filename):
             else:
                 input_rows.append(row)
 
-    print("Number of lines: {}".format(i))
+    print("Number of lines read: {}".format(i))
     return input_rows
 
 def map_input_to_output(input_rows, mapping_function, transform_function):
@@ -515,7 +514,7 @@ def process_one_publisher(publisher, database):
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
         if file_extension == ".csv":
-            print("  File: {}".format(input_file))
+            print("File: {}".format(input_file))
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             try:
@@ -523,7 +522,7 @@ def process_one_publisher(publisher, database):
                 write_to_outputs(transformed_rows, output_filename, database)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
-                print("  Processed.")
+                print("Complete.")
             except Exception as e:
                 print("Failed to process file: {}".format(e))
 
