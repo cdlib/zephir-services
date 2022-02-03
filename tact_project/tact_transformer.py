@@ -100,17 +100,16 @@ def define_variables(publisher):
     publisher = publisher.lower()
     mapper = importlib.import_module("{}_mapper".format(publisher))
 
-    source_fieldnames = mapper.source_fieldnames
     mapping_function = getattr(mapper, "source_to_output_mapping")
     transform_function = globals()["transform_{}".format(publisher)]
 
-    return source_fieldnames, mapping_function, transform_function
+    return mapping_function, transform_function
 
 def transform(publisher, input_filename):
 
-    source_fieldnames, mapping_function, transform_function = define_variables(publisher)
+    mapping_function, transform_function = define_variables(publisher)
 
-    input_rows = get_input_rows(input_filename, source_fieldnames)
+    input_rows = get_input_rows(input_filename)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
     return remove_rejected_entries(output_rows, publisher, input_filename)
 
@@ -127,18 +126,62 @@ def write_to_outputs(output_rows, output_filename, database):
 
     output_file.close()
 
-def get_input_rows(input_filename, source_fieldnames):
-    input_rows = []
-
-    with open(input_filename, 'r', newline='', encoding='UTF-8') as csvfile:
-        reader = DictReader(csvfile, fieldnames=source_fieldnames)
-        next(reader, None)  # skip the headers
+def check_file_encoding(input_filename, encoding):
+    with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
+        reader = DictReader(csvfile)
         for row in reader:
-            for key in row:
-                if key:
-                    row[key] = row[key].rstrip("\n").strip()  # remove leading and trailing whitespaces and trailing newline
-            input_rows.append(row)
+            pass
 
+def get_input_rows(input_filename):
+    input_rows = []
+    Encoding = '' 
+    try:
+        print("decoding file using utf-8-sig")
+        check_file_encoding(input_filename, 'utf-8-sig')
+        encoding = 'utf-8-sig'
+    except Exception as e:
+        print("decoding file using utf-8-sig failed: {}".format(e))
+        try:
+            print("decoding file using cp1252")
+            check_file_encoding(input_filename, 'cp1252')
+            encoding = 'cp1252'
+        except Exception as e:
+            print("decoding file using cp1252 failed: {}".format(e))
+            raise e
+
+    with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
+        reader = DictReader(csvfile)
+
+        i=0
+        for row in reader:
+            i +=1
+            new_row = {}
+            values = ''
+            for key, val in row.items():
+                if key:
+                    # remove leading and trailing whitespaces and trailing newline
+                    row[key] = val.rstrip("\n").strip()
+                    values += val.rstrip("\n").strip()
+
+                    # if a key has spaces and newline, create a new key
+                    if key.rstrip("\n").strip() != key:
+                        new_row[key.rstrip("\n").strip()] = row[key]
+
+            if not values.strip():
+                print("Skip empty line ({})".format(i))
+                continue    # skip empty lines
+
+            if i < 3:
+                print(row) 
+
+            if new_row:
+                print("new keys: {}".format(new_row))
+                new_row.update(row)
+                input_rows.append(new_row)
+            else:
+                input_rows.append(row)
+
+    print("Number of lines read: {}".format(i))
     return input_rows
 
 def map_input_to_output(input_rows, mapping_function, transform_function):
@@ -466,11 +509,12 @@ def process_one_publisher(publisher, database):
     output_dir = Path(os.getcwd()).joinpath("./outputs/{}".format(publisher))
     processed_dir = Path(os.getcwd()).joinpath("./processed/{}".format(publisher))
     input_files = (entry for entry in input_dir.iterdir() if entry.is_file())
+
     for input_file in input_files:
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
         if file_extension == ".csv":
-            print("  File: {}".format(input_file))
+            print("File: {}".format(input_file))
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             try:
@@ -478,7 +522,7 @@ def process_one_publisher(publisher, database):
                 write_to_outputs(transformed_rows, output_filename, database)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
-                print("  Processed.")
+                print("Complete.")
             except Exception as e:
                 print("Failed to process file: {}".format(e))
 

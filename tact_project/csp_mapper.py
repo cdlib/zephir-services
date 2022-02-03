@@ -1,34 +1,5 @@
 # CSP mapper 
-from utils import *
-
-source_fieldnames = [
-        "DOI",
-        "Title",
-        "Corresponding Author",
-        "Corresponding Author Email",
-        "Corresponding Author Institution/Affiliation",
-        "Institution Identifier",
-        "Document Type",
-        "Eligible",
-        "Inclusion Date",
-        "UC Approval Date",
-        "Article Open Access Status",
-        "License",
-        "Journal Name",
-        "ISSN/eISSN",
-        "Journal Access Type",
-        "Subject",
-        "Grant Participation",
-        "Funder Information",
-        "Full Coverage Reason",
-        "Original APC (USD)",
-        "Contractual APC (USD)",
-        "Library APC Portion (USD)",
-        "Author APC Portion (USD)",
-        "Payment Note",
-        "Status",
-        ]
-
+from utils import str_to_decimal 
 
 def source_to_output_mapping(src_row, output_row):
     output_row['Publisher'] = "CSP"

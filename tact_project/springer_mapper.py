@@ -1,34 +1,5 @@
-# Springer transformer
-from utils import *
-
-source_fieldnames = [
-        "Agreement",
-        "UAI",
-        "DOI",
-        "Journal ID",
-        "Journal ISSN",
-        "Journal Title",
-        "Article Title",
-        "Article Type",
-        "OA License Type",
-        "Corresponding Author Name",
-        "Corresponding Author Affiliation",
-        "Corresponding Author ORCID ID",
-        "Accepted Date",
-        "Approval Status",
-        "Approval Date",
-        "Approving Institution",
-        "Online Publication Date",
-        "Fee Model",
-        "Full Coverage Reason",
-        "List APC (USD)",
-        "Licensee APC (USD)",
-        "Insitutional APC Share (USD)",
-        "Author APC Share (USD)",
-        "Funder Name",
-        "Comments"
-        ]
-
+# Springer mapper
+from utils import str_to_decimal 
 
 def source_to_output_mapping(src_row, output_row):
     output_row['Publisher'] = "Springer"

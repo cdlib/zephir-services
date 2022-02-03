@@ -1,35 +1,5 @@
-# Elsevier transformer
-from utils import *
-
-source_fieldnames = [
-        "Corr. Author Name",
-        "Corr. Author Email",
-        "Journal ISSN",
-        "Journal Title",
-        "DOI",
-        "Full Article Title",
-        "Institute ECR",
-        "Institute Name",
-        "License Type",
-        "PII",
-        "Publication Item Type",
-        "Article Access Type",
-        "Journal Buckets",
-        "Acceptance Date",
-        "Author Journey Completion Date",
-        "Grant Participation",
-        "Research Funder",
-        "Reason Author Chose Not to Pay the Remainder",
-        "APC List Price",
-        "Discount % on APC",
-        "Discount on APC",
-        "UC Subvention",
-        "APC After Discount",
-        "APC Remainder",
-        "Author Portion of Remainder",
-        "Library Portion of Remainder"
-        ]
-
+# Elsevier mapper 
+from utils import str_to_decimal 
 
 def source_to_output_mapping(src_row, output_row):
     output_row['Publisher'] = "Elsevier"
