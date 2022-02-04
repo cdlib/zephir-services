@@ -32,8 +32,8 @@ CREATE TABLE IF NOT EXISTS publisher_reports (
   journal_bucket varchar(50) NOT NULL DEFAULT '',
   agreement_manager_profile_name varchar(70) NOT NULL DEFAULT '',
   publisher_status varchar(50) NOT NULL DEFAULT '',
-  create_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_edit timestamp NOT NULL DEFAULT  CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_date timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  last_edit timestamp(3) NOT NULL DEFAULT  CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (id),
   UNIQUE(doi) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

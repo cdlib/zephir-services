@@ -16,8 +16,6 @@ from utils import normalized_date
 import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
-from tact_db_utils import find_tact_publisher_reports_by_id
-from tact_db_utils import find_tact_publisher_reports_by_publisher
 
 publishers = [
         "ACM",
@@ -634,10 +632,14 @@ def main():
     db_conn_str = get_db_conn_str()
     database = init_database(db_conn_str)
 
+    last_updated_timestamp = ""
+
     if publisher:
         process_one_publisher(publisher, database)
     else:
         process_all_publishers(database)
+
+    update_transaction_log_table()
 
     print("Processing finished: {}".format(datetime.now()))
 

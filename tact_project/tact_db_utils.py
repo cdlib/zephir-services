@@ -14,6 +14,9 @@ from sqlalchemy.exc import SQLAlchemyError
 
 SELECT_TACT_BY_ID = "SELECT id, publisher, doi FROM publisher_reports WHERE id=:id"
 SELECT_TACT_BY_PUBLISHER = "SELECT id, publisher, doi FROM publisher_reports WHERE publisher=:publisher"
+SELECT_LAST_EDIT = "SELECT max(last_edit) as last_edit FROM publisher_reports"
+SELECT_NEW_RECORDS = "SELECT doi from publisher_reports where last_edit = create_date AND last_edit>:last_edit"
+SELECT_UPD_RECORDS = "SELECT * from publisher_reports where last_edit > create_date AND last_edit>:last_edit"
 
 class Database:
     def __init__(self, db_connect_str):
@@ -36,7 +39,7 @@ class Database:
                db_table: table name in string
                records: list of records in dictionary
             Returns: None
-               Idealy the of affected rows. However sqlalchemy does not support this feature.
+               Idealy the number of affected rows. However sqlalchemy does not support this feature.
                The CursorResult.rowcount suppose to return the number of rows matched, 
                which is not necessarily the same as the number of rows that were actually modified.
                However, the result.rowcount here always returns -1.
@@ -58,7 +61,7 @@ class Database:
                db_table: table name in string
                records: list of records in dictionary
             Returns: None
-               Idealy the of affected rows. However sqlalchemy does not support this feature.
+               Idealy the number of affected rows. However sqlalchemy does not support this feature.
                The CursorResult.rowcount suppose to return the number of rows matched, 
                which is not necessarily the same as the number of rows that were actually modified.
                However, the result.rowcount here always returns -1.
@@ -78,7 +81,7 @@ class Database:
 def init_database(db_connect_str):
     return Database(db_connect_str)
 
-def find_records(db_connect_str, select_query, params=None):
+def find_records(database, select_query, params=None):
     """
     Args:
         db_connect_str: database connection string
@@ -87,19 +90,28 @@ def find_records(db_connect_str, select_query, params=None):
         list of dict with selected field names as keys
     """
     if select_query:
-        db = Database(db_connect_str)
-        records = db.findall(text(select_query), params)
-        db.close()
+        records = database.findall(text(select_query), params)
         return records
 
 
-def find_tact_publisher_reports_by_id(db_connect_str, id):
+def find_tact_publisher_reports_by_id(database, id):
     params = {"id": id}
-    return find_records(db_connect_str, SELECT_TACT_BY_ID, params)
+    return find_records(database, SELECT_TACT_BY_ID, params)
 
-def find_tact_publisher_reports_by_publisher(db_connect_str, publisher):
+def find_tact_publisher_reports_by_publisher(database, publisher):
     params = {"publisher": publisher}
-    return find_records(db_connect_str, SELECT_TACT_BY_PUBLISHER, params)
+    return find_records(database, SELECT_TACT_BY_PUBLISHER, params)
+
+def find_last_edit_timestamp(database):
+    return find_records(database, SELECT_LAST_EDIT)
+
+def find_new_records(database, last_edit):
+    params = {"last_edit": last_edit}
+    return find_records(database, SELECT_NEW_RECORDS, params)
+
+def find_updated_records(database, last_edit):
+    params = {"last_edit": last_edit}
+    return find_records(database, SELECT_UPD_RECORDS, params)
 
 def insert_tact_publisher_reports(database, records):
     """Insert records to the publisher_reports table
@@ -110,6 +122,17 @@ def insert_tact_publisher_reports(database, records):
     if records:
         database.insert_update_on_duplicate_key(define_publisher_reports_table(), records)
         database.close
+
+def insert_tact_transaction_log(database, records):
+    """Insert records to the transaction_log table
+    Args:
+        database: a Database object
+        records: list of dictionaries
+    """
+    if records:
+        database.insert_update_on_duplicate_key(define_transaction_log_table(), records)
+        database.close
+
 
 def define_publisher_reports_table():
     return table("publisher_reports",
@@ -143,5 +166,40 @@ def define_publisher_reports_table():
       column("journal_bucket"),
       column("agreement_manager_profile_name"),
       column("publisher_status")
+      )
+
+def define_transaction_log_table():
+    return table("transaction_log",
+      column("publisher"),
+      column("doi"),
+      column("article_title"),
+      column("corresponding_author"),
+      column("corresponding_author_email"),
+      column("uc_institution"),
+      column("institution_identifier"),
+      column("document_type"),
+      column("eligible"),
+      column("inclusion_date"),
+      column("uc_approval_date"),
+      column("article_access_type"),
+      column("article_license"),
+      column("journal_name"),
+      column("issn_eissn"),
+      column("journal_access_type"),
+      column("journal_subject"),
+      column("grant_participation"),
+      column("funder_information"),
+      column("full_coverage_reason"),
+      column("original_apc_usd"),
+      column("contractual_apc_usd"),
+      column("library_apc_portion_usd"),
+      column("author_apc_portion_usd"),
+      column("payment_note"),
+      column("cdl_notes"),
+      column("license_chosen"),
+      column("journal_bucket"),
+      column("agreement_manager_profile_name"),
+      column("publisher_status"),
+      column("transaction_status")
       )
 
