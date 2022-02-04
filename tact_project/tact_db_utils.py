@@ -14,7 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 SELECT_TACT_BY_ID = "SELECT id, publisher, doi FROM publisher_reports WHERE id=:id"
 SELECT_TACT_BY_PUBLISHER = "SELECT id, publisher, doi FROM publisher_reports WHERE publisher=:publisher"
-SELECT_LAST_EDIT = "SELECT max(last_edit) as last_edit FROM publisher_reports"
+SELECT_LAST_EDIT_BY_DOI = "SELECT last_edit FROM publisher_reports WHERE doi=:doi"
 SELECT_NEW_RECORDS = "SELECT doi from publisher_reports where last_edit = create_date AND last_edit>:last_edit"
 SELECT_UPD_RECORDS = "SELECT * from publisher_reports where last_edit > create_date AND last_edit>:last_edit"
 
@@ -49,7 +49,6 @@ class Database:
                 try:
                     insert_stmt = insert(db_table).values(record)
                     result = conn.execute(insert_stmt)
-                    print("{}".format(result.rowcount()))
                 except SQLAlchemyError as e:
                     print("DB insert error: {}".format(e))
 
@@ -102,8 +101,9 @@ def find_tact_publisher_reports_by_publisher(database, publisher):
     params = {"publisher": publisher}
     return find_records(database, SELECT_TACT_BY_PUBLISHER, params)
 
-def find_last_edit_timestamp(database):
-    return find_records(database, SELECT_LAST_EDIT)
+def find_last_edit_by_doi(database, doi):
+    params = {"doi": doi}
+    return find_records(database, SELECT_LAST_EDIT_BY_DOI, params)
 
 def find_new_records(database, last_edit):
     params = {"last_edit": last_edit}
@@ -121,7 +121,6 @@ def insert_tact_publisher_reports(database, records):
     """
     if records:
         database.insert_update_on_duplicate_key(define_publisher_reports_table(), records)
-        database.close
 
 def insert_tact_transaction_log(database, records):
     """Insert records to the transaction_log table
@@ -130,8 +129,7 @@ def insert_tact_transaction_log(database, records):
         records: list of dictionaries
     """
     if records:
-        database.insert_update_on_duplicate_key(define_transaction_log_table(), records)
-        database.close
+        database.insert(define_transaction_log_table(), records)
 
 
 def define_publisher_reports_table():
