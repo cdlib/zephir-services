@@ -16,6 +16,8 @@ from utils import normalized_date
 import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
+from tact_db_utils import insert_tact_transaction_log
+from tact_db_utils import find_last_edit_by_doi
 
 publishers = [
         "ACM",
@@ -94,6 +96,8 @@ institution_id = {
         "UC Berkeley": "1438",
         }
 
+run_report = {}
+
 def define_variables(publisher):
     publisher = publisher.lower()
     mapper = importlib.import_module("{}_mapper".format(publisher))
@@ -108,8 +112,15 @@ def transform(publisher, input_filename):
     mapping_function, transform_function = define_variables(publisher)
 
     input_rows = get_input_rows(input_filename)
+    print("input rows: {}".format(len(input_rows)))
+    run_report['Input Records'] = len(input_rows)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
-    return remove_rejected_entries(output_rows, publisher, input_filename)
+    print("output rows: {}".format(len(output_rows)))
+    run_report['Total Processed Records'] = len(output_rows)
+    output_rows = remove_rejected_entries(output_rows, publisher, input_filename)
+    print("output rows after reject: {}".format(len(output_rows)))
+    run_report['Rejected Records'] = len(input_rows) - len(output_rows)
+    return output_rows
 
 def write_to_outputs(output_rows, output_filename, database):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
@@ -120,9 +131,53 @@ def write_to_outputs(output_rows, output_filename, database):
         writer.writerow(row)
 
         db_record = convert_row_to_record(row)
-        insert_tact_publisher_reports(database, [db_record])
+        update_database(database, db_record)
 
     output_file.close()
+
+def update_database(database, record):
+    """Writes a record to the TACT database.
+
+    1. Writes the record to the publisher_reports table:
+     * add a new record when the DOI is new to the table
+     * update an exist record when there are content changes 
+
+    2. Creates a transaction log in the transaction_log table with info of:
+     * incoming record
+     * plus transaction status:
+       'N': when inserted a new record
+       'U': when updated an existing record
+    
+    Use last_edit timestamp on record to identify new or update status. 
+
+    """
+    last_edit_before = None
+    last_edit_after = None
+    results = find_last_edit_by_doi(database, record['doi'])
+    print(results)
+    if results:
+        last_edit_before = results[0]['last_edit']
+
+    insert_tact_publisher_reports(database, [record])
+
+    results = find_last_edit_by_doi(database, record['doi'])
+    print(results)
+    if results:
+        last_edit_after = results[0]['last_edit']
+
+    if last_edit_before is None:
+        if last_edit_after:
+            print("new record")
+            record['transaction_status'] = 'N'
+            run_report['New Records Added'] += 1
+    else:
+        if last_edit_after > last_edit_before:
+            print("Updated record")
+            record['transaction_status'] = 'U'
+            run_report['Existing Records Updated'] += 1
+
+    if 'transaction_status' in record.keys():
+        insert_tact_transaction_log(database, [record])
 
 def check_file_encoding(input_filename, encoding):
     with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
@@ -512,6 +567,14 @@ def process_one_publisher(publisher, database):
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
         if file_extension == ".csv":
+            run_report['Filename'] = input_file
+            run_report['Run datetime'] = ''
+            run_report['Input Records'] = 0
+            run_report['Total Processed Records'] = 0
+            run_report['Rejected Records'] = 0
+            run_report['New Records Added'] = 0
+            run_report['Existing Records Updated'] = 0
+
             print("File: {}".format(input_file))
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
@@ -524,6 +587,8 @@ def process_one_publisher(publisher, database):
             except Exception as e:
                 print("Failed to process file: {}".format(e))
 
+            if run_report:
+                print(run_report)
 
 def process_all_publishers(database):
     for publisher in publishers:
@@ -638,8 +703,6 @@ def main():
         process_one_publisher(publisher, database)
     else:
         process_all_publishers(database)
-
-    update_transaction_log_table()
 
     print("Processing finished: {}".format(datetime.now()))
 

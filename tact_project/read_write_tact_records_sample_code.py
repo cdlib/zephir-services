@@ -70,7 +70,7 @@ def test_read_write_tact_records():
     print("write one value")
     print(publisher_report_list_1)
     for record in publisher_report_list_1:
-        load_record(database, record)
+        update_database(database, record)
 
     print("write multiple values")
     print(publisher_report_list_2)
@@ -78,10 +78,10 @@ def test_read_write_tact_records():
     #insert_tact_publisher_reports(database, publisher_report_list_2)
 
     for record in publisher_report_list_2:
-        load_record(database, record)
+        update_database(database, record)
 
 
-def load_record(database, record):
+def update_database(database, record):
     last_edit_1 = None
     last_edit_2 = None
     results = find_last_edit_by_doi(database, record['doi'])
