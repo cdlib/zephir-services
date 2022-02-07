@@ -198,6 +198,7 @@ def define_transaction_log_table():
       column("journal_bucket"),
       column("agreement_manager_profile_name"),
       column("publisher_status"),
-      column("transaction_status")
+      column("transaction_status"),
+      column("filename")
       )
 

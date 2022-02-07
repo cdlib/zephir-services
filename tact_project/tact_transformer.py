@@ -122,7 +122,7 @@ def transform(publisher, input_filename):
     run_report['Rejected Records'] = len(input_rows) - len(output_rows)
     return output_rows
 
-def write_to_outputs(output_rows, output_filename, database):
+def write_to_outputs(output_rows, output_filename, database, input_filename):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
@@ -131,11 +131,11 @@ def write_to_outputs(output_rows, output_filename, database):
         writer.writerow(row)
 
         db_record = convert_row_to_record(row)
-        update_database(database, db_record)
+        update_database(database, db_record, input_filename)
 
     output_file.close()
 
-def update_database(database, record):
+def update_database(database, record, input_filename):
     """Writes a record to the TACT database.
 
     1. Writes the record to the publisher_reports table:
@@ -177,6 +177,7 @@ def update_database(database, record):
             run_report['Existing Records Updated'] += 1
 
     if 'transaction_status' in record.keys():
+        record['filename'] = input_filename
         insert_tact_transaction_log(database, [record])
 
 def check_file_encoding(input_filename, encoding):
@@ -580,7 +581,7 @@ def process_one_publisher(publisher, database):
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             try:
                 transformed_rows = transform(publisher, input_file)
-                write_to_outputs(transformed_rows, output_filename, database)
+                write_to_outputs(transformed_rows, output_filename, database, input_file.name)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
                 print("Complete.")
