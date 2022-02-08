@@ -117,10 +117,10 @@ def transform(publisher, input_filename):
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
     print("output rows: {}".format(len(output_rows)))
     run_report['Total Processed Records'] = len(output_rows)
-    output_rows, rejected_rows = remove_rejected_entries(output_rows, publisher, input_filename)
+    output_rows = mark_rejected_entries(output_rows, publisher, input_filename)
     print("output rows after reject: {}".format(len(output_rows)))
     run_report['Rejected Records'] = len(input_rows) - len(output_rows)
-    return output_rows, rejected_rows
+    return output_rows
 
 def write_to_outputs(output_rows, output_filename, database, input_filename):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
@@ -248,11 +248,11 @@ def map_input_to_output(input_rows, mapping_function, transform_function):
     """Convert input data to output data format.
 
     Args:
-      input_rows: list of dictionary representing data entries of the input file 
+      input_rows: list of dictionaries representing data entries of the input file 
       mapping_function: reference to the mapping function 
       transform_function: reference to the transorm function 
 
-    Return: list of dictionary representing transformed data entries
+    Return: list of dictionaries representing transformed data entries
     """
     output_rows = []
     for row in input_rows:
@@ -280,45 +280,51 @@ def get_dup_doi_list(rows):
     return dup_doi_list
 
 
-def remove_rejected_entries(rows, publisher, input_filename):
-    """Remove rejected data entries.
+def mark_rejected_entries(rows, publisher, input_filename):
+    """Mark rejected data entries.
 
-      - Reject the data entry if there are multiple DOIs in the DOI data field.
-      - Reject all data entries which has the same DOI.
-      - Reject data entries without a DOI value.
+    Set row['transaction_status'] to 'R' (rejected) when the data entry:
+      - has more than one DOIs in the DOI data field
+      - has the same DOI with another data entry
+      - does not have a DOI value
+
+    Args:
+      rows: list of dictionaries representing data entries of the input file
+      publisher: a string for publisher name
+      input_filename: input filename without path
+
+    Returns: 
+      A list of dictionaries representing modified input rows with reject status added.
+
     """
     dup_doi_list = get_dup_doi_list(rows) 
 
     line_no = 1  # header
     modified_rows = []
-    rejected_rows = []
     for row in rows:
         line_no += 1
+        err_msg = ""
         reject = False
-
         if not row['DOI'].strip():
             reject = True
-            print("ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+            err_msg = "ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no)
         elif row['DOI'] in dup_doi_list:
             reject = True
-            print("ERROR: Duplicated DOI: {}".format(row['DOI']))
-            print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+            err_msg = "ERROR: Duplicated DOI: {} publisher: {} filename: {}, line: {}".format(row['DOI'], publisher, input_filename, line_no)
         elif multiple_doi(row['DOI']):
             reject = True
-            print("ERROR: Wrong or multiple DOIs: {}".format(row['DOI']))
-            print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+            err_msg = "ERROR: Wrong or multiple DOIs: {} publisher: {} filename: {}, line: {}".format(row['DOI'], publisher, input_filename, line_no)
 
         if reject:
             print("rejected")
             row['transaction_status'] = 'R'
-            rejected_rows.append(row)
+            row['err_msg'] = err_msg
 
         modified_rows.append(row)
 
-    print("rejected rows: {}".format(len(rejected_rows)))
     print("MODIFIED rows: {}".format(len(modified_rows)))
 
-    return modified_rows, rejected_rows 
+    return modified_rows 
 
 def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
@@ -592,10 +598,8 @@ def process_one_publisher(publisher, database):
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             try:
-                transformed_rows, rejected_rows = transform(publisher, input_file)
+                transformed_rows = transform(publisher, input_file)
                 write_to_outputs(transformed_rows, output_filename, database, input_file.name)
-                #print("REJECTED: {}".format(rejected_rows))
-                #log_rejected_records(rejected_rows, database, input_file.name)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
                 print("Complete.")
