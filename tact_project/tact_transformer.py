@@ -117,10 +117,10 @@ def transform(publisher, input_filename):
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
     print("output rows: {}".format(len(output_rows)))
     run_report['Total Processed Records'] = len(output_rows)
-    output_rows = remove_rejected_entries(output_rows, publisher, input_filename)
+    output_rows, rejected_rows = remove_rejected_entries(output_rows, publisher, input_filename)
     print("output rows after reject: {}".format(len(output_rows)))
     run_report['Rejected Records'] = len(input_rows) - len(output_rows)
-    return output_rows
+    return output_rows, rejected_rows
 
 def write_to_outputs(output_rows, output_filename, database, input_filename):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
@@ -128,12 +128,23 @@ def write_to_outputs(output_rows, output_filename, database, input_filename):
     writer.writeheader()
 
     for row in output_rows:
-        writer.writerow(row)
-
         db_record = convert_row_to_record(row)
-        update_database(database, db_record, input_filename)
+        if row.get('transaction_status') == 'R' :
+            print("this is a rejected row")
+            log_rejected_record(database, db_record, input_filename)
+        else:
+            writer.writerow(row)
+            update_database(database, db_record, input_filename)
 
     output_file.close()
+
+def log_rejected_record(database, record, input_filename):
+    record['transaction_status'] = 'R'
+    record['filename'] = input_filename 
+    print("log_rejected")
+    print("record: {}".format(record))
+    insert_tact_transaction_log(database, [record])
+
 
 def update_database(database, record, input_filename):
     """Writes a record to the TACT database.
@@ -154,20 +165,18 @@ def update_database(database, record, input_filename):
     last_edit_before = None
     last_edit_after = None
     results = find_last_edit_by_doi(database, record['doi'])
-    print(results)
     if results:
         last_edit_before = results[0]['last_edit']
 
     insert_tact_publisher_reports(database, [record])
 
     results = find_last_edit_by_doi(database, record['doi'])
-    print(results)
     if results:
         last_edit_after = results[0]['last_edit']
 
     if last_edit_before is None:
         if last_edit_after:
-            print("new record")
+            #print("new record")
             record['transaction_status'] = 'N'
             run_report['New Records Added'] += 1
     else:
@@ -224,9 +233,6 @@ def get_input_rows(input_filename):
             if not values.strip():
                 print("Skip empty line ({})".format(i))
                 continue    # skip empty lines
-
-            if i < 3:
-                print(row) 
 
             if new_row:
                 print("new keys: {}".format(new_row))
@@ -285,28 +291,34 @@ def remove_rejected_entries(rows, publisher, input_filename):
 
     line_no = 1  # header
     modified_rows = []
+    rejected_rows = []
     for row in rows:
         line_no += 1
         reject = False
 
         if not row['DOI'].strip():
+            reject = True
             print("ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-            continue
-
-        if row['DOI'] in dup_doi_list:
+        elif row['DOI'] in dup_doi_list:
             reject = True
             print("ERROR: Duplicated DOI: {}".format(row['DOI']))
             print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-       
-        if multiple_doi(row['DOI']):
+        elif multiple_doi(row['DOI']):
             reject = True
             print("ERROR: Wrong or multiple DOIs: {}".format(row['DOI']))
             print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
 
-        if not reject:
-            modified_rows.append(row)
+        if reject:
+            print("rejected")
+            row['transaction_status'] = 'R'
+            rejected_rows.append(row)
 
-    return modified_rows 
+        modified_rows.append(row)
+
+    print("rejected rows: {}".format(len(rejected_rows)))
+    print("MODIFIED rows: {}".format(len(modified_rows)))
+
+    return modified_rows, rejected_rows 
 
 def transform_acm(row):
     row['Article Title'] = normalized_article_title(row['Article Title'])
@@ -580,8 +592,10 @@ def process_one_publisher(publisher, database):
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             try:
-                transformed_rows = transform(publisher, input_file)
+                transformed_rows, rejected_rows = transform(publisher, input_file)
                 write_to_outputs(transformed_rows, output_filename, database, input_file.name)
+                #print("REJECTED: {}".format(rejected_rows))
+                #log_rejected_records(rejected_rows, database, input_file.name)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
                 print("Complete.")
