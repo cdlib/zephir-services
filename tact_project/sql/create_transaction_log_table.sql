@@ -32,8 +32,7 @@ CREATE TABLE IF NOT EXISTS transaction_log (
   journal_bucket varchar(50) NOT NULL DEFAULT '',
   agreement_manager_profile_name varchar(70) NOT NULL DEFAULT '',
   publisher_status varchar(50) NOT NULL DEFAULT '',
-  transaction_status varchar(10) NOT NULL DEFAULT '',
-  filename varchar(100) NOT NULL DEFAULT '',
+  transaction_status_json json DEFAULT NULL,
   create_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_edit timestamp NOT NULL DEFAULT  CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id)

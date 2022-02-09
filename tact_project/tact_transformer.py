@@ -9,6 +9,7 @@ from csv import DictWriter
 from pathlib import Path
 from pathlib import PurePosixPath
 import importlib
+import json
 
 from utils import str_to_decimal
 from utils import multiple_doi
@@ -117,7 +118,7 @@ def transform(publisher, input_filename):
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
     print("output rows: {}".format(len(output_rows)))
     run_report['Total Processed Records'] = len(output_rows)
-    output_rows = mark_rejected_entries(output_rows, publisher, input_filename)
+    output_rows = mark_rejected_entries(output_rows, publisher, input_filename.name)
     print("output rows after reject: {}".format(len(output_rows)))
     run_report['Rejected Records'] = len(input_rows) - len(output_rows)
     return output_rows
@@ -129,20 +130,20 @@ def write_to_outputs(output_rows, output_filename, database, input_filename):
 
     for row in output_rows:
         db_record = convert_row_to_record(row)
-        if row.get('transaction_status') == 'R' :
+        if row.get('transaction_status_json'):
             print("this is a rejected row")
-            log_rejected_record(database, db_record, input_filename)
+            log_rejected_record(database, db_record, row['transaction_status_json'])
         else:
             writer.writerow(row)
             update_database(database, db_record, input_filename)
 
     output_file.close()
 
-def log_rejected_record(database, record, input_filename):
-    record['transaction_status'] = 'R'
-    record['filename'] = input_filename 
+def log_rejected_record(database, record, transaction_status):
     print("log_rejected")
     print("record: {}".format(record))
+    print(transaction_status)
+    record['transaction_status_json'] = json.dumps(transaction_status)
     insert_tact_transaction_log(database, [record])
 
 
@@ -174,19 +175,21 @@ def update_database(database, record, input_filename):
     if results:
         last_edit_after = results[0]['last_edit']
 
+    transaction_status = {}
     if last_edit_before is None:
         if last_edit_after:
             #print("new record")
-            record['transaction_status'] = 'N'
+            transaction_status['transaction_status'] = 'N'
             run_report['New Records Added'] += 1
     else:
         if last_edit_after > last_edit_before:
             print("Updated record")
-            record['transaction_status'] = 'U'
+            transaction_status['transaction_status'] = 'U'
             run_report['Existing Records Updated'] += 1
 
-    if 'transaction_status' in record.keys():
-        record['filename'] = input_filename
+    if transaction_status:
+        transaction_status['filename'] = input_filename
+        record['transaction_status_json'] = json.dumps(transaction_status)
         insert_tact_transaction_log(database, [record])
 
 def check_file_encoding(input_filename, encoding):
@@ -303,22 +306,32 @@ def mark_rejected_entries(rows, publisher, input_filename):
     modified_rows = []
     for row in rows:
         line_no += 1
-        err_msg = ""
+        error_code = "" 
+        error_msg = ""
+        transaction_status_json = {}
         reject = False
         if not row['DOI'].strip():
             reject = True
-            err_msg = "ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no)
+            error_code = "0"
+            error_msg = "No DOI"
         elif row['DOI'] in dup_doi_list:
             reject = True
-            err_msg = "ERROR: Duplicated DOI: {} publisher: {} filename: {}, line: {}".format(row['DOI'], publisher, input_filename, line_no)
+            error_code = "1"
+            error_msg = "Duplicated DOI"
         elif multiple_doi(row['DOI']):
             reject = True
-            err_msg = "ERROR: Wrong or multiple DOIs: {} publisher: {} filename: {}, line: {}".format(row['DOI'], publisher, input_filename, line_no)
+            error_code = "2"
+            error_msg = "Wrong or multiple DOIs (with space(s) in DOI field)"
 
         if reject:
             print("rejected")
-            row['transaction_status'] = 'R'
-            row['err_msg'] = err_msg
+            transaction_status_json['transaction_status'] = 'R'
+            transaction_status_json['error_code'] = error_code 
+            transaction_status_json['error_msg'] = error_msg
+            transaction_status_json['line_no'] = line_no
+            transaction_status_json['publisher'] = publisher
+            transaction_status_json['filename'] = input_filename
+            row['transaction_status_json'] = transaction_status_json
 
         modified_rows.append(row)
 
