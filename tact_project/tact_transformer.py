@@ -113,39 +113,27 @@ def transform(publisher, input_filename):
     mapping_function, transform_function = define_variables(publisher)
 
     input_rows = get_input_rows(input_filename)
-    print("input rows: {}".format(len(input_rows)))
+    print("Input Records: {}".format(len(input_rows)))
     run_report['Input Records'] = len(input_rows)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
-    print("output rows: {}".format(len(output_rows)))
-    run_report['Total Processed Records'] = len(output_rows)
     output_rows = mark_rejected_entries(output_rows, publisher, input_filename.name)
-    print("output rows after reject: {}".format(len(output_rows)))
-    run_report['Rejected Records'] = len(input_rows) - len(output_rows)
     return output_rows
 
-def write_to_outputs(output_rows, output_filename, database, input_filename):
+def write_to_outputs(input_rows, output_filename, database, input_filename):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
 
-    for row in output_rows:
+    for row in input_rows:
         db_record = convert_row_to_record(row)
-        if row.get('transaction_status_json'):
-            print("this is a rejected row")
-            log_rejected_record(database, db_record, row['transaction_status_json'])
+        if row.get('reject_status'):
+            db_record['transaction_status_json'] = json.dumps(row['reject_status'])
+            insert_tact_transaction_log(database, [db_record])
         else:
             writer.writerow(row)
             update_database(database, db_record, input_filename)
 
     output_file.close()
-
-def log_rejected_record(database, record, transaction_status):
-    print("log_rejected")
-    print("record: {}".format(record))
-    print(transaction_status)
-    record['transaction_status_json'] = json.dumps(transaction_status)
-    insert_tact_transaction_log(database, [record])
-
 
 def update_database(database, record, input_filename):
     """Writes a record to the TACT database.
@@ -308,7 +296,7 @@ def mark_rejected_entries(rows, publisher, input_filename):
         line_no += 1
         error_code = "" 
         error_msg = ""
-        transaction_status_json = {}
+        reject_status = {}
         reject = False
         if not row['DOI'].strip():
             reject = True
@@ -324,18 +312,16 @@ def mark_rejected_entries(rows, publisher, input_filename):
             error_msg = "Wrong or multiple DOIs (with space(s) in DOI field)"
 
         if reject:
-            print("rejected")
-            transaction_status_json['transaction_status'] = 'R'
-            transaction_status_json['error_code'] = error_code 
-            transaction_status_json['error_msg'] = error_msg
-            transaction_status_json['line_no'] = line_no
-            transaction_status_json['publisher'] = publisher
-            transaction_status_json['filename'] = input_filename
-            row['transaction_status_json'] = transaction_status_json
+            run_report['Rejected Records'] += 1
+            reject_status['transaction_status'] = 'R'
+            reject_status['error_code'] = error_code 
+            reject_status['error_msg'] = error_msg
+            reject_status['line_no'] = line_no
+            reject_status['publisher'] = publisher
+            reject_status['filename'] = input_filename
+            row['reject_status'] = reject_status
 
         modified_rows.append(row)
-
-    print("MODIFIED rows: {}".format(len(modified_rows)))
 
     return modified_rows 
 
@@ -599,16 +585,17 @@ def process_one_publisher(publisher, database):
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
         if file_extension == ".csv":
-            run_report['Filename'] = input_file
-            run_report['Run datetime'] = ''
+            print("File: {}".format(input_file))
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
+
+            run_report['Filename'] = input_file.name
+            run_report['Run datetime'] = timestamp 
             run_report['Input Records'] = 0
             run_report['Total Processed Records'] = 0
             run_report['Rejected Records'] = 0
             run_report['New Records Added'] = 0
             run_report['Existing Records Updated'] = 0
 
-            print("File: {}".format(input_file))
-            timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             try:
                 transformed_rows = transform(publisher, input_file)
@@ -620,6 +607,7 @@ def process_one_publisher(publisher, database):
                 print("Failed to process file: {}".format(e))
 
             if run_report:
+                run_report['Total Processed Records'] = run_report['New Records Added'] + run_report['Existing Records Updated'] + run_report['Rejected Records']
                 print(run_report)
 
 def process_all_publishers(database):
