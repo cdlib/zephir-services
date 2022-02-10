@@ -9,6 +9,7 @@ from csv import DictWriter
 from pathlib import Path
 from pathlib import PurePosixPath
 import importlib
+import json
 
 from utils import str_to_decimal
 from utils import multiple_doi
@@ -16,8 +17,8 @@ from utils import normalized_date
 import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
-from tact_db_utils import find_tact_publisher_reports_by_id
-from tact_db_utils import find_tact_publisher_reports_by_publisher
+from tact_db_utils import insert_tact_transaction_log
+from tact_db_utils import find_last_edit_by_doi
 
 publishers = [
         "ACM",
@@ -96,6 +97,8 @@ institution_id = {
         "UC Berkeley": "1438",
         }
 
+run_report = {}
+
 def define_variables(publisher):
     publisher = publisher.lower()
     mapper = importlib.import_module("{}_mapper".format(publisher))
@@ -110,21 +113,72 @@ def transform(publisher, input_filename):
     mapping_function, transform_function = define_variables(publisher)
 
     input_rows = get_input_rows(input_filename)
+    print("Input Records: {}".format(len(input_rows)))
+    run_report['Input Records'] = len(input_rows)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
-    return remove_rejected_entries(output_rows, publisher, input_filename)
+    output_rows = mark_rejected_entries(output_rows, publisher, input_filename.name)
+    return output_rows
 
-def write_to_outputs(output_rows, output_filename, database):
+def write_to_outputs(input_rows, output_filename, database, input_filename):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
 
-    for row in output_rows:
-        writer.writerow(row)
-
+    for row in input_rows:
         db_record = convert_row_to_record(row)
-        insert_tact_publisher_reports(database, [db_record])
+        if row.get('reject_status'):
+            db_record['transaction_status_json'] = json.dumps(row['reject_status'])
+            insert_tact_transaction_log(database, [db_record])
+        else:
+            writer.writerow(row)
+            update_database(database, db_record, input_filename)
 
     output_file.close()
+
+def update_database(database, record, input_filename):
+    """Writes a record to the TACT database.
+
+    1. Writes the record to the publisher_reports table:
+     * add a new record when the DOI is new to the table
+     * update an exist record when there are content changes 
+
+    2. Creates a transaction log in the transaction_log table with info of:
+     * incoming record
+     * plus transaction status:
+       'N': when inserted a new record
+       'U': when updated an existing record
+    
+    Use last_edit timestamp on record to identify new or update status. 
+
+    """
+    last_edit_before = None
+    last_edit_after = None
+    results = find_last_edit_by_doi(database, record['doi'])
+    if results:
+        last_edit_before = results[0]['last_edit']
+
+    insert_tact_publisher_reports(database, [record])
+
+    results = find_last_edit_by_doi(database, record['doi'])
+    if results:
+        last_edit_after = results[0]['last_edit']
+
+    transaction_status = {}
+    if last_edit_before is None:
+        if last_edit_after:
+            #print("new record")
+            transaction_status['transaction_status'] = 'N'
+            run_report['New Records Added'] += 1
+    else:
+        if last_edit_after > last_edit_before:
+            print("Updated record")
+            transaction_status['transaction_status'] = 'U'
+            run_report['Existing Records Updated'] += 1
+
+    if transaction_status:
+        transaction_status['filename'] = input_filename
+        record['transaction_status_json'] = json.dumps(transaction_status)
+        insert_tact_transaction_log(database, [record])
 
 def check_file_encoding(input_filename, encoding):
     with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
@@ -171,9 +225,6 @@ def get_input_rows(input_filename):
                 print("Skip empty line ({})".format(i))
                 continue    # skip empty lines
 
-            if i < 3:
-                print(row) 
-
             if new_row:
                 print("new keys: {}".format(new_row))
                 new_row.update(row)
@@ -188,11 +239,11 @@ def map_input_to_output(input_rows, mapping_function, transform_function):
     """Convert input data to output data format.
 
     Args:
-      input_rows: list of dictionary representing data entries of the input file 
+      input_rows: list of dictionaries representing data entries of the input file 
       mapping_function: reference to the mapping function 
       transform_function: reference to the transorm function 
 
-    Return: list of dictionary representing transformed data entries
+    Return: list of dictionaries representing transformed data entries
     """
     output_rows = []
     for row in input_rows:
@@ -220,12 +271,22 @@ def get_dup_doi_list(rows):
     return dup_doi_list
 
 
-def remove_rejected_entries(rows, publisher, input_filename):
-    """Remove rejected data entries.
+def mark_rejected_entries(rows, publisher, input_filename):
+    """Mark rejected data entries.
 
-      - Reject the data entry if there are multiple DOIs in the DOI data field.
-      - Reject all data entries which has the same DOI.
-      - Reject data entries without a DOI value.
+    Set row['transaction_status'] to 'R' (rejected) when the data entry:
+      - has more than one DOIs in the DOI data field
+      - has the same DOI with another data entry
+      - does not have a DOI value
+
+    Args:
+      rows: list of dictionaries representing data entries of the input file
+      publisher: a string for publisher name
+      input_filename: input filename without path
+
+    Returns: 
+      A list of dictionaries representing modified input rows with reject status added.
+
     """
     dup_doi_list = get_dup_doi_list(rows) 
 
@@ -233,24 +294,34 @@ def remove_rejected_entries(rows, publisher, input_filename):
     modified_rows = []
     for row in rows:
         line_no += 1
+        error_code = "" 
+        error_msg = ""
+        reject_status = {}
         reject = False
-
         if not row['DOI'].strip():
-            print("ERROR: No DOI: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-            continue
-
-        if row['DOI'] in dup_doi_list:
             reject = True
-            print("ERROR: Duplicated DOI: {}".format(row['DOI']))
-            print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
-       
-        if multiple_doi(row['DOI']):
+            error_code = "0"
+            error_msg = "No DOI"
+        elif row['DOI'] in dup_doi_list:
             reject = True
-            print("ERROR: Wrong or multiple DOIs: {}".format(row['DOI']))
-            print("INFO: publisher: {} filename: {}, line: {}".format(publisher, input_filename, line_no))
+            error_code = "1"
+            error_msg = "Duplicated DOI"
+        elif multiple_doi(row['DOI']):
+            reject = True
+            error_code = "2"
+            error_msg = "Wrong or multiple DOIs (with space(s) in DOI field)"
 
-        if not reject:
-            modified_rows.append(row)
+        if reject:
+            run_report['Rejected Records'] += 1
+            reject_status['transaction_status'] = 'R'
+            reject_status['error_code'] = error_code 
+            reject_status['error_msg'] = error_msg
+            reject_status['line_no'] = line_no
+            reject_status['publisher'] = publisher
+            reject_status['filename'] = input_filename
+            row['reject_status'] = reject_status
+
+        modified_rows.append(row)
 
     return modified_rows 
 
@@ -516,16 +587,28 @@ def process_one_publisher(publisher, database):
         if file_extension == ".csv":
             print("File: {}".format(input_file))
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S_%f')
+
+            run_report['Filename'] = input_file.name
+            run_report['Run datetime'] = timestamp 
+            run_report['Input Records'] = 0
+            run_report['Total Processed Records'] = 0
+            run_report['Rejected Records'] = 0
+            run_report['New Records Added'] = 0
+            run_report['Existing Records Updated'] = 0
+
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             try:
                 transformed_rows = transform(publisher, input_file)
-                write_to_outputs(transformed_rows, output_filename, database)
+                write_to_outputs(transformed_rows, output_filename, database, input_file.name)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
                 print("Complete.")
             except Exception as e:
                 print("Failed to process file: {}".format(e))
 
+            if run_report:
+                run_report['Total Processed Records'] = run_report['New Records Added'] + run_report['Existing Records Updated'] + run_report['Rejected Records']
+                print(run_report)
 
 def process_all_publishers(database):
     for publisher in publishers:
@@ -633,6 +716,8 @@ def main():
 
     db_conn_str = get_db_conn_str()
     database = init_database(db_conn_str)
+
+    last_updated_timestamp = ""
 
     if publisher:
         process_one_publisher(publisher, database)

@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS publisher_reports;
+DROP TABLE IF EXISTS transaction_log;
 
-CREATE TABLE IF NOT EXISTS publisher_reports (
+CREATE TABLE IF NOT EXISTS transaction_log (
   id int(11) NOT NULL AUTO_INCREMENT,
   publisher varchar(20) NOT NULL DEFAULT '',
   doi varchar(150) NOT NULL DEFAULT '',
@@ -32,10 +32,10 @@ CREATE TABLE IF NOT EXISTS publisher_reports (
   journal_bucket varchar(50) NOT NULL DEFAULT '',
   agreement_manager_profile_name varchar(70) NOT NULL DEFAULT '',
   publisher_status varchar(50) NOT NULL DEFAULT '',
-  create_date timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  last_edit timestamp(3) NOT NULL DEFAULT  CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-  PRIMARY KEY (id),
-  UNIQUE(doi) 
+  transaction_status_json json DEFAULT NULL,
+  create_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_edit timestamp NOT NULL DEFAULT  CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-create index doi_index on publisher_reports (doi);
+create index log_doi_index on transaction_log (doi);
