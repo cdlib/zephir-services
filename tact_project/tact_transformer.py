@@ -10,6 +10,7 @@ from pathlib import Path
 from pathlib import PurePosixPath
 import importlib
 import json
+import logging
 
 from utils import str_to_decimal
 from utils import multiple_doi
@@ -20,6 +21,8 @@ from tact_db_utils import insert_tact_publisher_reports
 from tact_db_utils import insert_tact_transaction_log
 from tact_db_utils import insert_run_reports
 from tact_db_utils import find_last_edit_by_doi
+
+logger = logging.getLogger("TACT Logger")
 
 publishers = [
         "ACM",
@@ -110,14 +113,14 @@ class RunReport:
         self.existing_records_updated = 0
 
     def display(self):
-        print("Publisher: {}".format(self.publisher))
-        print("Filename: {}".format(self.filename))
-        print("Run datatime: {}".format(self.run_datetime))
-        print("Input Records: {}".format(self.input_records))
-        print("Total Processed Records: {}".format(self.total_processed_records))
-        print("Rejected Records: {}".format(self.rejected_records))
-        print("New Records Added: {}".format(self.new_records_added))
-        print("Existing Records Updated: {}".format(self.existing_records_updated))
+        logger.info("Publisher: {}".format(self.publisher))
+        logger.info("Filename: {}".format(self.filename))
+        logger.info("Run datatime: {}".format(self.run_datetime))
+        logger.info("Input Records: {}".format(self.input_records))
+        logger.info("Total Processed Records: {}".format(self.total_processed_records))
+        logger.info("Rejected Records: {}".format(self.rejected_records))
+        logger.info("New Records Added: {}".format(self.new_records_added))
+        logger.info("Existing Records Updated: {}".format(self.existing_records_updated))
 
 
 def define_variables(publisher):
@@ -134,7 +137,7 @@ def transform(publisher, input_filename, run_report):
     mapping_function, transform_function = define_variables(publisher)
 
     input_rows = get_input_rows(input_filename)
-    print("Input Records: {}".format(len(input_rows)))
+    logger.info("Input Records: {}".format(len(input_rows)))
     run_report.input_records = len(input_rows)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
     output_rows = mark_rejected_entries(output_rows, run_report)
@@ -239,11 +242,11 @@ def get_input_rows(input_filename):
                         new_row[key.rstrip("\n").strip()] = row[key]
 
             if not values.strip():
-                print("Skip empty line ({})".format(i))
+                logger.info("Skip empty line ({})".format(i))
                 continue    # skip empty lines
 
             if new_row:
-                print("new keys: {}".format(new_row))
+                logger.inf("new keys: {}".format(new_row))
                 new_row.update(row)
                 input_rows.append(new_row)
             else:
@@ -336,7 +339,7 @@ def mark_rejected_entries(rows, run_report):
             reject_status['publisher'] = run_report.publisher
             reject_status['filename'] = run_report.filename
             row['reject_status'] = reject_status
-            print("Rejected row: {}".format(reject_status))
+            logger.info("Rejected row: {}".format(reject_status))
 
         modified_rows.append(row)
 
@@ -590,7 +593,7 @@ def test_remove_punctuation():
     assert(converted == normalized_publication_title(title))
 
 def process_one_publisher(publisher, database):
-    print("Processing files from {}".format(publisher))
+    logger.info("Processing files from {}".format(publisher))
     publisher = publisher.strip().lower()
 
     input_dir = Path(os.getcwd()).joinpath("./indata/{}".format(publisher))
@@ -602,7 +605,7 @@ def process_one_publisher(publisher, database):
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
         if file_extension == ".csv":
-            print("File: {}".format(input_file))
+            logger.info("File: {}".format(input_file))
             run_datetime = datetime.now()
             timestamp = run_datetime.strftime('%Y%m%d%H%M%S_%f')
 
@@ -614,9 +617,9 @@ def process_one_publisher(publisher, database):
                 write_to_outputs(transformed_rows, output_filename, database, run_report)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
-                print("Complete.")
+                logger.info("Complete.")
             except Exception as e:
-                print("Failed to process file: {}".format(e))
+                logger.error("Failed to process file: {}".format(e))
 
             run_report.total_processed_records = run_report.input_records - run_report.rejected_records
             run_report.display()
@@ -716,6 +719,21 @@ def convert_row_to_record(row):
         }
     return record
 
+def config_logger():
+    logger.setLevel(logging.DEBUG)
+
+    log_format = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    file = logging.FileHandler("./logs/tact_run.log")
+    file.setLevel(logging.INFO)
+    file.setFormatter(log_format)
+
+    # output to console
+    stream = logging.StreamHandler()
+    stream.setLevel(logging.INFO)
+
+    logger.addHandler(file)
+    logger.addHandler(stream)
+
 def main():
 
     publisher = None
@@ -725,7 +743,9 @@ def main():
         usage()
         exit(1)
 
-    print("Processing started: {}".format(datetime.now()))
+    config_logger()
+
+    logger.info("Processing started: {}".format(datetime.now()))
 
     db_conn_str = get_db_conn_str()
     database = init_database(db_conn_str)
@@ -737,7 +757,7 @@ def main():
     else:
         process_all_publishers(database)
 
-    print("Processing finished: {}".format(datetime.now()))
+    logger.info("Processing finished: {}".format(datetime.now()))
 
 if __name__ == "__main__":
     main()
