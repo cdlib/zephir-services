@@ -317,6 +317,7 @@ def mark_rejected_entries(rows, publisher, input_filename):
             reject_status['publisher'] = publisher
             reject_status['filename'] = input_filename
             row['reject_status'] = reject_status
+            print("Rejected row: {}".format(reject_status))
 
         modified_rows.append(row)
 
