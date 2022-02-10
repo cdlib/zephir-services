@@ -98,7 +98,27 @@ institution_id = {
         "UC Berkeley": "1438",
         }
 
-run_report = {}
+class RunReport:
+    def __init__(self, publisher='', filename=''):
+        self.publisher = publisher
+        self.filename = filename
+        self.run_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+        self.input_records = 0
+        self.total_processed_records = 0
+        self.rejected_records = 0
+        self.new_records_added = 0
+        self.existing_records_updated = 0
+
+    def display(self):
+        print("Publisher: {}".format(self.publisher))
+        print("Filename: {}".format(self.filename))
+        print("Run datatime: {}".format(self.run_datetime))
+        print("Input Records: {}".format(self.input_records))
+        print("Total Processed Records: {}".format(self.total_processed_records))
+        print("Rejected Records: {}".format(self.rejected_records))
+        print("New Records Added: {}".format(self.new_records_added))
+        print("Existing Records Updated: {}".format(self.existing_records_updated))
+
 
 def define_variables(publisher):
     publisher = publisher.lower()
@@ -109,18 +129,18 @@ def define_variables(publisher):
 
     return mapping_function, transform_function
 
-def transform(publisher, input_filename):
+def transform(publisher, input_filename, run_report):
 
     mapping_function, transform_function = define_variables(publisher)
 
     input_rows = get_input_rows(input_filename)
     print("Input Records: {}".format(len(input_rows)))
-    run_report['input_records'] = len(input_rows)
+    run_report.input_records = len(input_rows)
     output_rows = map_input_to_output(input_rows, mapping_function, transform_function)
-    output_rows = mark_rejected_entries(output_rows, publisher, input_filename.name)
+    output_rows = mark_rejected_entries(output_rows, run_report)
     return output_rows
 
-def write_to_outputs(input_rows, output_filename, database, input_filename):
+def write_to_outputs(input_rows, output_filename, database, run_report):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
@@ -132,11 +152,11 @@ def write_to_outputs(input_rows, output_filename, database, input_filename):
             insert_tact_transaction_log(database, [db_record])
         else:
             writer.writerow(row)
-            update_database(database, db_record, input_filename)
+            update_database(database, db_record, run_report)
 
     output_file.close()
 
-def update_database(database, record, input_filename):
+def update_database(database, record, run_report):
     """Writes a record to the TACT database.
 
     1. Writes the record to the publisher_reports table:
@@ -167,16 +187,15 @@ def update_database(database, record, input_filename):
     transaction_status = {}
     if last_edit_before is None:
         if last_edit_after:
-            #print("new record")
             transaction_status['transaction_status'] = 'N'
-            run_report['new_records_added'] += 1
+            run_report.new_records_added += 1
     else:
         if last_edit_after > last_edit_before:
             transaction_status['transaction_status'] = 'U'
-            run_report['existing_records_updated'] += 1
+            run_report.existing_records_updated += 1
 
     if transaction_status:
-        transaction_status['filename'] = input_filename
+        transaction_status['filename'] = run_report.filename
         record['transaction_status_json'] = json.dumps(transaction_status)
         insert_tact_transaction_log(database, [record])
 
@@ -268,7 +287,7 @@ def get_dup_doi_list(rows):
     return dup_doi_list
 
 
-def mark_rejected_entries(rows, publisher, input_filename):
+def mark_rejected_entries(rows, run_report):
     """Mark rejected data entries.
 
     Set row['transaction_status'] to 'R' (rejected) when the data entry:
@@ -309,13 +328,13 @@ def mark_rejected_entries(rows, publisher, input_filename):
             error_msg = "Wrong or multiple DOIs (with space(s) in DOI field)"
 
         if reject:
-            run_report['rejected_records'] += 1
+            run_report.rejected_records += 1
             reject_status['transaction_status'] = 'R'
             reject_status['error_code'] = error_code 
             reject_status['error_msg'] = error_msg
             reject_status['line_no'] = line_no
-            reject_status['publisher'] = publisher
-            reject_status['filename'] = input_filename
+            reject_status['publisher'] = run_report.publisher
+            reject_status['filename'] = run_report.filename
             row['reject_status'] = reject_status
             print("Rejected row: {}".format(reject_status))
 
@@ -587,29 +606,22 @@ def process_one_publisher(publisher, database):
             run_datetime = datetime.now()
             timestamp = run_datetime.strftime('%Y%m%d%H%M%S_%f')
 
-            run_report['filename'] = input_file.name
-            run_report['run_datetime'] = run_datetime.strftime('%Y-%m-%d %H:%M:%S.%f') 
-            run_report['input_records'] = 0
-            run_report['total_processed_records'] = 0
-            run_report['rejected_records'] = 0
-            run_report['new_records_added'] = 0
-            run_report['existing_records_updated'] = 0
+            run_report = RunReport(publisher, input_file.name)
 
             output_filename = output_dir.joinpath("{}_output_{}.csv".format(filename_wo_ext, timestamp))
             try:
-                transformed_rows = transform(publisher, input_file)
-                write_to_outputs(transformed_rows, output_filename, database, input_file.name)
+                transformed_rows = transform(publisher, input_file, run_report)
+                write_to_outputs(transformed_rows, output_filename, database, run_report)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
                 print("Complete.")
             except Exception as e:
                 print("Failed to process file: {}".format(e))
 
-            if run_report:
-                run_report['total_processed_records'] = run_report['input_records'] - run_report['rejected_records']
-                print(run_report)
-                db_record = {'run_report': json.dumps(run_report)}
-                insert_run_reports(database, [db_record])
+            run_report.total_processed_records = run_report.input_records - run_report.rejected_records
+            run_report.display()
+            db_record = {'run_report': json.dumps(run_report.__dict__)}
+            insert_run_reports(database, [db_record])
 
 def process_all_publishers(database):
     for publisher in publishers:

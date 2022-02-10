@@ -2,8 +2,9 @@ DROP TABLE IF EXISTS run_reports;
 
 CREATE TABLE IF NOT EXISTS run_reports (
   id int(11) NOT NULL AUTO_INCREMENT,
+  publisher char(20) GENERATED ALWAYS AS (json_unquote(json_extract(run_report,'$.publisher'))) VIRTUAL,
   filename char(100) GENERATED ALWAYS AS (json_unquote(json_extract(run_report,'$.filename'))) VIRTUAL,
-  run_datetime char(20) GENERATED ALWAYS AS (json_unquote(json_extract(run_report,'$.run_datetime'))) VIRTUAL,
+  run_datetime char(30) GENERATED ALWAYS AS (json_unquote(json_extract(run_report,'$.run_datetime'))) VIRTUAL,
   input_records int GENERATED ALWAYS AS (json_unquote(json_extract(run_report,'$.input_records'))) VIRTUAL,
   total_processed_records int GENERATED ALWAYS AS (json_unquote(json_extract(run_report,'$.total_processed_records'))) VIRTUAL,
   rejected_records int GENERATED ALWAYS AS (json_unquote(json_extract(run_report,'$.rejected_records'))) VIRTUAL,
