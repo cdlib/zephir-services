@@ -18,6 +18,7 @@ import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
 from tact_db_utils import insert_tact_transaction_log
+from tact_db_utils import insert_run_reports
 from tact_db_utils import find_last_edit_by_doi
 
 publishers = [
@@ -171,7 +172,6 @@ def update_database(database, record, input_filename):
             run_report['new_records_added'] += 1
     else:
         if last_edit_after > last_edit_before:
-            print("Updated record")
             transaction_status['transaction_status'] = 'U'
             run_report['existing_records_updated'] += 1
 
@@ -607,6 +607,8 @@ def process_one_publisher(publisher, database):
             if run_report:
                 run_report['total_processed_records'] = run_report['input_records'] - run_report['rejected_records']
                 print(run_report)
+                db_record = {'run_report': json.dumps(run_report)}
+                insert_run_reports(database, [db_record])
 
 def process_all_publishers(database):
     for publisher in publishers:
