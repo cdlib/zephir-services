@@ -131,6 +131,14 @@ def insert_tact_transaction_log(database, records):
     if records:
         database.insert(define_transaction_log_table(), records)
 
+def insert_run_reports(database, records):
+    """Insert records to the run_reports table
+    Args:
+        database: a Database object
+        records: list of dictionaries
+    """
+    if records:
+        database.insert(define_run_reports_table(), records)
 
 def define_publisher_reports_table():
     return table("publisher_reports",
@@ -202,3 +210,7 @@ def define_transaction_log_table():
       column("filename")
       )
 
+def define_run_reports_table():
+    return table("run_reports",
+      column("run_report")
+      )
