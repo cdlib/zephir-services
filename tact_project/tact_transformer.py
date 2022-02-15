@@ -229,11 +229,13 @@ def get_input_rows(input_filename):
     with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
         reader = DictReader(csvfile)
 
+        line_count = 1   # header row
         for row in reader:
             new_row = {}
             values = ''
+            line_count += 1
             for key, val in row.items():
-                if key:
+                if key and key.rstrip("\n").strip() != '':
                     # remove leading and trailing whitespaces and trailing newline
                     row[key] = val.rstrip("\n").strip()
                     values += val.rstrip("\n").strip()
@@ -243,11 +245,11 @@ def get_input_rows(input_filename):
                         new_row[key.rstrip("\n").strip()] = row[key]
 
             if not values.strip():
-                logger.info("Skip empty line ({})".format(i))
+                logger.debug("Skip empty line ({})".format(line_count))
                 continue    # skip empty lines
 
             if new_row:
-                logger.info("new keys: {}".format(new_row))
+                logger.debug("new keys: {}".format(new_row))
                 new_row.update(row)
                 input_rows.append(new_row)
             else:
@@ -721,12 +723,13 @@ def convert_row_to_record(row):
 def config_logger():
     logger.setLevel(logging.DEBUG)
 
+    # output to file at DEBUG level
     log_format = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
     file = logging.FileHandler("./logs/tact_run.log")
-    file.setLevel(logging.INFO)
+    file.setLevel(logging.DEBUG)
     file.setFormatter(log_format)
 
-    # output to console
+    # output to console at INFO level using default format
     stream = logging.StreamHandler()
     stream.setLevel(logging.INFO)
 
