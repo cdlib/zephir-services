@@ -1,5 +1,53 @@
+import os
+import sys
+
+import sqlalchemy.engine.url
+import yaml
 from decimal import Decimal
 from datetime import datetime
+
+def db_connect_url(config):
+    """Database connection URL creates a connection string through configuration
+    values passed. The method allows for environmental variable overriding.
+
+    Notes: These strings depend on the sqlalchemy package.
+
+    Args:
+        config:  A dictionary of database configuration values.
+
+    Returns:
+        A database connection string compatable with sqlalchemy.
+
+        """
+    drivername = config.get("drivername")
+    username = config.get("username")
+    password = config.get("password")
+    host = config.get("host")
+    port = config.get("port")
+    database = config.get("database")
+
+    url = str(
+        sqlalchemy.engine.url.URL(drivername, username, password, host, port, database)
+    )
+
+    return url
+
+def get_configs_by_filename(config_file):
+    """return configs defined in the config_file
+
+    Args:
+      config_file: full path of the yaml config file
+    Returns:
+      dict of configurations
+    """
+
+    configs = {}
+    with open(config_file, 'r') as ymlfile:
+        configs = yaml.safe_load(ymlfile)
+
+    return configs
+
+
 
 def str_to_decimal(a_str):
     try:

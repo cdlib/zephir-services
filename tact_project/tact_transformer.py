@@ -12,10 +12,11 @@ import importlib
 import json
 import logging
 
+from utils import get_configs_by_filename
+from utils import db_connect_url
 from utils import str_to_decimal
 from utils import multiple_doi
 from utils import normalized_date
-import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
 from tact_db_utils import insert_tact_transaction_log
@@ -246,7 +247,7 @@ def get_input_rows(input_filename):
                 continue    # skip empty lines
 
             if new_row:
-                logger.inf("new keys: {}".format(new_row))
+                logger.info("new keys: {}".format(new_row))
                 new_row.update(row)
                 input_rows.append(new_row)
             else:
@@ -642,12 +643,10 @@ def usage():
 
 
 def get_db_conn_str():
-    env="dev"
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-    CONFIG_PATH = os.path.join(ROOT_PATH, "config")
-    CONFIG_FILE = "tact_db"
-    configs= utils.get_configs_by_filename(CONFIG_PATH, CONFIG_FILE)
-    return str(utils.db_connect_url(configs[env]))
+    config_file = os.path.join(ROOT_PATH, "config/tact_db.yml")
+    configs= get_configs_by_filename(config_file)
+    return str(db_connect_url(configs))
 
 def init_output_row():
     return {
