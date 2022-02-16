@@ -12,10 +12,11 @@ import importlib
 import json
 import logging
 
+from utils import get_configs_by_filename
+from utils import db_connect_url
 from utils import str_to_decimal
 from utils import multiple_doi
 from utils import normalized_date
-import lib.utils as utils
 from tact_db_utils import init_database
 from tact_db_utils import insert_tact_publisher_reports
 from tact_db_utils import insert_tact_transaction_log
@@ -228,11 +229,13 @@ def get_input_rows(input_filename):
     with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
         reader = DictReader(csvfile)
 
+        line_count = 1   # header row
         for row in reader:
             new_row = {}
             values = ''
+            line_count += 1
             for key, val in row.items():
-                if key:
+                if key and key.rstrip("\n").strip() != '':
                     # remove leading and trailing whitespaces and trailing newline
                     row[key] = val.rstrip("\n").strip()
                     values += val.rstrip("\n").strip()
@@ -242,11 +245,11 @@ def get_input_rows(input_filename):
                         new_row[key.rstrip("\n").strip()] = row[key]
 
             if not values.strip():
-                logger.info("Skip empty line ({})".format(i))
+                logger.debug("Skip empty line ({})".format(line_count))
                 continue    # skip empty lines
 
             if new_row:
-                logger.inf("new keys: {}".format(new_row))
+                logger.debug("new keys: {}".format(new_row))
                 new_row.update(row)
                 input_rows.append(new_row)
             else:
@@ -642,12 +645,10 @@ def usage():
 
 
 def get_db_conn_str():
-    env="dev"
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-    CONFIG_PATH = os.path.join(ROOT_PATH, "config")
-    CONFIG_FILE = "tact_db"
-    configs= utils.get_configs_by_filename(CONFIG_PATH, CONFIG_FILE)
-    return str(utils.db_connect_url(configs[env]))
+    config_file = os.path.join(ROOT_PATH, "config/tact_db.yml")
+    configs= get_configs_by_filename(config_file)
+    return str(db_connect_url(configs))
 
 def init_output_row():
     return {
@@ -722,12 +723,13 @@ def convert_row_to_record(row):
 def config_logger():
     logger.setLevel(logging.DEBUG)
 
+    # output to file at DEBUG level
     log_format = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
     file = logging.FileHandler("./logs/tact_run.log")
-    file.setLevel(logging.INFO)
+    file.setLevel(logging.DEBUG)
     file.setFormatter(log_format)
 
-    # output to console
+    # output to console at INFO level using default format
     stream = logging.StreamHandler()
     stream.setLevel(logging.INFO)
 
