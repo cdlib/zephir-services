@@ -44,7 +44,6 @@ def test():
     output_marc_file = "output/marc_file_batch_test"
     output_xmlrecords_in_batch(autoids_df, output_marc_file, db_connect_str, 100)
 
-
 def output_xmlrecords_in_batch(df, output_filename, db_connect_str, batch_size):
 
     autoid_list = []
@@ -52,23 +51,30 @@ def output_xmlrecords_in_batch(df, output_filename, db_connect_str, batch_size):
         autoid = df['z_record_autoid'][index].item()
 
         if (index % batch_size == 0 and index !=0):
-            filename = "{}_{}.xml".format(output_filename, index)
-            outfile = open(filename, 'w')
-            outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-            outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
+            if len(autoid_list) > 0:
+                filename = "{}_{}.xml".format(output_filename, index)
+                search_and_write_records_to_file(filename, autoid_list, db_connect_str)
+                autoid_list = []
+        
+        autoid_list.append(autoid)
 
-            records = find_marcxml_records_by_autoid_list(db_connect_str, autoid_list)
-            for record in records:
-                marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
-                marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
-                outfile.write(marcxml)
+    if len(autoid_list) >0:
+        filename = "{}_last_batch.xml".format(output_filename)
+        search_and_write_records_to_file(filename, autoid_list, db_connect_str)
 
-            outfile.write("</collection>\n")
-            outfile.close()
+def search_and_write_records_to_file(filename, autoid_list, db_connect_str):
+    outfile = open(filename, 'w')
+    outfile.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    outfile.write("<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n");
 
-            autoid_list = []
-        else:
-            autoid_list.append(autoid)
+    records = find_marcxml_records_by_autoid_list(db_connect_str, autoid_list)
+    for record in records:
+        marcxml = re.sub("<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n", "", record["metadata"])
+        marcxml = re.sub(" xmlns=\"http://www.loc.gov/MARC21/slim\"", "", marcxml)
+        outfile.write(marcxml)
+
+    outfile.write("</collection>\n")
+    outfile.close()
 
 
 def output_xmlrecords_by_htid(input_filename, output_filename, db_connect_str):
@@ -161,4 +167,5 @@ def test_output_shadow_records():
         print("{},{}\n".format(result['cid'], result['id']))
 
 if __name__ == '__main__':
-    test_output_shadow_records()
+    #test_output_shadow_records()
+    test()
