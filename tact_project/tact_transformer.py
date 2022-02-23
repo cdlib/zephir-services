@@ -12,16 +12,16 @@ import importlib
 import json
 import logging
 
-from utils import get_configs_by_filename
-from utils import db_connect_url
-from utils import str_to_decimal
-from utils import multiple_doi
-from utils import normalized_date
-from tact_db_utils import init_database
-from tact_db_utils import insert_tact_publisher_reports
-from tact_db_utils import insert_tact_transaction_log
-from tact_db_utils import insert_run_reports
-from tact_db_utils import find_last_edit_by_doi
+from lib.utils import get_configs_by_filename
+from lib.utils import db_connect_url
+from lib.utils import str_to_decimal
+from lib.utils import multiple_doi
+from lib.utils import normalized_date
+from lib.tact_db_utils import init_database
+from lib.tact_db_utils import insert_tact_publisher_reports
+from lib.tact_db_utils import insert_tact_transaction_log
+from lib.tact_db_utils import insert_run_reports
+from lib.tact_db_utils import find_last_edit_by_doi
 
 logger = logging.getLogger("TACT Logger")
 

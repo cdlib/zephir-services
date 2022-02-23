@@ -1,5 +1,5 @@
 # Springer mapper
-from utils import str_to_decimal 
+from lib.utils import str_to_decimal 
 
 def source_to_output_mapping(src_row, output_row):
     output_row['Publisher'] = "Springer"
