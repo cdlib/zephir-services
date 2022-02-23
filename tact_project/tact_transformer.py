@@ -126,7 +126,7 @@ class RunReport:
 
 def define_variables(publisher):
     publisher = publisher.lower()
-    mapper = importlib.import_module("{}_mapper".format(publisher))
+    mapper = importlib.import_module("mapper.{}_mapper".format(publisher))
 
     mapping_function = getattr(mapper, "source_to_output_mapping")
     transform_function = globals()["transform_{}".format(publisher)]
