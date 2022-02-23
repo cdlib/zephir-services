@@ -76,38 +76,25 @@ class Database:
     def close(self):
         self.engine.dispose()
 
-def find_records(database, select_query, params=None):
-    """
-    Args:
-        database: a database object
-        sql_select_query: SQL select query
-    Returns:
-        list of dict with selected field names as keys
-    """
-    if select_query:
-        records = database.findall(text(select_query), params)
-        return records
-
-
 def find_tact_publisher_reports_by_id(database, id):
     params = {"id": id}
-    return find_records(database, SELECT_TACT_BY_ID, params)
+    return database.findall(text(SELECT_TACT_BY_ID), params)
 
 def find_tact_publisher_reports_by_publisher(database, publisher):
     params = {"publisher": publisher}
-    return find_records(database, SELECT_TACT_BY_PUBLISHER, params)
+    return database.findall(text(SELECT_TACT_BY_PUBLISHER), params)
 
 def find_last_edit_by_doi(database, doi):
     params = {"doi": doi}
-    return find_records(database, SELECT_LAST_EDIT_BY_DOI, params)
+    return database.findall(text(SELECT_LAST_EDIT_BY_DOI), params)
 
 def find_new_records(database, last_edit):
     params = {"last_edit": last_edit}
-    return find_records(database, SELECT_NEW_RECORDS, params)
+    return database.findall(text(SELECT_NEW_RECORDS), params)
 
 def find_updated_records(database, last_edit):
     params = {"last_edit": last_edit}
-    return find_records(database, SELECT_UPD_RECORDS, params)
+    return database.findall(text(SELECT_UPD_RECORDS), params)
 
 def insert_tact_publisher_reports(database, records):
     """Insert records to the publisher_reports table
