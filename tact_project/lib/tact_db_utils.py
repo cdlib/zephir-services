@@ -5,7 +5,6 @@ from sqlalchemy import create_engine
 from sqlalchemy import text
 from sqlalchemy import String
 from sqlalchemy import Integer
-#from sqlalchemy import Column
 from sqlalchemy import column
 from sqlalchemy import table 
 from sqlalchemy.dialects.mysql import insert
@@ -77,13 +76,10 @@ class Database:
     def close(self):
         self.engine.dispose()
 
-def init_database(db_connect_str):
-    return Database(db_connect_str)
-
 def find_records(database, select_query, params=None):
     """
     Args:
-        db_connect_str: database connection string
+        database: a database object
         sql_select_query: SQL select query
     Returns:
         list of dict with selected field names as keys

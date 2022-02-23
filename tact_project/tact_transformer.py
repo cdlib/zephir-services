@@ -17,7 +17,7 @@ from lib.utils import db_connect_url
 from lib.utils import str_to_decimal
 from lib.utils import multiple_doi
 from lib.utils import normalized_date
-from lib.tact_db_utils import init_database
+from lib.tact_db_utils import Database
 from lib.tact_db_utils import insert_tact_publisher_reports
 from lib.tact_db_utils import insert_tact_transaction_log
 from lib.tact_db_utils import insert_run_reports
@@ -750,7 +750,7 @@ def main():
     logger.info("Processing started: {}".format(datetime.now()))
 
     db_conn_str = get_db_conn_str()
-    database = init_database(db_conn_str)
+    database = Database(db_conn_str)
 
     last_updated_timestamp = ""
 
