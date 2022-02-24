@@ -21,7 +21,6 @@ from lib.tact_db_utils import Database
 from lib.tact_db_utils import RunReportsTable
 from lib.tact_db_utils import PublisherReportsTable
 from lib.tact_db_utils import TransactionLogTable
-from lib.tact_db_utils import find_last_edit_by_doi
 
 logger = logging.getLogger("TACT Logger")
 
@@ -180,14 +179,15 @@ def update_database(database, record, run_report):
     """
     last_edit_before = None
     last_edit_after = None
-    results = find_last_edit_by_doi(database, record['doi'])
+    publisher_reports = PublisherReportsTable(database)
+
+    results = publisher_reports.find_last_edit_by_doi(record['doi'])
     if results:
         last_edit_before = results[0]['last_edit']
 
-    publisher_reports = PublisherReportsTable(database)
     publisher_reports.insert_update_on_duplicate_key([record])
 
-    results = find_last_edit_by_doi(database, record['doi'])
+    results = publisher_reports.find_last_edit_by_doi(record['doi'])
     if results:
         last_edit_after = results[0]['last_edit']
 

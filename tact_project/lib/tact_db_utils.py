@@ -76,26 +76,6 @@ class Database:
     def close(self):
         self.engine.dispose()
 
-def find_tact_publisher_reports_by_id(database, id):
-    params = {"id": id}
-    return database.findall(text(SELECT_TACT_BY_ID), params)
-
-def find_tact_publisher_reports_by_publisher(database, publisher):
-    params = {"publisher": publisher}
-    return database.findall(text(SELECT_TACT_BY_PUBLISHER), params)
-
-def find_last_edit_by_doi(database, doi):
-    params = {"doi": doi}
-    return database.findall(text(SELECT_LAST_EDIT_BY_DOI), params)
-
-def find_new_records(database, last_edit):
-    params = {"last_edit": last_edit}
-    return database.findall(text(SELECT_NEW_RECORDS), params)
-
-def find_updated_records(database, last_edit):
-    params = {"last_edit": last_edit}
-    return database.findall(text(SELECT_UPD_RECORDS), params)
-
 
 class TactDbTables:
     def __init__(self, database):
@@ -147,6 +127,25 @@ class PublisherReportsTable(TactDbTables):
             column("publisher_status")
         )
 
+    def find_tact_publisher_reports_by_id(self, id):
+        params = {"id": id}
+        return self.database.findall(text(SELECT_TACT_BY_ID), params)
+
+    def find_tact_publisher_reports_by_publisher(self, publisher):
+        params = {"publisher": publisher}
+        return self.database.findall(text(SELECT_TACT_BY_PUBLISHER), params)
+
+    def find_last_edit_by_doi(self, doi):
+        params = {"doi": doi}
+        return self.database.findall(text(SELECT_LAST_EDIT_BY_DOI), params)
+
+    def find_new_records(self, last_edit):
+        params = {"last_edit": last_edit}
+        return self.database.findall(text(SELECT_NEW_RECORDS), params)
+
+    def find_updated_records(self, last_edit):
+        params = {"last_edit": last_edit}
+        return self.database.findall(text(SELECT_UPD_RECORDS), params)
 
 class TransactionLogTable(TactDbTables):
     def __init__(self, database):
