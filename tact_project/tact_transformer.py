@@ -111,8 +111,18 @@ class RunReport:
         self.rejected_records = 0
         self.new_records_added = 0
         self.existing_records_updated = 0
+        self.status = 'S'
+        self.error_msg = ''
 
     def display(self):
+        status_map = { 
+            'S': "Success",
+            'F': "Failed"
+        }
+
+        logger.info("Status: {}".format(status_map.get(self.status, '')))
+        if self.error_msg:
+            logger.info("Error message: {}".format(self.error_msg))
         logger.info("Publisher: {}".format(self.publisher))
         logger.info("Filename: {}".format(self.filename))
         logger.info("Run datatime: {}".format(self.run_datetime))
@@ -626,9 +636,11 @@ def process_one_publisher(publisher, database):
                 write_to_outputs(transformed_rows, output_filename, database, run_report)
 
                 input_file.rename(processed_dir.joinpath(input_file.name))
-                logger.info("Complete.")
+                logger.info("Completed.")
             except Exception as e:
                 logger.error("Failed to process file: {}".format(e))
+                run_report.status = 'F'
+                run_report.error_msg = str(e)
 
             run_report.total_processed_records = run_report.input_records - run_report.rejected_records
             run_report.display()
