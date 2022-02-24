@@ -18,9 +18,9 @@ from lib.utils import str_to_decimal
 from lib.utils import multiple_doi
 from lib.utils import normalized_date
 from lib.tact_db_utils import Database
+from lib.tact_db_utils import RunReportsTable
 from lib.tact_db_utils import insert_tact_publisher_reports
 from lib.tact_db_utils import insert_tact_transaction_log
-from lib.tact_db_utils import insert_run_reports
 from lib.tact_db_utils import find_last_edit_by_doi
 
 logger = logging.getLogger("TACT Logger")
@@ -604,6 +604,8 @@ def process_one_publisher(publisher, database):
     processed_dir = Path(os.getcwd()).joinpath("./processed/{}".format(publisher))
     input_files = (entry for entry in input_dir.iterdir() if entry.is_file())
 
+    run_reports_tbl = RunReportsTable(database)
+
     for input_file in input_files:
         file_extension = PurePosixPath(input_file).suffix
         filename_wo_ext = PurePosixPath(input_file).stem
@@ -627,7 +629,7 @@ def process_one_publisher(publisher, database):
             run_report.total_processed_records = run_report.input_records - run_report.rejected_records
             run_report.display()
             db_record = {'run_report': json.dumps(run_report.__dict__)}
-            insert_run_reports(database, [db_record])
+            run_reports_tbl.insert([db_record])
 
 def process_all_publishers(database):
     for publisher in publishers:
