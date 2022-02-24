@@ -105,14 +105,6 @@ def insert_tact_publisher_reports(database, records):
     if records:
         database.insert_update_on_duplicate_key(define_publisher_reports_table(), records)
 
-def insert_tact_transaction_log(database, records):
-    """Insert records to the transaction_log table
-    Args:
-        database: a Database object
-        records: list of dictionaries
-    """
-    if records:
-        database.insert(define_transaction_log_table(), records)
 
 class TactDbTables:
     def __init__(self, database):
@@ -158,42 +150,6 @@ def define_publisher_reports_table():
       column("publisher_status")
       )
 
-
-def define_transaction_log_table():
-    return table("transaction_log",
-                column("publisher"),
-                column("doi"),
-                column("article_title"),
-                column("corresponding_author"),
-                column("corresponding_author_email"),
-                column("uc_institution"),
-                column("institution_identifier"),
-                column("document_type"),
-                column("eligible"),
-                column("inclusion_date"),
-                column("uc_approval_date"),
-                column("article_access_type"),
-                column("article_license"),
-                column("journal_name"),
-                column("issn_eissn"),
-                column("journal_access_type"),
-                column("journal_subject"),
-                column("grant_participation"),
-                column("funder_information"),
-                column("full_coverage_reason"),
-                column("original_apc_usd"),
-                column("contractual_apc_usd"),
-                column("library_apc_portion_usd"),
-                column("author_apc_portion_usd"),
-                column("payment_note"),
-                column("cdl_notes"),
-                column("license_chosen"),
-                column("journal_bucket"),
-                column("agreement_manager_profile_name"),
-                column("publisher_status"),
-                column("transaction_status_json"),
-                column("filename")
-            )
 
 class TransactionLogTable(TactDbTables):
     def __init__(self, database):

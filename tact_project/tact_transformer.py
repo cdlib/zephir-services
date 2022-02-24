@@ -20,7 +20,7 @@ from lib.utils import normalized_date
 from lib.tact_db_utils import Database
 from lib.tact_db_utils import RunReportsTable
 from lib.tact_db_utils import insert_tact_publisher_reports
-from lib.tact_db_utils import insert_tact_transaction_log
+from lib.tact_db_utils import TransactionLogTable
 from lib.tact_db_utils import find_last_edit_by_doi
 
 logger = logging.getLogger("TACT Logger")
@@ -149,11 +149,13 @@ def write_to_outputs(input_rows, output_filename, database, run_report):
     writer = DictWriter(output_file, fieldnames=output_fieldnames)
     writer.writeheader()
 
+    transaction_log = TransactionLogTable(database)
+
     for row in input_rows:
         db_record = convert_row_to_record(row)
         if row.get('reject_status'):
             db_record['transaction_status_json'] = json.dumps(row['reject_status'])
-            insert_tact_transaction_log(database, [db_record])
+            transaction_log.insert([db_record])
         else:
             writer.writerow(row)
             update_database(database, db_record, run_report)
@@ -201,7 +203,8 @@ def update_database(database, record, run_report):
     if transaction_status:
         transaction_status['filename'] = run_report.filename
         record['transaction_status_json'] = json.dumps(transaction_status)
-        insert_tact_transaction_log(database, [record])
+        transaction_log = TransactionLogTable(database)
+        transaction_log.insert([record])
 
 def check_file_encoding(input_filename, encoding):
     with open(input_filename, 'r', newline='', encoding=encoding) as csvfile:
