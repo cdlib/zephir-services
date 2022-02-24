@@ -96,15 +96,6 @@ def find_updated_records(database, last_edit):
     params = {"last_edit": last_edit}
     return database.findall(text(SELECT_UPD_RECORDS), params)
 
-def insert_tact_publisher_reports(database, records):
-    """Insert records to the publisher_reports table
-    Args:
-        database: a Database object
-        records: list of dictionaries
-    """
-    if records:
-        database.insert_update_on_duplicate_key(define_publisher_reports_table(), records)
-
 
 class TactDbTables:
     def __init__(self, database):
@@ -115,40 +106,46 @@ class TactDbTables:
         if records:
             self.database.insert(self.table, records)
 
+    def insert_update_on_duplicate_key(self, records):
+        if records:
+            self.database.insert_update_on_duplicate_key(self.table, records)
 
-def define_publisher_reports_table():
-    return table("publisher_reports",
-      column("publisher"),
-      column("doi"),
-      column("article_title"),
-      column("corresponding_author"),
-      column("corresponding_author_email"),
-      column("uc_institution"),
-      column("institution_identifier"),
-      column("document_type"),
-      column("eligible"),
-      column("inclusion_date"),
-      column("uc_approval_date"),
-      column("article_access_type"),
-      column("article_license"),
-      column("journal_name"),
-      column("issn_eissn"),
-      column("journal_access_type"),
-      column("journal_subject"),
-      column("grant_participation"),
-      column("funder_information"),
-      column("full_coverage_reason"),
-      column("original_apc_usd"),
-      column("contractual_apc_usd"),
-      column("library_apc_portion_usd"),
-      column("author_apc_portion_usd"),
-      column("payment_note"),
-      column("cdl_notes"),
-      column("license_chosen"),
-      column("journal_bucket"),
-      column("agreement_manager_profile_name"),
-      column("publisher_status")
-      )
+
+class PublisherReportsTable(TactDbTables):
+    def __init__(self, database):
+        super(PublisherReportsTable, self).__init__(database)
+        self.table = table("publisher_reports",
+            column("publisher"),
+            column("doi"),
+            column("article_title"),
+            column("corresponding_author"),
+            column("corresponding_author_email"),
+            column("uc_institution"),
+            column("institution_identifier"),
+            column("document_type"),
+            column("eligible"),
+            column("inclusion_date"),
+            column("uc_approval_date"),
+            column("article_access_type"),
+            column("article_license"),
+            column("journal_name"),
+            column("issn_eissn"),
+            column("journal_access_type"),
+            column("journal_subject"),
+            column("grant_participation"),
+            column("funder_information"),
+            column("full_coverage_reason"),
+            column("original_apc_usd"),
+            column("contractual_apc_usd"),
+            column("library_apc_portion_usd"),
+            column("author_apc_portion_usd"),
+            column("payment_note"),
+            column("cdl_notes"),
+            column("license_chosen"),
+            column("journal_bucket"),
+            column("agreement_manager_profile_name"),
+            column("publisher_status")
+        )
 
 
 class TransactionLogTable(TactDbTables):

@@ -19,7 +19,7 @@ from lib.utils import multiple_doi
 from lib.utils import normalized_date
 from lib.tact_db_utils import Database
 from lib.tact_db_utils import RunReportsTable
-from lib.tact_db_utils import insert_tact_publisher_reports
+from lib.tact_db_utils import PublisherReportsTable
 from lib.tact_db_utils import TransactionLogTable
 from lib.tact_db_utils import find_last_edit_by_doi
 
@@ -184,7 +184,8 @@ def update_database(database, record, run_report):
     if results:
         last_edit_before = results[0]['last_edit']
 
-    insert_tact_publisher_reports(database, [record])
+    publisher_reports = PublisherReportsTable(database)
+    publisher_reports.insert_update_on_duplicate_key([record])
 
     results = find_last_edit_by_doi(database, record['doi'])
     if results:
