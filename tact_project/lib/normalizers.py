@@ -1,5 +1,6 @@
 from datetime import datetime
 import string
+import re
 
 OPEN_ACCESS_PUBLICATION_TITLES = [
         "Disease Models Mechanisms",
