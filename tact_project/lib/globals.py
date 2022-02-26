@@ -46,33 +46,4 @@ OUTPUT_FIELDNAMES = [
         "Publisher Status",
         ]
 
-OPEN_ACCESS_PUBLICATION_TITLES = [
-        "Disease Models Mechanisms",
-        "Biology Open",
-        "ACM Transactions on Architecture and Code Optimization",
-        "ACM Transactions on Human Robot Interaction",
-        "ACM/IMS Transactions on Data Science",
-        "DGOV Research and Practice",
-        "Digital Government Research and Practice",
-        "Digital Threats Research and Practice",
-        "PACM on Programming Languages",
-        "Proceedings of the ACM on Programming Languages",
-        "Transactions on Architecture and Code Optimization",
-        "Transactions on Data Science",
-        "Transactions on Human Robot Interaction",
-        "TACO",
-        "THRI",
-        "TDS",
-        "DGOV",
-        "DTRAP",
-        "PACMPL",
-        ]
-
-INSTITUTION_ID = {
-        "UC Santa Cruz": "8787",
-        "UC San Francisco": "8785",
-        "UC Davis": "8789",
-        "UC San Diego": "8784",
-        "UC Berkeley": "1438",
-        }
 

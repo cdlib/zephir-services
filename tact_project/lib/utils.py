@@ -4,7 +4,6 @@ import sys
 import sqlalchemy.engine.url
 import yaml
 from decimal import Decimal
-from datetime import datetime
 
 def db_connect_url(config):
     """Database connection URL creates a connection string through configuration
@@ -75,60 +74,6 @@ def multiple_doi(input_str):
         return any(item in input_str.rstrip("\n").strip() for item in check_list)
     else:
         return False
-
-def normalized_date(date_str, doi=''):
-    # 1/31/21 => 01/31/2021
-    # 1/4/21 20:00 => 01/31/2021
-    # 01/31/2021: keep as is
-    # 2021-06-24 21:18:29 => 06/24/2021
-    # 10-Jun-2021 - 10.1242/jeb.237628 => 06/10/2021
-    # Jan 25, 2021 - cjfas-2020-0398.R1 => 01/25/2021
-    normalized_date = ''
-    if date_str:
-        date_str = date_str.strip()
-        date_1 = date_str.split()[0]
-        try:
-            normalized_date = datetime.strptime(date_1 , '%m/%d/%y').strftime('%m/%d/%Y')
-        except ValueError:
-            try:
-                normalized_date = datetime.strptime(date_1, '%m/%d/%Y').strftime('%m/%d/%Y')
-            except ValueError:
-                try:
-                    normalized_date = datetime.strptime(date_1 , '%Y-%m-%d').strftime('%m/%d/%Y')
-                except ValueError:
-                    try:
-                        normalized_date = datetime.strptime(date_1 , '%d-%b-%Y').strftime('%m/%d/%Y')
-                    except ValueError:
-                        try:
-                            date_1 = date_str.split('-')[0].strip()
-                            normalized_date = datetime.strptime(date_1 , '%b %d, %Y').strftime('%m/%d/%Y')
-                        except ValueError:
-                            print("Date format error: {} - {} ".format(date_str, doi))
-
-    return normalized_date
-
-def test_normalized_date():
-    # 1/31/21 => 01/31/2021
-    # 1/4/21 20:00 => 01/04/2021
-    # 01/21/2021: keep as is
-    # 2021-06-24 21:18:29 => 06/24/2021
-    # 10-Jun-2021 - 10.1242/jeb.237628 => 06/10/2021
-    # Jan 25, 2021 - cjfas-2020-0398.R1 => 01/25/2021
-
-    test_dates = {
-        '01/31/2021': "1/31/21",
-        '01/04/2021': "1/4/21 20:00",
-        '01/21/2021': "01/21/2021",
-        '06/24/2021': "2021-06-24 21:18:29",
-        '06/10/2021': "10-Jun-2021 - 10.1242/jeb.237628",
-        '01/25/2021': "Jan 25, 2021 - cjfas-2020-0398.R1",
-    }
-
-    for key, val in test_dates.items():
-        res = normalized_date(val)
-        print("input date: {}".format(val))
-        print("normalized: {}".format(res))
-        assert(key == res)
 
 def test_multiple_doi():
 
@@ -210,9 +155,8 @@ def test_srt_to_decimal():
     print(str_to_decimal(a_str))
 
 def tests():
-    #test_srt_to_decimal()
-    #test_multiple_doi()
-    test_normalized_date()
+    test_srt_to_decimal()
+    test_multiple_doi()
 
 if __name__ == "__main__":
     tests()
