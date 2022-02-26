@@ -1,0 +1,78 @@
+
+PUBLISHERS = [
+        "ACM",
+        "CoB",
+        "CSP",
+        "CUP",
+        "Elsevier",
+        "JMIR",
+        "PLOS",
+        "PNAS",
+        "TRS",
+        "Springer",
+        ]
+
+
+OUTPUT_FIELDNAMES = [
+        "Publisher",
+        "DOI",
+        "Article Title",
+        "Corresponding Author",
+        "Corresponding Author Email",
+        "UC Institution",
+        "Institution Identifier",
+        "Document Type",
+        "Eligible",
+        "Inclusion Date",
+        "UC Approval Date",
+        "Article Access Type",
+        "Article License",
+        "Journal Name",
+        "ISSN/eISSN",
+        "Journal Access Type",
+        "Journal Subject",
+        "Grant Participation",
+        "Funder Information",
+        "Full Coverage Reason",
+        "Original APC (USD)",
+        "Contractual APC (USD)",
+        "Library APC Portion (USD)",
+        "Author APC Portion (USD)",
+        "Payment Note",
+        "CDL Notes",
+        "License Chosen",
+        "Journal Bucket",
+        "Agreement Manager Profile Name",
+        "Publisher Status",
+        ]
+
+OPEN_ACCESS_PUBLICATION_TITLES = [
+        "Disease Models Mechanisms",
+        "Biology Open",
+        "ACM Transactions on Architecture and Code Optimization",
+        "ACM Transactions on Human Robot Interaction",
+        "ACM/IMS Transactions on Data Science",
+        "DGOV Research and Practice",
+        "Digital Government Research and Practice",
+        "Digital Threats Research and Practice",
+        "PACM on Programming Languages",
+        "Proceedings of the ACM on Programming Languages",
+        "Transactions on Architecture and Code Optimization",
+        "Transactions on Data Science",
+        "Transactions on Human Robot Interaction",
+        "TACO",
+        "THRI",
+        "TDS",
+        "DGOV",
+        "DTRAP",
+        "PACMPL",
+        ]
+
+INSTITUTION_ID = {
+        "UC Santa Cruz": "8787",
+        "UC San Francisco": "8785",
+        "UC Davis": "8789",
+        "UC San Diego": "8784",
+        "UC Berkeley": "1438",
+        }
+

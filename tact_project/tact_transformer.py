@@ -12,6 +12,10 @@ import importlib
 import json
 import logging
 
+from lib.globals import PUBLISHERS
+from lib.globals import OUTPUT_FIELDNAMES
+from lib.globals import OPEN_ACCESS_PUBLICATION_TITLES
+from lib.globals import INSTITUTION_ID
 from lib.utils import get_configs_by_filename
 from lib.utils import db_connect_url
 from lib.utils import str_to_decimal
@@ -21,117 +25,9 @@ from lib.tact_db_utils import Database
 from lib.tact_db_utils import RunReportsTable
 from lib.tact_db_utils import PublisherReportsTable
 from lib.tact_db_utils import TransactionLogTable
+from lib.run_report import RunReport
 
 logger = logging.getLogger("TACT Logger")
-
-publishers = [
-        "ACM",
-        "CoB",
-        "CSP",
-        "CUP",
-        "Elsevier",
-        "JMIR",
-        "PLOS",
-        "PNAS",
-        "TRS",
-        "Springer",
-        ]
-
-
-output_fieldnames = [
-        "Publisher",
-        "DOI",
-        "Article Title",
-        "Corresponding Author",
-        "Corresponding Author Email",
-        "UC Institution",
-        "Institution Identifier",
-        "Document Type",
-        "Eligible",
-        "Inclusion Date",
-        "UC Approval Date",
-        "Article Access Type",
-        "Article License",
-        "Journal Name",
-        "ISSN/eISSN",
-        "Journal Access Type",
-        "Journal Subject",
-        "Grant Participation",
-        "Funder Information",
-        "Full Coverage Reason",
-        "Original APC (USD)",
-        "Contractual APC (USD)",
-        "Library APC Portion (USD)",
-        "Author APC Portion (USD)",
-        "Payment Note",
-        "CDL Notes",
-        "License Chosen",
-        "Journal Bucket",
-        "Agreement Manager Profile Name",
-        "Publisher Status",
-        ]
-
-open_access_publication_titles = [
-        "Disease Models Mechanisms",
-        "Biology Open",
-        "ACM Transactions on Architecture and Code Optimization",
-        "ACM Transactions on Human Robot Interaction",
-        "ACM/IMS Transactions on Data Science",
-        "DGOV Research and Practice",
-        "Digital Government Research and Practice",
-        "Digital Threats Research and Practice",
-        "PACM on Programming Languages",
-        "Proceedings of the ACM on Programming Languages",
-        "Transactions on Architecture and Code Optimization",
-        "Transactions on Data Science",
-        "Transactions on Human Robot Interaction",
-        "TACO",
-        "THRI",
-        "TDS",
-        "DGOV",
-        "DTRAP",
-        "PACMPL",
-        ]
-
-institution_id = {
-        "UC Santa Cruz": "8787",
-        "UC San Francisco": "8785",
-        "UC Davis": "8789",
-        "UC San Diego": "8784",
-        "UC Berkeley": "1438",
-        }
-
-class RunReport:
-    def __init__(self, publisher='', filename=''):
-        self.publisher = publisher
-        self.filename = filename
-        self.run_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        self.input_records = 0
-        self.total_processed_records = 0
-        self.rejected_records = 0
-        self.new_records_added = 0
-        self.existing_records_updated = 0
-        self.status = 'S'
-        self.error_msg = ''
-
-    def display(self):
-        status_map = { 
-            'S': "Success",
-            'F': "Failed"
-        }
-
-        logger.info("Status: {}".format(status_map.get(self.status, '')))
-        if self.error_msg:
-            logger.info("Error message: {}".format(self.error_msg))
-        logger.info("Publisher: {}".format(self.publisher))
-        logger.info("Filename: {}".format(self.filename))
-        logger.info("Run datatime: {}".format(self.run_datetime))
-        logger.info("Input Records: {}".format(self.input_records))
-        logger.info("Total Processed Records: {}".format(self.total_processed_records))
-        logger.info("Rejected Records: {}".format(self.rejected_records))
-        logger.info("New Records Added: {}".format(self.new_records_added))
-        logger.info("Existing Records Updated: {}".format(self.existing_records_updated))
-
 
 def define_variables(publisher):
     publisher = publisher.lower()
@@ -155,7 +51,7 @@ def transform(publisher, input_filename, run_report):
 
 def write_to_outputs(input_rows, output_filename, database, run_report):
     output_file = open(output_filename, 'w', newline='', encoding='UTF-8')
-    writer = DictWriter(output_file, fieldnames=output_fieldnames)
+    writer = DictWriter(output_file, fieldnames=OUTPUT_FIELDNAMES)
     writer.writeheader()
 
     transaction_log = TransactionLogTable(database)
@@ -505,11 +401,11 @@ def normalized_journal_access_type_by_title(publication_title):
     """Open Access look-up based on publication title.
     Normalize publication_title to change punctuation to space, change multiple spaces to single space before match. 
     Returns:
-        "Fully OA": when publication_title is listed in open_access_publication_titles.
+        "Fully OA": when publication_title is listed in OPEN_ACCESS_PUBLICATION_TITLES.
         "Hybrid": other cases.
 
     """
-    if normalized_publication_title(publication_title) in open_access_publication_titles:
+    if normalized_publication_title(publication_title) in OPEN_ACCESS_PUBLICATION_TITLES:
         return "Fully OA"
     else:
         return "Hybrid"
@@ -598,7 +494,7 @@ def get_institution_by_email(email):
 
 def get_institution_id_by_name(name):
     try:
-        return institution_id[name]
+        return INSTITUTION_ID[name]
     except:
         return ""
 
@@ -648,7 +544,7 @@ def process_one_publisher(publisher, database):
             run_reports_tbl.insert([db_record])
 
 def process_all_publishers(database):
-    for publisher in publishers:
+    for publisher in PUBLISHERS:
         process_one_publisher(publisher, database)
 
 
