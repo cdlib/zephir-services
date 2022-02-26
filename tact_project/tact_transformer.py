@@ -263,7 +263,7 @@ def transform_cob(row):
     row['Institution Identifier'] = norm.get_institution_id_by_name(row['UC Institution'])
     row['Inclusion Date'] = norm.normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Access Type'] = norm.normalized_journal_access_type_by_title(row['Journal Name']) 
-    row['Grant Participation'] = norm.normalized_grant_participation_2(row['Grant Participation']) 
+    row['Grant Participation'] = norm.normalized_grant_participation(row['Grant Participation']) 
 
 def transform_csp(row):
     row['UC Institution'] = norm.normalized_institution_name(row['UC Institution'])
@@ -289,7 +289,7 @@ def transform_cup(row):
     row['Inclusion Date'] = norm.normalized_date(row['Inclusion Date'], row['DOI'])
     row['Article Access Type'] = norm.normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = norm.normalized_journal_access_type(row['Journal Access Type'])
-    row['Grant Participation'] = norm.normalized_grant_participation_2(row['Grant Participation'])
+    row['Grant Participation'] = norm.normalized_grant_participation(row['Grant Participation'])
     if "I have research funds available to pay the remaining balance due (you will be asked to pay the Additional Charge on a later screen)" in row['Full Coverage Reason']:
         row['Full Coverage Reason'] = ""
 
