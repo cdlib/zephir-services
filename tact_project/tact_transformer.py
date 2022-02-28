@@ -1,8 +1,6 @@
 import os
 import sys
 
-import string
-import re
 from datetime import datetime
 from csv import DictReader
 from csv import DictWriter
@@ -12,18 +10,27 @@ import importlib
 import json
 import logging
 
-from lib.globals import PUBLISHERS
 from lib.globals import OUTPUT_FIELDNAMES
-from lib.utils import get_configs_by_filename
-from lib.utils import db_connect_url
-from lib.utils import str_to_decimal
-from lib.utils import multiple_doi
+import lib.utils as utils
 from lib.tact_db_utils import Database
 from lib.tact_db_utils import RunReportsTable
 from lib.tact_db_utils import PublisherReportsTable
 from lib.tact_db_utils import TransactionLogTable
 from lib.run_report import RunReport
 import lib.normalizers as norm
+
+PUBLISHERS = [
+        "ACM",
+        "CoB",
+        "CSP",
+        "CUP",
+        "Elsevier",
+        "JMIR",
+        "PLOS",
+        "PNAS",
+        "TRS",
+        "Springer",
+        ]
 
 logger = logging.getLogger("TACT Logger")
 
@@ -236,7 +243,7 @@ def mark_rejected_entries(rows, run_report):
             reject = True
             error_code = "1"
             error_msg = "Duplicated DOI"
-        elif multiple_doi(row['DOI']):
+        elif utils.multiple_doi(row['DOI']):
             reject = True
             error_code = "2"
             error_msg = "Wrong or multiple DOIs (with space(s) in DOI field)"
@@ -268,7 +275,7 @@ def transform_cob(row):
     row['Institution Identifier'] = norm.get_institution_id_by_name(row['UC Institution'])
     row['Inclusion Date'] = norm.normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Access Type'] = norm.normalized_journal_access_type_by_title(row['Journal Name']) 
-    row['Grant Participation'] = norm.normalized_grant_participation_2(row['Grant Participation']) 
+    row['Grant Participation'] = norm.normalized_grant_participation(row['Grant Participation']) 
 
 def transform_csp(row):
     row['UC Institution'] = norm.normalized_institution_name(row['UC Institution'])
@@ -281,9 +288,9 @@ def transform_csp(row):
     else:
         row['Funder Information'] = row['Grant Participation'].strip() + row['Funder Information'].strip()
 
-    if str_to_decimal(row['Author APC Portion (USD)']) > 0:
+    if utils.str_to_decimal(row['Author APC Portion (USD)']) > 0:
         row['Grant Participation'] = "Yes"
-    elif str_to_decimal(row['Author APC Portion (USD)']) == 0 and row['Payment Note'].lower() != "awaiting payment form":
+    elif utils.str_to_decimal(row['Author APC Portion (USD)']) == 0 and row['Payment Note'].lower() != "awaiting payment form":
         row['Grant Participation'] = "No"
     else:
         row['Grant Participation'] = ""
@@ -294,7 +301,7 @@ def transform_cup(row):
     row['Inclusion Date'] = norm.normalized_date(row['Inclusion Date'], row['DOI'])
     row['Article Access Type'] = norm.normalized_article_access_type(row['Article Access Type'])
     row['Journal Access Type'] = norm.normalized_journal_access_type(row['Journal Access Type'])
-    row['Grant Participation'] = norm.normalized_grant_participation_2(row['Grant Participation'])
+    row['Grant Participation'] = norm.normalized_grant_participation(row['Grant Participation'])
     if "I have research funds available to pay the remaining balance due (you will be asked to pay the Additional Charge on a later screen)" in row['Full Coverage Reason']:
         row['Full Coverage Reason'] = ""
 
@@ -310,7 +317,7 @@ def transform_plos(row):
     row['UC Institution'] = norm.normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = norm.normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Name'] = norm.normalized_journal_name_plos(row['Journal Name'])
-    row['Grant Participation'] = "Yes" if str_to_decimal(row['Grant Participation']) > 0 else "No"
+    row['Grant Participation'] = "Yes" if utils.str_to_decimal(row['Grant Participation']) > 0 else "No"
 
 def transform_springer(row):
     row['UC Institution'] = norm.normalized_institution_name(row['UC Institution'])
@@ -324,13 +331,6 @@ def transform_trs(row):
     row['UC Institution'] = norm.normalized_institution_name(row['UC Institution'])
     row['Inclusion Date'] = norm.normalized_date(row['Inclusion Date'], row['DOI'])
     row['Journal Access Type'] = norm.normalized_journal_access_type(row['Journal Access Type'])
-
-    
-
-def test_remove_punctuation():
-    title = " Thank you Human-Robot!  -- You're welcome. "
-    converted = "Thank you Human Robot You're welcome"
-    assert(converted == norm.normalized_publication_title(title))
 
 def process_one_publisher(publisher, database):
     logger.info("Processing files from {}".format(publisher))
@@ -377,9 +377,9 @@ def process_all_publishers(database):
 
 def usage():
     print("Parameter error.")
-    print("Usage: {} publisher_name(optional)".format(sys.argv[0]))
-    print("For example: {} Elsevier".format(sys.argv[0]))
-    print("For example: {}".format(sys.argv[0]))
+    print("Usage: Python3 {} publisher_name(optional)".format(sys.argv[0]))
+    print("For example: Python3 {} elsevier".format(sys.argv[0]))
+    print("For example: python3 {}".format(sys.argv[0]))
     print("Processing files from specified publisher when publisher name is provided")
     print("Otherwise processing files from all publishers")
     print("Publisher name is case insensitive")
@@ -388,8 +388,8 @@ def usage():
 def get_db_conn_str():
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
     config_file = os.path.join(ROOT_PATH, "config/tact_db.yml")
-    configs= get_configs_by_filename(config_file)
-    return str(db_connect_url(configs))
+    configs= utils.get_configs_by_filename(config_file)
+    return str(utils.db_connect_url(configs))
 
 def init_output_row():
     return {
@@ -492,8 +492,6 @@ def main():
 
     db_conn_str = get_db_conn_str()
     database = Database(db_conn_str)
-
-    last_updated_timestamp = ""
 
     if publisher:
         process_one_publisher(publisher, database)

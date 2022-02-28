@@ -1,5 +1,6 @@
 from datetime import datetime
 import string
+import re
 
 OPEN_ACCESS_PUBLICATION_TITLES = [
         "Disease Models Mechanisms",
@@ -179,18 +180,18 @@ def normalized_article_title(title):
     return normalized_title
 
 def normalized_grant_participation(grant_participation):
-    if grant_participation in ["Y", "Yes", "Partially Covered"]:
+    if grant_participation in ["Y", "Yes", "Partially Covered"] or "I have research funds" in grant_participation:
         return "Yes"
-    elif grant_participation in ["N", "No", "Fully Covered"]:
+    elif grant_participation in ["N", "No", "Fully Covered"] or "I do not have research funds" in grant_participation:
         return "No"
     return ""
 
-def normalized_grant_participation_2(grant_participation):
-    if "I have research funds" in grant_participation:
-        return "Yes"
-    elif "I do not have research funds" in grant_participation:
-        return "No"
-    return ""
+#def normalized_grant_participation_2(grant_participation):
+#    if "I have research funds" in grant_participation:
+#        return "Yes"
+#    elif "I do not have research funds" in grant_participation:
+#        return "No"
+#    return ""
 
 def normalized_journal_name_plos(journal_name):
     journal_name = journal_name.strip()
