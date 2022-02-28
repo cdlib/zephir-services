@@ -1,18 +1,3 @@
-
-PUBLISHERS = [
-        "ACM",
-        "CoB",
-        "CSP",
-        "CUP",
-        "Elsevier",
-        "JMIR",
-        "PLOS",
-        "PNAS",
-        "TRS",
-        "Springer",
-        ]
-
-
 OUTPUT_FIELDNAMES = [
         "Publisher",
         "DOI",

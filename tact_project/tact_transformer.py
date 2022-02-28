@@ -10,7 +10,6 @@ import importlib
 import json
 import logging
 
-from lib.globals import PUBLISHERS
 from lib.globals import OUTPUT_FIELDNAMES
 import lib.utils as utils
 from lib.tact_db_utils import Database
@@ -19,6 +18,19 @@ from lib.tact_db_utils import PublisherReportsTable
 from lib.tact_db_utils import TransactionLogTable
 from lib.run_report import RunReport
 import lib.normalizers as norm
+
+PUBLISHERS = [
+        "ACM",
+        "CoB",
+        "CSP",
+        "CUP",
+        "Elsevier",
+        "JMIR",
+        "PLOS",
+        "PNAS",
+        "TRS",
+        "Springer",
+        ]
 
 logger = logging.getLogger("TACT Logger")
 
