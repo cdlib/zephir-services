@@ -1,0 +1,10 @@
+# Run the following command to install required packages
+# pip install --user -r requirements.txt
+
+# List of required packages without version specifiers
+pyyaml 
+SQLAlchemy 
+mysql-connector
+
+
+

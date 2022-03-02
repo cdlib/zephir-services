@@ -27,7 +27,7 @@ class RunReport:
             logger.info("Error message: {}".format(self.error_msg))
         logger.info("Publisher: {}".format(self.publisher))
         logger.info("Filename: {}".format(self.filename))
-        logger.info("Run datatime: {}".format(self.run_datetime))
+        logger.info("Run datetime: {}".format(self.run_datetime))
         logger.info("Input Records: {}".format(self.input_records))
         logger.info("Total Processed Records: {}".format(self.total_processed_records))
         logger.info("Rejected Records: {}".format(self.rejected_records))
