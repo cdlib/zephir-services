@@ -88,7 +88,16 @@ Run the `scripts/deploy_tact.sh` script to:
   * Run `pip install --user -r requirements.txt` command to install the packages
 
 ### Manually setup configuraiton file
-Manually setup the configuraiton file tact_db.yml in the `config` directory under `$TACT_HOME`
+Manually setup the configuraiton file tact_db.yml in the `config` directory under `$TACT_HOME`.
+The tact_db.yml file contains:
+```
+host: rds-col-tact-prd.cmcguhglinoa.us-west-2.rds.amazonaws.com
+port: 3306
+username: tactrw 
+password: <password>
+database: tact
+drivername: mysql+mysqlconnector
+```
 
 ### Manually create database tables
 Run the create table SQL scripts in the {TACT_HOME}/scripts directory to create the tables.
