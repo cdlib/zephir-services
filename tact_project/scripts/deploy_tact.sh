@@ -21,5 +21,6 @@ pip install --user -r $TACT_HOME/requirements.txt
 
 echo ""
 echo "Please manually setup the configuraiton file tact_db.yml in $TACT_HOME/config"
+echo "Please manually create the database tables using the create table SQL files in the $TACT_HOME/scripts directory"
 
 
