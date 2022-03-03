@@ -80,6 +80,10 @@ Transaction status includes:
 {TACT_HOME}/logs/tact_run.log
 
 ## How to Deploy the Project
+
+### Check out the code from git repository
+Checkout the code from git repository into the `{TACT_HOME}` directory
+
 ### Run the deployment script
 Run the `scripts/deploy_tact.sh` script to:
 * Create required directories
