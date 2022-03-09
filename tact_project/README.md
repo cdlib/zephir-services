@@ -84,6 +84,12 @@ Transaction status includes:
 ### Check out the code from git repository
 Checkout the code from git repository into the `{TACT_HOME}` directory
 
+### Install required packages
+Run the `scripts/install_pacakges.sh` script to install required packages:
+* git
+* Python3
+* MySQL
+
 ### Run the deployment script
 Run the `scripts/deploy_tact.sh` script to:
 * Create required directories
