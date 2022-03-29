@@ -1,0 +1,6 @@
+logfile=/var/log/maillog
+lastlinechecked=324
+matchpattern=failed|error|bounced|rejected|rejected|deferred
+excludepattern=
+problemstate=none
+mailto=jing.jiang@ucop.edu
