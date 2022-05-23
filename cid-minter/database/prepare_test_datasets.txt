@@ -1,0 +1,9 @@
+# setup cid  minter store test datasets
+# create table
+sqlite3 zephir_test.db < create_cid_minting_store_table.sql
+# insert datasets
+sqlite3 zephir_test.db < ../tests/test_cid_minting_store/prepare_cid_minter_datasets.sql
+
+sqlite3 zephir_test.db < ../tests/test_zephir_cluster_lookup/setup_zephir_test_db.sql
+
+
