@@ -36,10 +36,56 @@ class ZephirDatabase:
         self.engine = create_engine(db_connect_str)
 
     def findall(self, sql, params=None):
-        with self.engine.connect() as connection:
-            results = connection.execute(sql, params or ())
-            results_dict = [dict(row) for row in results.fetchall()]
-            return results_dict
+        with self.engine.connect() as conn:
+            try:
+                results = conn.execute(sql, params or ())
+                results_dict = [dict(row) for row in results.fetchall()]
+                return results_dict
+            except SQLAlchemyError as e:
+                print("DB error: {}".format(e))
+                return None
+            
+
+    def insert(self, db_table, records):
+        """insert multiple records to a db table
+           Args:
+               db_table: table name in string
+               records: list of records in dictionary
+            Returns: None
+               Idealy the number of affected rows. However sqlalchemy does not support this feature.
+               The CursorResult.rowcount suppose to return the number of rows matched, 
+               which is not necessarily the same as the number of rows that were actually modified.
+               However, the result.rowcount here always returns -1.
+        """ 
+        with self.engine.connect() as conn:
+            for record in records:
+                try:
+                    insert_stmt = insert(db_table).values(record)
+                    result = conn.execute(insert_stmt)
+                except SQLAlchemyError as e:
+                    print("DB insert error: {}".format(e))
+
+    def insert_update_on_duplicate_key(self, db_table, records):
+        """insert multiple records to a db table
+           insert when record is new
+           update on duplicate key - update only when the content is changed 
+           Args:
+               db_table: table name in string
+               records: list of records in dictionary
+            Returns: None
+               Idealy the number of affected rows. However sqlalchemy does not support this feature.
+               The CursorResult.rowcount suppose to return the number of rows matched, 
+               which is not necessarily the same as the number of rows that were actually modified.
+               However, the result.rowcount here always returns -1.
+        """
+        with self.engine.connect() as conn:
+            for record in records:
+                try:
+                    insert_stmt = insert(db_table).values(record)
+                    on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(record)
+                    result = conn.execute(on_duplicate_key_stmt)
+                except SQLAlchemyError as e:
+                    print("DB insert error: {}".format(e))
 
     def close(self):
         self.engine.dispose()
