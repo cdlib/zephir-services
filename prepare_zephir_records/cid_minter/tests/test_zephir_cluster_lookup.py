@@ -9,6 +9,8 @@ from zephir_cluster_lookup import list_to_str
 from zephir_cluster_lookup import formatting_cid_ocn_clusters
 from zephir_cluster_lookup import find_zephir_clusters_by_ocns
 from zephir_cluster_lookup import find_zephir_clusters_by_cids
+from zephir_cluster_lookup import find_zephir_clusters_by_contribsys_ids
+from zephir_cluster_lookup import find_zephir_clusters_by_cid_and_contribsys_ids
 from zephir_cluster_lookup import zephir_clusters_lookup
 
 @pytest.fixture
@@ -107,6 +109,82 @@ def test_find_zephir_cluster_by_cids(create_test_db):
         cid_ocn_list = find_zephir_clusters_by_cids(db_conn_str, cids)
         print(cid_ocn_list)
         assert cid_ocn_list == expected_cid_ocn_list[k]
+
+def test_find_zephir_cluster_by_contribsys_ids(create_test_db):
+    """ the 'create_test_db' argument here is matched to the name of the
+        fixture above
+        Test datasets:
+        000000009|miu000000009
+        000000009|nrlfGLAD151160146-B
+        000000280|nrlfGLAD100908680-B
+        000000446|miu000000446
+        000002076|miu000002076
+        000025463|pur2671999
+        000246197|ia-nrlf.b131529626
+        000249880|ia-nrlf.b12478852x
+        000249880|ia-srlf334843
+    """
+    db_conn_str = create_test_db["db_conn_str"]
+    sysid_list = {
+        "one_sysid": ['miu000000009'],
+        "two_sysids": ['ia-nrlf.b131529626', 'ia-srlf334843'],
+        "no_sysid": [],
+        "not_used_sysid": ['123456789'],
+    }
+    expected_cid_sysid_list = {
+        "one_sysid": [
+                {"cid": '000000009', "contribsys_id": 'miu000000009'},
+                ],
+        "two_sysids": [
+                {"cid": '000246197', "contribsys_id": 'ia-nrlf.b131529626'},
+                {"cid": '000249880', "contribsys_id": 'ia-srlf334843'}],
+        "no_sysid": None,
+        "not_used_sysid": [],
+    }
+
+    for k, sysids in sysid_list.items():
+        cid_sysid_list = find_zephir_clusters_by_contribsys_ids(db_conn_str, sysids)
+        print(cid_sysid_list)
+        assert cid_sysid_list == expected_cid_sysid_list[k]
+
+def test_find_zephir_cluster_by_cid_and_contribsys_ids(create_test_db):
+    """ the 'create_test_db' argument here is matched to the name of the
+        fixture above
+        Test datasets:
+        000000009|miu000000009
+        000000009|nrlfGLAD151160146-B
+        000000280|nrlfGLAD100908680-B
+        000000446|miu000000446
+        000002076|miu000002076
+        000025463|pur2671999
+        000246197|ia-nrlf.b131529626
+        000249880|ia-nrlf.b12478852x
+        000249880|ia-srlf334843
+    """
+    db_conn_str = create_test_db["db_conn_str"]
+    sysid_list = {
+        "000000009": ['miu000000009', 'miu.000000009'],
+        "000000280": ['nrlfGLAD100908680-B'],
+        "000000446": ['miu000000446', 'miu.000000446'],
+        "000249880": ['ia-nrlfb12478852x', 'ia-nrlf.b12478852x'],
+        "123456789": ['xyz'],
+    }
+    expected_cid_sysid_list = {
+        "000000009": [
+                {"cid": '000000009', "contribsys_id": 'nrlfGLAD151160146-B'},
+            ],
+        "000000280": [],
+        "000000446": [],
+        "000249880": [
+                {"cid": '000249880', "contribsys_id": 'ia-srlf334843'},
+            ],
+        "123456789": [],
+    }
+
+    for cid, sysids in sysid_list.items():
+        cid_sysid_list = find_zephir_clusters_by_cid_and_contribsys_ids(db_conn_str, cid, sysids)
+        print(cid_sysid_list)
+        assert cid_sysid_list == expected_cid_sysid_list[cid]
 
 def test_zephir_cluster_lookup_no_matched_cluster(create_test_db):
     db_conn_str = create_test_db["db_conn_str"]

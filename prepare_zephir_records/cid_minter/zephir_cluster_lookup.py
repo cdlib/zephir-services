@@ -31,6 +31,18 @@ def construct_select_zephir_cluster_by_cid(cids):
 
     return SELECT_ZEPHIR_BY_OCLC + " " + AND_CID_IN + " (" + cids + ") " + ORDER_BY
 
+def construct_select_zephir_cluster_by_contribsys_id(contribsys_ids):
+    if contribsys_ids:
+        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
+    else:
+        return None
+
+def construct_select_zephir_cluster_by_cid_and_contribsys_id(cid, contribsys_ids):
+    if cid and contribsys_ids:
+        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE cid='" + cid + "' and contribsys_id not in (" + contribsys_ids + ") order by cid"
+    else:
+        return None
+
 class ZephirDatabase:
     def __init__(self, db_connect_str):
         self.engine = create_engine(db_connect_str)
@@ -174,6 +186,48 @@ def find_zephir_clusters_by_cids(db_conn_str, cid_list):
             return None
     return None
 
+def find_zephir_clusters_by_contribsys_ids(db_conn_str, contribsys_id_list):
+    """
+    Args:
+        db_conn_str: database connection string
+        contribsys_id_list: list of contribsys IDs in string
+    Returns:
+        list of dict with keys "cid" and "contribsys_id"
+    """
+    select_zephir = construct_select_zephir_cluster_by_contribsys_id(list_to_str(contribsys_id_list))
+    print(select_zephir)
+    if select_zephir:
+        try:
+            zephir = ZephirDatabase(db_conn_str)
+            results = zephir.findall(text(select_zephir))
+            zephir.close()
+            return results
+        except:
+            return None
+    return None
+
+def find_zephir_clusters_by_cid_and_contribsys_ids(db_conn_str, cid, contribsys_id_list):
+    """
+    Args:
+        db_conn_str: database connection string
+        cid: a CID
+        contribsys_id_list: list of contribsys IDs in string
+    Returns:
+        list of dict with keys "cid" and "contribsys_id"
+    """
+    select_zephir = construct_select_zephir_cluster_by_cid_and_contribsys_id(cid, list_to_str(contribsys_id_list))
+    print(select_zephir)
+    if select_zephir:
+        try:
+            zephir = ZephirDatabase(db_conn_str)
+            results = zephir.findall(text(select_zephir))
+            zephir.close()
+            return results
+        except:
+            return None
+    return None
+
+
 def list_to_str(a_list):
     """Convert list item to a single quoted string, concat with a comma and space 
     """
@@ -249,8 +303,17 @@ def main():
     db_connect_str = str(utils.db_connect_url(configs[env]))
 
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
+    ocns_list = ['6758168', 15437990, 5663662, 33393343, 28477569, 8727632]
 
     results = zephir_clusters_lookup(db_connect_str, ocns_list)
+    print(results)
+
+    sysid_list = ['pur63733', 'nrlf.b100608668']
+    results = find_zephir_clusters_by_contribsys_ids(db_connect_str, sysid_list)
+    print(results)
+
+    sysid_list = ['pur63733']
+    results = find_zephir_clusters_by_contribsys_ids(db_connect_str, sysid_list)
     print(results)
 
 if __name__ == '__main__':
