@@ -97,3 +97,34 @@ run_cid_inquiry.sh 1,6567842,6758168,8727632
 ```
 ### CID Minting Store (cid_minting_store)
 This module has core functions for storing and finding a record's cluster ID assigend by the record prepartation process in the cid_minting_store table in the Zephir database. The cid_minting_store table only holds new CIDs that have not been reflected in the Zephir database due to delays in records loading. The CIDs in the cid_minting_store table will be used as an additonal resource for CID minting in the prepare process. 
+
+### How to run tests
+We use the PyTest framework for unit testing. 
+Script and its unit tests are managed in this convention:
+
+* module__dir_name
+* script_1.py
+* tests (dir)
+* tests/test_script_1 (dir)
+* tests/test_script_1.py
+
+For example:
+* Module directory name: zephir-services/prepare_zephir_records/cid_minter
+* Script to test: zephir_cluster_lookup.py
+* Tests directory and files: 
+```
+zephir-services/prepare_zephir_records/cid_minter/tests
+drwxrwxr-x 2 htmm htmm  4096 Jun  1 11:24 test_zephir_cluster_lookup
+-rw-rw-r-- 1 htmm htmm  9837 May 24 10:31 test_zephir_cluster_lookup.py
+```
+
+To run the unit tests for the `zephir_cluster_lookup.py` script:
+In the zephir-services/prepare_zephir_records/cid_minter>
+
+```
+pipenv run pytest tests/test_zephir_cluster_lookup.py
+```
+To run all unit tests:
+```
+pipenv run pytest tests/
+```
