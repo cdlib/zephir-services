@@ -10,9 +10,10 @@ import lib.utils as utils
 from config import get_configs_by_filename
 
 from oclc_lookup import lookup_ocns_from_oclc
+from zephir_cluster_lookup import ZephirDatabase
 from zephir_cluster_lookup import zephir_clusters_lookup
 
-def cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
+def cid_inquiry(ocns, zephirDb, primary_db_path, cluster_db_path):
     """Find Zephir clusters by given OCNs and their associated OCLC OCNs.
        1. Find associated OCLC OCNs
        2. Combine incoming OCNs and OCLC OCNs, remove duplicates  
@@ -41,7 +42,7 @@ def cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
     combined_ocns_list = flat_and_dedup_sort_list([ocns] + oclc_ocns_list)
 
     # Finds Zephir clusters by list of OCNs and returns compiled results
-    zephir_clusters_result = zephir_clusters_lookup(db_conn_str, combined_ocns_list)
+    zephir_clusters_result = zephir_clusters_lookup(zephirDb, combined_ocns_list)
 
     return {**oclc_lookup_result, **zephir_clusters_result}
 
@@ -91,11 +92,8 @@ def main():
                    4. repeat 1-3 indefinitely or when there are no input files for 10 minutes.
     """
 
-    if (len(sys.argv) != 2 and len(sys.argv) != 3):
-        print("Parameter error.")
-        print("Usage: {} env[dev|stg|prd] optional_comma_separated_ocns".format(sys.argv[0]))
-        print("{} dev".format(sys.argv[0]))
-        print("{} dev 1,6567842,6758168,8727632".format(sys.argv[0]))
+    if (len(sys.argv) != 3):
+        usage(sys.argv[0])
         exit(1)
 
     env = sys.argv[1]
@@ -125,29 +123,15 @@ def main():
     PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
+    zephirDb = ZephirDatabase(DB_CONNECT_STR)
+
     if (len(sys.argv) == 3):
         ocns_list = convert_comma_separated_str_to_int_list(sys.argv[2])
 
-        results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+        results = cid_inquiry(ocns_list, zephirDb, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
         print(json.dumps(results))
 
         exit(0)
-
-    run_process = True
-    while run_process:
-        for file in os.listdir(cid_inquiry_data_dir):
-            if file.endswith(".txt"):
-                output_filename = os.path.join(cid_inquiry_data_dir, file)
-                done_filename = os.path.join(cid_inquiry_done_dir, file + ".done")
-
-                ocns_from_filename = file[37:][:-4]
-                ocns_list = convert_comma_separated_str_to_int_list(ocns_from_filename)
-                results = cid_inquiry(ocns_list, DB_CONNECT_STR, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
-
-                with open(output_filename, 'w') as output_file:
-                    output_file.write(json.dumps(results))
-
-                os.rename(output_filename, done_filename)
 
 
 if __name__ == '__main__':
