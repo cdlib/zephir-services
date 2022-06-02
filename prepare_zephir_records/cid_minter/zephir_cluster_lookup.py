@@ -191,7 +191,6 @@ def find_zephir_clusters_by_contribsys_ids(zephirDb, contribsys_id_list):
         list of dict with keys "cid" and "contribsys_id"
     """
     select_zephir = construct_select_zephir_cluster_by_contribsys_id(list_to_str(contribsys_id_list))
-    print(select_zephir)
     if select_zephir:
         try:
             results = zephirDb.findall(text(select_zephir))
@@ -210,7 +209,6 @@ def find_zephir_clusters_by_cid_and_contribsys_ids(zephirDb, cid, contribsys_id_
         list of dict with keys "cid" and "contribsys_id"
     """
     select_zephir = construct_select_zephir_cluster_by_cid_and_contribsys_id(cid, list_to_str(contribsys_id_list))
-    print(select_zephir)
     if select_zephir:
         try:
             results = zephirDb.findall(text(select_zephir))
@@ -296,17 +294,19 @@ def main():
     zephirDb = ZephirDatabase(db_conn_str)
 
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
-    ocns_list = ['6758168', 15437990, 5663662, 33393343, 28477569, 8727632]
-
+    print("Inquiry OCNs: {}".format(ocns_list))
     results = zephir_clusters_lookup(zephirDb, ocns_list)
     print(results)
 
     sysid_list = ['pur63733', 'nrlf.b100608668']
+    print("Inquiry sys IDs: {}".format(sysid_list))
     results = find_zephir_clusters_by_contribsys_ids(zephirDb, sysid_list)
     print(results)
 
-    sysid_list = ['pur63733']
-    results = find_zephir_clusters_by_contribsys_ids(zephirDb, sysid_list)
+    cid = "000000009"
+    sysid_list = ['miu000000009', 'miu.000000009']
+    print("Inquiry ids: CID: {}, sys IDs: {}".format(cid, sysid_list))
+    results = find_zephir_clusters_by_cid_and_contribsys_ids(zephirDb, cid, sysid_list)
     print(results)
 
 if __name__ == '__main__':
