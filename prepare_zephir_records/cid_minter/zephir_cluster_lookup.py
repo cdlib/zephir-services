@@ -102,7 +102,7 @@ class ZephirDatabase:
     def close(self):
         self.engine.dispose()
 
-def zephir_clusters_lookup(db_conn_str, ocns_list):
+def zephir_clusters_lookup(zephirDb, ocns_list):
     """
     Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
     Args:
@@ -123,14 +123,14 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         "min_cid": None,
     }
 
-    cid_ocn_list_by_ocns = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    cid_ocn_list_by_ocns = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
     if not cid_ocn_list_by_ocns:
         return zephir_cluster
 
     # find all OCNs in each cluster
     cids_list = [cid_ocn.get("cid") for cid_ocn in cid_ocn_list_by_ocns]
     unique_cids_list = list(set(cids_list))
-    cid_ocn_list = find_zephir_clusters_by_cids(db_conn_str, unique_cids_list)
+    cid_ocn_list = find_zephir_clusters_by_cids(zephirDb, unique_cids_list)
     if not cid_ocn_list:
         return zephir_cluster
 
@@ -146,7 +146,7 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
     }
     return zephir_cluster
 
-def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
+def find_zephir_clusters_by_ocns(zephirDb, ocns_list):
     """
     Args:
         db_conn_str: database connection string
@@ -159,15 +159,13 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
     select_zephir = construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
     if select_zephir:
         try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
+            results = zephirDb.findall(text(select_zephir))
             return results
         except:
             return None
     return None
 
-def find_zephir_clusters_by_cids(db_conn_str, cid_list):
+def find_zephir_clusters_by_cids(zephirDb, cid_list):
     """
     Args:
         db_conn_str: database connection string
@@ -178,15 +176,13 @@ def find_zephir_clusters_by_cids(db_conn_str, cid_list):
     select_zephir = construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
     if select_zephir:
         try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
+            results = zephirDb.findall(text(select_zephir))
             return results 
         except:
             return None
     return None
 
-def find_zephir_clusters_by_contribsys_ids(db_conn_str, contribsys_id_list):
+def find_zephir_clusters_by_contribsys_ids(zephirDb, contribsys_id_list):
     """
     Args:
         db_conn_str: database connection string
@@ -198,15 +194,13 @@ def find_zephir_clusters_by_contribsys_ids(db_conn_str, contribsys_id_list):
     print(select_zephir)
     if select_zephir:
         try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
+            results = zephirDb.findall(text(select_zephir))
             return results
         except:
             return None
     return None
 
-def find_zephir_clusters_by_cid_and_contribsys_ids(db_conn_str, cid, contribsys_id_list):
+def find_zephir_clusters_by_cid_and_contribsys_ids(zephirDb, cid, contribsys_id_list):
     """
     Args:
         db_conn_str: database connection string
@@ -219,9 +213,7 @@ def find_zephir_clusters_by_cid_and_contribsys_ids(db_conn_str, cid, contribsys_
     print(select_zephir)
     if select_zephir:
         try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
+            results = zephirDb.findall(text(select_zephir))
             return results
         except:
             return None
@@ -300,20 +292,21 @@ def main():
     configs= get_configs_by_filename('config', 'zephir_db')
     print(configs)
 
-    db_connect_str = str(utils.db_connect_url(configs[env]))
+    db_conn_str = str(utils.db_connect_url(configs[env]))
+    zephirDb = ZephirDatabase(db_conn_str)
 
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
     ocns_list = ['6758168', 15437990, 5663662, 33393343, 28477569, 8727632]
 
-    results = zephir_clusters_lookup(db_connect_str, ocns_list)
+    results = zephir_clusters_lookup(zephirDb, ocns_list)
     print(results)
 
     sysid_list = ['pur63733', 'nrlf.b100608668']
-    results = find_zephir_clusters_by_contribsys_ids(db_connect_str, sysid_list)
+    results = find_zephir_clusters_by_contribsys_ids(zephirDb, sysid_list)
     print(results)
 
     sysid_list = ['pur63733']
-    results = find_zephir_clusters_by_contribsys_ids(db_connect_str, sysid_list)
+    results = find_zephir_clusters_by_contribsys_ids(zephirDb, sysid_list)
     print(results)
 
 if __name__ == '__main__':
