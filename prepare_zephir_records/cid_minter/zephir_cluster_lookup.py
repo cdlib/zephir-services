@@ -1,10 +1,10 @@
 import os
 import sys
-import environs
 import re
 
 from sqlalchemy import create_engine
 from sqlalchemy import text
+from sqlalchemy.dialects.mysql import insert
 
 import lib.utils as utils
 from config import get_configs_by_filename
@@ -19,11 +19,7 @@ AND_IDENTIFIER_IN = "AND i.identifier in"
 AND_CID_IN = "AND z.cid in"
 ORDER_BY = "ORDER BY z.cid, i.identifier"
 
-def construct_select_zephir_cluster_by_ocns(ocns):
-    if invalid_sql_in_clause_str(ocns):
-        return None
 
-    return SELECT_ZEPHIR_BY_OCLC + " " + AND_IDENTIFIER_IN + " (" + ocns + ") " + ORDER_BY
 
 def construct_select_zephir_cluster_by_cid(cids):
     if invalid_sql_in_clause_str(cids):
@@ -123,7 +119,9 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         "min_cid": None,
     }
 
-    cid_ocn_list_by_ocns = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    findZephirClass = FindZephirClusters(db_conn_str)
+
+    cid_ocn_list_by_ocns = findZephirClass.find_zephir_clusters_by_ocns(ocns_list)
     if not cid_ocn_list_by_ocns:
         return zephir_cluster
 
@@ -146,26 +144,34 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
     }
     return zephir_cluster
 
-def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
-    """
-    Args:
-        db_conn_str: database connection string
-        ocns_list: list of OCNs in integer 
-    Returns:
-        list of dict with keys "cid" and "ocn"
-        [] when there is no match
-        None: when there is an exception
-    """
-    select_zephir = construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
-    if select_zephir:
-        try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
-            return results
-        except:
+class FindZephirClusters:
+    def __init__(self, database):
+        self.database = database
+
+    def construct_select_zephir_cluster_by_ocns(self, ocns):
+        if invalid_sql_in_clause_str(ocns):
             return None
-    return None
+
+        return SELECT_ZEPHIR_BY_OCLC + " " + AND_IDENTIFIER_IN + " (" + ocns + ") " + ORDER_BY
+
+    def find_zephir_clusters_by_ocns(self, ocns_list):
+        """
+        Args:
+            db_conn_str: database connection string
+            ocns_list: list of OCNs in integer 
+        Returns:
+            list of dict with keys "cid" and "ocn"
+            [] when there is no match
+            None: when there is an exception
+        """
+        select_zephir = self.construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
+        if select_zephir:
+            try:
+                results = self.database.findall(text(select_zephir))
+                return results
+            except:
+                return None
+        return None
 
 def find_zephir_clusters_by_cids(db_conn_str, cid_list):
     """
