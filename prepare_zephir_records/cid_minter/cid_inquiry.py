@@ -6,8 +6,8 @@ import json
 import logging
 import time
 
-import lib.utils as utils
-from config import get_configs_by_filename
+from lib.utils import db_connect_url
+from lib.utils import get_configs_by_filename
 
 from oclc_lookup import lookup_ocns_from_oclc
 from zephir_cluster_lookup import ZephirDatabase
@@ -101,8 +101,11 @@ def main():
         usage(sys.argv[0])
         exit(1)
 
-    zephir_db_config = get_configs_by_filename("config", "zephir_db")
-    db_connect_url = str(utils.db_connect_url(zephir_db_config[env]))
+    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    CONFIG_PATH = os.path.join(ROOT_PATH, 'config')
+
+    zephir_db_config = get_configs_by_filename(CONFIG_PATH, "zephir_db")
+    db_connect_str = str(db_connect_url(zephir_db_config[env]))
 
     cid_minting_config = get_configs_by_filename("config", "cid_minting")
     primary_db_path = cid_minting_config["primary_db_path"]
@@ -119,7 +122,7 @@ def main():
     logging.info("Start " + os.path.basename(__file__))
     logging.info("Env: {}".format(env))
 
-    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_url
+    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_str
     PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 

@@ -6,8 +6,8 @@ import re
 from sqlalchemy import create_engine
 from sqlalchemy import text
 
-import lib.utils as utils
-from config import get_configs_by_filename
+from lib.utils import db_connect_url
+from lib.utils import get_configs_by_filename
 
 SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
     FROM zephir_records as z
@@ -287,10 +287,13 @@ def main():
     else:
         env = "test"
 
-    configs= get_configs_by_filename('config', 'zephir_db')
+    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    CONFIG_PATH = os.path.join(ROOT_PATH, 'config')
+
+    configs= get_configs_by_filename(CONFIG_PATH, 'zephir_db')
     print(configs)
 
-    db_conn_str = str(utils.db_connect_url(configs[env]))
+    db_conn_str = str(db_connect_url(configs[env]))
     zephirDb = ZephirDatabase(db_conn_str)
 
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]

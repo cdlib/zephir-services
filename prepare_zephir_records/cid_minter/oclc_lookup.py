@@ -6,7 +6,7 @@ import msgpack
 import plyvel
 import click
 
-from config import get_configs_by_filename
+from lib.utils import get_configs_by_filename
 
 # convenience methods for converting ints to and from bytes
 def int_to_bytes(inum):
@@ -334,7 +334,10 @@ def main(test, ocns):
         tests()
         exit(0)
 
-    configs = get_configs_by_filename("config", "cid_minting")
+    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    CONFIG_PATH = os.path.join(ROOT_PATH, 'config')
+
+    configs = get_configs_by_filename(CONFIG_PATH, "cid_minting")
     primary_db_path = configs["primary_db_path"]
     cluster_db_path = configs["cluster_db_path"]
 
