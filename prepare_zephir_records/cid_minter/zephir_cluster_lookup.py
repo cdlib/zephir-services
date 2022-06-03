@@ -1,6 +1,5 @@
 import os
 import sys
-import environs
 import re
 
 from sqlalchemy import create_engine
@@ -37,9 +36,9 @@ def construct_select_zephir_cluster_by_contribsys_id(contribsys_ids):
     else:
         return None
 
-def construct_select_zephir_cluster_by_cid_and_contribsys_id(cid, contribsys_ids):
-    if cid and contribsys_ids:
-        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE cid='" + cid + "' and contribsys_id not in (" + contribsys_ids + ") order by cid"
+def construct_select_contribsys_id_by_cid(cids):
+    if cids:
+        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE cid in (" + cids + ") order by cid"
     else:
         return None
 
@@ -146,6 +145,50 @@ def zephir_clusters_lookup(zephirDb, ocns_list):
     }
     return zephir_cluster
 
+def zephir_clusters_lookup_by_sysids(zephirDb, sysids_list):
+    """
+    Finds Zephir clusters by sysids and returns clusters' info including cluster IDs, number of clusters and all SysIds in each cluster. 
+    Args:
+        zephirDb: database class
+        sysids_list: list of sysids in string
+    Return: A dict with:
+        "inquiry_sysids": input sysids list,
+        "cid_sysid_list": list of dict with keys of "cid" and "sysid",
+        "cid_sysid_clusters": dict with key="cid", value=list of sysids in the cid cluster,
+        "num_of_matched_zephir_clusters": number of matched clusters
+        "min_cid": lowest CID 
+    """
+    zephir_cluster = {
+        "inquiry_sysids": sysids_list,
+        "cid_sysid_list": [],
+        "cid_sysid_clusters": {},
+        "num_of_matched_zephir_clusters": 0,
+        "min_cid": None,
+    }
+
+    cid_sysid_list = find_zephir_clusters_by_contribsys_ids(zephirDb, sysids_list)
+    if not cid_sysid_list:
+        return zephir_cluster
+
+    # find all sysids in each cluster
+    cids_list = [cid_sysid.get("cid") for cid_sysid in cid_sysid_list]
+    unique_cids_list = list(set(cids_list))
+    cid_sysid_list_2 = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, unique_cids_list)
+    if not cid_sysid_list_2:
+        return zephir_cluster
+
+    # convert to a dict with key=cid, value=list of sysids
+    cid_sysid_clusters = formatting_cid_ocn_clusters(cid_sysid_list_2)
+
+    zephir_cluster = {
+        "inquiry_ocns_zephir": sysids_list,
+        "cid_sysid_list": cid_sysid_list,
+        "cid_sysid_clusters": cid_sysid_clusters,
+        "num_of_matched_zephir_clusters": len(cid_sysid_clusters),
+        "min_cid": min([cid_sysid.get("cid") for cid_sysid in cid_sysid_list])
+    }
+    return zephir_cluster
+
 def find_zephir_clusters_by_ocns(zephirDb, ocns_list):
     """
     Args:
@@ -199,7 +242,7 @@ def find_zephir_clusters_by_contribsys_ids(zephirDb, contribsys_id_list):
             return None
     return None
 
-def find_zephir_clusters_by_cid_and_contribsys_ids(zephirDb, cid, contribsys_id_list):
+def find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid_list):
     """
     Args:
         db_conn_str: database connection string
@@ -208,7 +251,7 @@ def find_zephir_clusters_by_cid_and_contribsys_ids(zephirDb, cid, contribsys_id_
     Returns:
         list of dict with keys "cid" and "contribsys_id"
     """
-    select_zephir = construct_select_zephir_cluster_by_cid_and_contribsys_id(cid, list_to_str(contribsys_id_list))
+    select_zephir = construct_select_contribsys_id_by_cid(list_to_str(cid_list))
     if select_zephir:
         try:
             results = zephirDb.findall(text(select_zephir))
@@ -309,7 +352,7 @@ def main():
     cid = "000000009"
     sysid_list = ['miu000000009', 'miu.000000009']
     print("Inquiry ids: CID: {}, sys IDs: {}".format(cid, sysid_list))
-    results = find_zephir_clusters_by_cid_and_contribsys_ids(zephirDb, cid, sysid_list)
+    results = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid, sysid_list)
     print(results)
 
 if __name__ == '__main__':

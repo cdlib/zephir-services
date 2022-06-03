@@ -11,7 +11,7 @@ from zephir_cluster_lookup import formatting_cid_ocn_clusters
 from zephir_cluster_lookup import find_zephir_clusters_by_ocns
 from zephir_cluster_lookup import find_zephir_clusters_by_cids
 from zephir_cluster_lookup import find_zephir_clusters_by_contribsys_ids
-from zephir_cluster_lookup import find_zephir_clusters_by_cid_and_contribsys_ids
+from zephir_cluster_lookup import find_zephir_clusters_and_contribsys_ids_by_cid
 from zephir_cluster_lookup import zephir_clusters_lookup
 
 @pytest.fixture
@@ -184,7 +184,7 @@ def test_find_zephir_cluster_by_cid_and_contribsys_ids(create_test_db):
     }
 
     for cid, sysids in sysid_list.items():
-        cid_sysid_list = find_zephir_clusters_by_cid_and_contribsys_ids(zephirDb, cid, sysids)
+        cid_sysid_list = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid, sysids)
         print(cid_sysid_list)
         assert cid_sysid_list == expected_cid_sysid_list[cid]
 
