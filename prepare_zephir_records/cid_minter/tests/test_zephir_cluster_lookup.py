@@ -149,7 +149,7 @@ def test_find_zephir_cluster_by_contribsys_ids(create_test_db):
         print(cid_sysid_list)
         assert cid_sysid_list == expected_cid_sysid_list[k]
 
-def test_find_zephir_cluster_by_cid_and_contribsys_ids(create_test_db):
+def test_find_zephir_cluster_and_contribsys_ids_by_cids(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
         Test datasets:
@@ -164,29 +164,28 @@ def test_find_zephir_cluster_by_cid_and_contribsys_ids(create_test_db):
         000249880|ia-srlf334843
     """
     zephirDb = create_test_db
-    sysid_list = {
-        "000000009": ['miu000000009', 'miu.000000009'],
-        "000000280": ['nrlfGLAD100908680-B'],
-        "000000446": ['miu000000446', 'miu.000000446'],
-        "000249880": ['ia-nrlfb12478852x', 'ia-nrlf.b12478852x'],
-        "123456789": ['xyz'],
+    cid_list = {
+        "one_cid": ["000000280"],
+        "two_cids": ["000000280", "000249880"],
+        "no_cid": [],
+        "not_used_cid": ["123456789"],
     }
     expected_cid_sysid_list = {
-        "000000009": [
-                {"cid": '000000009', "contribsys_id": 'nrlfGLAD151160146-B'},
-            ],
-        "000000280": [],
-        "000000446": [],
-        "000249880": [
-                {"cid": '000249880', "contribsys_id": 'ia-srlf334843'},
-            ],
-        "123456789": [],
+        "one_cid": [
+                {"cid": "000000280", "contribsys_id": "nrlfGLAD100908680-B"}],
+        "two_cids": [
+                {"cid": "000000280", "contribsys_id": "nrlfGLAD100908680-B"},
+                {"cid": "000249880", "contribsys_id": "ia-nrlf.b12478852x"},
+                {"cid": "000249880", "contribsys_id": "ia-srlf334843"},
+                ],
+        "no_cid": None,
+        "not_used_cid": [],
     }
 
-    for cid, sysids in sysid_list.items():
-        cid_sysid_list = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid, sysids)
+    for k, cids in cid_list.items():
+        cid_sysid_list = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cids)
         print(cid_sysid_list)
-        assert cid_sysid_list == expected_cid_sysid_list[cid]
+        assert cid_sysid_list == expected_cid_sysid_list[k]
 
 def test_zephir_cluster_lookup_no_matched_cluster(create_test_db):
     zephirDb = create_test_db
