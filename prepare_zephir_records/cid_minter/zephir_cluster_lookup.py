@@ -31,10 +31,10 @@ def construct_select_zephir_cluster_by_cid(cids):
     return SELECT_ZEPHIR_BY_OCLC + " " + AND_CID_IN + " (" + cids + ") " + ORDER_BY
 
 def construct_select_zephir_cluster_by_contribsys_id(contribsys_ids):
-    if invalid_sql_in_clause_str(contribsys_ids):
+    if contribsys_ids:
+        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
+    else:
         return None
-
-    return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
 
 def construct_select_contribsys_id_by_cid(cids):
     if invalid_sql_in_clause_str(cids):
@@ -105,7 +105,7 @@ def zephir_clusters_lookup(zephirDb, ocns_list):
     """
     Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
     Args:
-        db_conn_str: database connection string
+        zephirDb: ZephirDatabase class
         ocns_list: list of OCNs in integers
     Return: A dict with:
         "inquiry_ocns_zephir": input ocns list,
@@ -134,7 +134,7 @@ def zephir_clusters_lookup(zephirDb, ocns_list):
         return zephir_cluster
 
     # convert to a dict with key=cid, value=list of ocns
-    cid_ocn_clusters = formatting_cid_ocn_clusters(cid_ocn_list)
+    cid_ocn_clusters = formatting_cid_id_clusters(cid_ocn_list, "ocn")
 
     zephir_cluster = {
         "inquiry_ocns_zephir": ocns_list,
@@ -149,7 +149,7 @@ def zephir_clusters_lookup_by_sysids(zephirDb, sysids_list):
     """
     Finds Zephir clusters by sysids and returns clusters' info including cluster IDs, number of clusters and all SysIds in each cluster. 
     Args:
-        zephirDb: database class
+        zephirDb: ZephirDatabase class
         sysids_list: list of sysids in string
     Return: A dict with:
         "inquiry_sysids": input sysids list,
@@ -178,10 +178,10 @@ def zephir_clusters_lookup_by_sysids(zephirDb, sysids_list):
         return zephir_cluster
 
     # convert to a dict with key=cid, value=list of sysids
-    cid_sysid_clusters = formatting_cid_ocn_clusters(cid_sysid_list_2)
+    cid_sysid_clusters = formatting_cid_id_clusters(cid_sysid_list_2, "contribsys_id")
 
     zephir_cluster = {
-        "inquiry_ocns_zephir": sysids_list,
+        "inquiry_sysids": sysids_list,
         "cid_sysid_list": cid_sysid_list,
         "cid_sysid_clusters": cid_sysid_clusters,
         "num_of_matched_zephir_clusters": len(cid_sysid_clusters),
@@ -192,7 +192,7 @@ def zephir_clusters_lookup_by_sysids(zephirDb, sysids_list):
 def find_zephir_clusters_by_ocns(zephirDb, ocns_list):
     """
     Args:
-        db_conn_str: database connection string
+        zephirDb: ZephirDatabase class
         ocns_list: list of OCNs in integer 
     Returns:
         list of dict with keys "cid" and "ocn"
@@ -211,7 +211,7 @@ def find_zephir_clusters_by_ocns(zephirDb, ocns_list):
 def find_zephir_clusters_by_cids(zephirDb, cid_list):
     """
     Args:
-        db_conn_str: database connection string
+        zephirDb: ZephirDatabase class
         cid_list: list of CIDs in string
     Returns:
         list of dict with keys "cid" and "ocn"
@@ -228,7 +228,7 @@ def find_zephir_clusters_by_cids(zephirDb, cid_list):
 def find_zephir_clusters_by_contribsys_ids(zephirDb, contribsys_id_list):
     """
     Args:
-        db_conn_str: database connection string
+        zephirDb: ZephirDatabase class 
         contribsys_id_list: list of contribsys IDs in string
     Returns:
         list of dict with keys "cid" and "contribsys_id"
@@ -245,7 +245,7 @@ def find_zephir_clusters_by_contribsys_ids(zephirDb, contribsys_id_list):
 def find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid_list):
     """
     Args:
-        db_conn_str: database connection string
+        zephirDb: ZephirDatabase class
         cid: a CID
         contribsys_id_list: list of contribsys IDs in string
     Returns:
@@ -272,32 +272,33 @@ def list_to_str(a_list):
             new_str = "'" + str(item) + "'"
     return new_str
 
-def formatting_cid_ocn_clusters(cid_ocn_list):
-    """Put cid and ocn pairs into clusters by unique cids. 
+def formatting_cid_id_clusters(cid_id_list, other_id):
+    """Put cid and id pairs into clusters by unique cids. 
     Args:
-        cid_ocn_list: list of dict with keys of "cid" and "ocn".
+        cid_ocn_list: list of dict with keys of "cid" and another ID such as "ocn" or "sysid".
         [{"cid": cid1, "ocn": ocn1}, {"cid": cid1, "ocn": ocn2}, {"cid": cid3, "ocn": ocn3}]
+        other_id: other ID such as "ocn", "contribsys_id"
     Returns:
-        A dict with key=unique cid, value=list of ocns with the same cid.
+        A dict with key=unique cid, value=list of other id with the same cid.
         {"cid1": [ocn1, ocn2],
          "cid3", [ocn3]}
     """
     # key: cid, value: list of ocns [ocn1, ocn2]
-    cid_ocns_dict = {}
+    cid_ids_dict = {}
 
-    if cid_ocn_list:
-        for cid_ocn in cid_ocn_list:
-            cid = cid_ocn.get("cid")
-            ocn = cid_ocn.get("ocn")
-            if cid in cid_ocns_dict:
-                cid_ocns_dict[cid].append(ocn)
+    if cid_id_list:
+        for cid_id in cid_id_list:
+            cid = cid_id.get("cid")
+            id = cid_id.get(other_id)
+            if cid in cid_ids_dict:
+                cid_ids_dict[cid].append(id)
             else:
-                cid_ocns_dict[cid] = [ocn]
+                cid_ids_dict[cid] = [id]
 
-    return cid_ocns_dict
+    return cid_ids_dict
 
 def valid_sql_in_clause_str(input_str):
-    """Validates if input is comma separated, single quoted strings.
+    """Validates if input is comma separated, single quoted strings with only digits.
 
     Returns:
         True: valid
@@ -345,14 +346,7 @@ def main():
     print(results)
 
     sysid_list = ['pur63733', 'nrlf.b100608668']
-    print("Inquiry sys IDs: {}".format(sysid_list))
-    results = find_zephir_clusters_by_contribsys_ids(zephirDb, sysid_list)
-    print(results)
-
-    cid = "000000009"
-    sysid_list = ['miu000000009', 'miu.000000009']
-    print("Inquiry ids: CID: {}, sys IDs: {}".format(cid, sysid_list))
-    results = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid, sysid_list)
+    results = zephir_clusters_lookup_by_sysids(zephirDb, sysid_list)
     print(results)
 
 if __name__ == '__main__':

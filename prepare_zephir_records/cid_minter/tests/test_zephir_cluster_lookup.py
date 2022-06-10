@@ -7,7 +7,7 @@ from zephir_cluster_lookup import ZephirDatabase
 from zephir_cluster_lookup import valid_sql_in_clause_str
 from zephir_cluster_lookup import invalid_sql_in_clause_str
 from zephir_cluster_lookup import list_to_str
-from zephir_cluster_lookup import formatting_cid_ocn_clusters
+from zephir_cluster_lookup import formatting_cid_id_clusters
 from zephir_cluster_lookup import find_zephir_clusters_by_ocns
 from zephir_cluster_lookup import find_zephir_clusters_by_cids
 from zephir_cluster_lookup import find_zephir_clusters_by_contribsys_ids
@@ -288,7 +288,7 @@ def test_list_to_str():
     for k, val in input_list.items():
         assert expected[k] == list_to_str(val)
 
-def test_formatting_cid_ocn_clusters():
+def test_formatting_cid_id_clusters():
     list_of_cid_ocn = [
             {"cid": '001693730', "ocn": '6758168'}, 
             {"cid": '001693730', "ocn": '15437990'},
@@ -301,7 +301,7 @@ def test_formatting_cid_ocn_clusters():
             '002492721': ['8727632'],
             '009547317': ['33393343', '28477569'],
             }
-    results = formatting_cid_ocn_clusters(list_of_cid_ocn)
+    results = formatting_cid_id_clusters(list_of_cid_ocn, "ocn")
     assert results != None
     assert results == expected_results
 
