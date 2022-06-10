@@ -59,4 +59,12 @@ def load_config(path, config={}):
                 config[section].update(yaml.safe_load(ymlfile))
     return config
 
+def get_configs_by_filename(config_path, config_file):
+    """return configs defined in the config_file as a dictionary
+       config_path: directory of configuration files
+       config_file: configuration filename
+    """
+    # load all configuration files in directory
+    configs = load_config(config_path)
 
+    return configs.get(config_file)

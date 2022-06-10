@@ -3,12 +3,15 @@ import os
 import pytest
 import environs
 
+from zephir_cluster_lookup import ZephirDatabase
 from zephir_cluster_lookup import valid_sql_in_clause_str
 from zephir_cluster_lookup import invalid_sql_in_clause_str
 from zephir_cluster_lookup import list_to_str
-from zephir_cluster_lookup import formatting_cid_ocn_clusters
+from zephir_cluster_lookup import formatting_cid_id_clusters
 from zephir_cluster_lookup import find_zephir_clusters_by_ocns
 from zephir_cluster_lookup import find_zephir_clusters_by_cids
+from zephir_cluster_lookup import find_zephir_clusters_by_contribsys_ids
+from zephir_cluster_lookup import find_zephir_clusters_and_contribsys_ids_by_cid
 from zephir_cluster_lookup import zephir_clusters_lookup
 
 @pytest.fixture
@@ -19,42 +22,43 @@ def create_test_db(data_dir, tmpdir, scope="session"):
     setup_sql = os.path.join(data_dir, "setup_zephir_test_db.sql")
 
     cmd = "sqlite3 {} < {}".format(database, setup_sql)
+    print("Create SQLite db for testing:")
     print(cmd)
     os.system(cmd)
 
-    return {
-        "db_conn_str": 'sqlite:///{}'.format(database)
-    }
+    db_conn_str = 'sqlite:///{}'.format(database)
+    
+    return ZephirDatabase(db_conn_str)
 
 def test_find_zephir_cluster_by_no_ocn(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
     """
-    db_conn_str = create_test_db["db_conn_str"]
+    zephirDb = create_test_db
     ocns_list = []
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    cid_ocn_list = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
     assert cid_ocn_list == None
 
 def test_find_zephir_cluster_by_ocn_not_in_zephir(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
     """
-    db_conn_str = create_test_db["db_conn_str"]
+    zephirDb = create_test_db
     ocns_list = [12345678901]
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    cid_ocn_list = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
     assert cid_ocn_list == []
 
 def test_find_zephir_cluster_by_one_ocn(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
     """
-    db_conn_str = create_test_db["db_conn_str"]
+    zephirDb = create_test_db
     ocns_list = [8727632]
     expected_cid_ocn_list = [{"cid": '002492721', "ocn": '8727632'}]
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    cid_ocn_list = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
     print(cid_ocn_list)
     assert cid_ocn_list != None
     assert cid_ocn_list == expected_cid_ocn_list
@@ -63,7 +67,7 @@ def test_find_zephir_cluster_by_ocns(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
     """
-    db_conn_str = create_test_db["db_conn_str"]
+    zephirDb = create_test_db
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
     expected_cid_ocn_list = [
             {"cid": '001693730', "ocn": '15437990'}, 
@@ -74,7 +78,7 @@ def test_find_zephir_cluster_by_ocns(create_test_db):
             {"cid": '009547317', "ocn": '33393343'}
         ]
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    cid_ocn_list = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
     print(cid_ocn_list)
     assert cid_ocn_list != None
     assert cid_ocn_list == expected_cid_ocn_list
@@ -83,7 +87,7 @@ def test_find_zephir_cluster_by_cids(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
         fixture above
     """
-    db_conn_str = create_test_db["db_conn_str"]
+    zephirDb = create_test_db
     cid_list = {
         "one_cid": ['001693730'],
         "two_cids": ['002492721', '009547317'],
@@ -104,19 +108,94 @@ def test_find_zephir_cluster_by_cids(create_test_db):
     }
 
     for k, cids in cid_list.items():
-        cid_ocn_list = find_zephir_clusters_by_cids(db_conn_str, cids)
+        cid_ocn_list = find_zephir_clusters_by_cids(zephirDb, cids)
         print(cid_ocn_list)
         assert cid_ocn_list == expected_cid_ocn_list[k]
 
+def test_find_zephir_cluster_by_contribsys_ids(create_test_db):
+    """ the 'create_test_db' argument here is matched to the name of the
+        fixture above
+        Test datasets:
+        000000009|miu000000009
+        000000009|nrlfGLAD151160146-B
+        000000280|nrlfGLAD100908680-B
+        000000446|miu000000446
+        000002076|miu000002076
+        000025463|pur2671999
+        000246197|ia-nrlf.b131529626
+        000249880|ia-nrlf.b12478852x
+        000249880|ia-srlf334843
+    """
+    zephirDb = create_test_db
+    sysid_list = {
+        "one_sysid": ['miu000000009'],
+        "two_sysids": ['ia-nrlf.b131529626', 'ia-srlf334843'],
+        "no_sysid": [],
+        "not_used_sysid": ['123456789'],
+    }
+    expected_cid_sysid_list = {
+        "one_sysid": [
+                {"cid": '000000009', "contribsys_id": 'miu000000009'},
+                ],
+        "two_sysids": [
+                {"cid": '000246197', "contribsys_id": 'ia-nrlf.b131529626'},
+                {"cid": '000249880', "contribsys_id": 'ia-srlf334843'}],
+        "no_sysid": None,
+        "not_used_sysid": [],
+    }
+
+    for k, sysids in sysid_list.items():
+        cid_sysid_list = find_zephir_clusters_by_contribsys_ids(zephirDb, sysids)
+        print(cid_sysid_list)
+        assert cid_sysid_list == expected_cid_sysid_list[k]
+
+def test_find_zephir_cluster_and_contribsys_ids_by_cids(create_test_db):
+    """ the 'create_test_db' argument here is matched to the name of the
+        fixture above
+        Test datasets:
+        000000009|miu000000009
+        000000009|nrlfGLAD151160146-B
+        000000280|nrlfGLAD100908680-B
+        000000446|miu000000446
+        000002076|miu000002076
+        000025463|pur2671999
+        000246197|ia-nrlf.b131529626
+        000249880|ia-nrlf.b12478852x
+        000249880|ia-srlf334843
+    """
+    zephirDb = create_test_db
+    cid_list = {
+        "one_cid": ["000000280"],
+        "two_cids": ["000000280", "000249880"],
+        "no_cid": [],
+        "not_used_cid": ["123456789"],
+    }
+    expected_cid_sysid_list = {
+        "one_cid": [
+                {"cid": "000000280", "contribsys_id": "nrlfGLAD100908680-B"}],
+        "two_cids": [
+                {"cid": "000000280", "contribsys_id": "nrlfGLAD100908680-B"},
+                {"cid": "000249880", "contribsys_id": "ia-nrlf.b12478852x"},
+                {"cid": "000249880", "contribsys_id": "ia-srlf334843"},
+                ],
+        "no_cid": None,
+        "not_used_cid": [],
+    }
+
+    for k, cids in cid_list.items():
+        cid_sysid_list = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cids)
+        print(cid_sysid_list)
+        assert cid_sysid_list == expected_cid_sysid_list[k]
+
 def test_zephir_cluster_lookup_no_matched_cluster(create_test_db):
-    db_conn_str = create_test_db["db_conn_str"]
+    zephirDb = create_test_db
     ocns_lists = {
         "not_in_zephir": [12345678901],
         "empty": [],
     }
 
     for k, ocns_list in ocns_lists.items():
-        result = zephir_clusters_lookup(db_conn_str, ocns_list)
+        result = zephir_clusters_lookup(zephirDb, ocns_list)
         assert result["cid_ocn_list"] == [] 
         assert result["cid_ocn_clusters"] == {}
         assert result["num_of_matched_zephir_clusters"] == 0 
@@ -124,7 +203,7 @@ def test_zephir_cluster_lookup_no_matched_cluster(create_test_db):
         assert result["min_cid"] == None
 
 def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
-    db_conn_str = create_test_db["db_conn_str"]
+    zephirDb = create_test_db
     ocns_lists = {
         "one_ocn_1_ocn_cluster": [8727632],
         "one_ocn_2_ocns_cluster": [28477569], # Zephir has more OCNs than incoming record
@@ -158,7 +237,7 @@ def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
     }
 
     for k, ocns_list in ocns_lists.items():
-        result = zephir_clusters_lookup(db_conn_str, ocns_list)
+        result = zephir_clusters_lookup(zephirDb, ocns_list)
         assert result["cid_ocn_list"] == expected_cid_ocn_list[k]
         assert result["cid_ocn_clusters"] == expected_clusters[k]
         assert result["num_of_matched_zephir_clusters"] == 1 
@@ -166,7 +245,7 @@ def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
         assert result["min_cid"] == expected_min_cid[k]
 
 def test_zephir_cluster_lookup_matched_more_than_one_clusters(create_test_db):
-    db_conn_str = create_test_db["db_conn_str"]
+    zephirDb = create_test_db
     ocns_list = [12345678901, 6758168, 28477569, 8727632, 217211158]
     expected_cid_ocn_list = [
             {"cid": '000000280', "ocn": '217211158'},
@@ -184,7 +263,7 @@ def test_zephir_cluster_lookup_matched_more_than_one_clusters(create_test_db):
             '002492721': [ '8727632'],
             '009547317': ['28477569', '33393343'],
         }
-    result = zephir_clusters_lookup(db_conn_str, ocns_list)
+    result = zephir_clusters_lookup(zephirDb, ocns_list)
     assert result["cid_ocn_list"] == expected_cid_ocn_list
     assert result["cid_ocn_clusters"] == expected_clusters
     assert result["num_of_matched_zephir_clusters"] == 4
@@ -209,7 +288,7 @@ def test_list_to_str():
     for k, val in input_list.items():
         assert expected[k] == list_to_str(val)
 
-def test_formatting_cid_ocn_clusters():
+def test_formatting_cid_id_clusters():
     list_of_cid_ocn = [
             {"cid": '001693730', "ocn": '6758168'}, 
             {"cid": '001693730', "ocn": '15437990'},
@@ -222,7 +301,7 @@ def test_formatting_cid_ocn_clusters():
             '002492721': ['8727632'],
             '009547317': ['33393343', '28477569'],
             }
-    results = formatting_cid_ocn_clusters(list_of_cid_ocn)
+    results = formatting_cid_id_clusters(list_of_cid_ocn, "ocn")
     assert results != None
     assert results == expected_results
 

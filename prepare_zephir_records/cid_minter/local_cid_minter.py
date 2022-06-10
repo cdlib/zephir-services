@@ -12,8 +12,8 @@ import environs
 import logging
 import json
 
-import lib.utils as utils
-from config import get_configs_by_filename
+from lib.utils import db_connect_url
+from lib.utils import get_configs_by_filename
 from zephir_cluster_lookup import list_to_str
 from zephir_cluster_lookup import valid_sql_in_clause_str
 from zephir_cluster_lookup import invalid_sql_in_clause_str
@@ -152,9 +152,12 @@ def main():
     if cid:
         cmd_options += " " + cid
 
-    configs= get_configs_by_filename('config', 'cid_minting')
+    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    CONFIG_PATH = os.path.join(ROOT_PATH, 'config')
+
+    configs= get_configs_by_filename(CONFIG_PATH, 'cid_minting')
     logfile = configs['logpath']
-    db_config = str(utils.db_connect_url(configs[env]['minter_db']))
+    db_config = str(db_connect_url(configs[env]['minter_db']))
 
     logging.basicConfig(
             level=logging.DEBUG,
