@@ -306,29 +306,61 @@ def test_formatting_cid_id_clusters():
     assert results == expected_results
 
 def test_valid_sql_in_clause_str_invalid():
-    input_str = {
-        "None": None,
-        "Empty": "",
-        "one_no_single_quote": "1234",
-        "two_no_single_quote": "1, 234",
-        "two_no_commna":"'1' '2'",
-        "one_not_numbers":"'a'",
-        "two_not_numbers":"'ab' 'c'",
-    }
+    input_str = [
+        None,
+        "",
+        " ",
+        "   ",
+        "1234",
+        " 1234",
+        "1234  ",
+        " 1234  ",
+        "12'34",
+        "12''34",
+        "'1234 ",
+        "1234' ",
+        "1, 234",
+        " 1, 234",
+        "1, 234 ",
+        " 1, 234 ",
+        "  1, 234  ",
+        "'ab123', '123',",
+        " 'ab123', '123',",
+        "'ab123', '123', ",
+        " 'ab123', '123',  ",
+    ]
 
-    for i, val in input_str.items():
-        assert valid_sql_in_clause_str(val) == False
+    for item in input_str:
+        assert valid_sql_in_clause_str(item) == False
+
 
 def test_valid_sql_in_clause_str_valid():
-    input_str = {
-        "one_item":"'1'",
-        "one_item_with_space":"'1' ",
-        "two_items":"'123', '456'",
-        "two_items_with_spaces": "'1' , '234'",
-    }
+    input_str =[ 
+        "'1'",
+        "'1' ",
+        " '1'",
+        " '1' ",
+        "  '1'  ",
+        "'a'",
+        "'ab123'",
+        "'ab123' ",
+        " 'ab123'",
+        " 'ab123' ",
+        "  'ab123'  ",
+        "'ab123' '123'",
+        " 'ab123'  '123' ",
+        "  'ab123'  '123'  ",
+        "'ab123','123'",
+        "'ab123', '123'",
+        "'ab123', '123' ",
+        " 'ab123', '123'",
+        " 'ab123', '123' ",
+        "  'ab123',  '123'  ",
+        "'1''2abc'",
+    ]
 
-    for i, val in input_str.items():
-        assert valid_sql_in_clause_str(val) == True
+    for item in input_str:
+        assert valid_sql_in_clause_str(item) == True
 
 def test_invalid_sql_in_clause_str():
     valid_str = "'123', '456'";
