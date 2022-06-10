@@ -31,16 +31,16 @@ def construct_select_zephir_cluster_by_cid(cids):
     return SELECT_ZEPHIR_BY_OCLC + " " + AND_CID_IN + " (" + cids + ") " + ORDER_BY
 
 def construct_select_zephir_cluster_by_contribsys_id(contribsys_ids):
-    if contribsys_ids:
-        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
-    else:
+    if invalid_sql_in_clause_str(contribsys_ids):
         return None
 
+    return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
+
 def construct_select_contribsys_id_by_cid(cids):
-    if cids:
-        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE cid in (" + cids + ") order by cid"
-    else:
+    if invalid_sql_in_clause_str(cids):
         return None
+    
+    return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE cid in (" + cids + ") order by cid"
 
 class ZephirDatabase:
     def __init__(self, db_connect_str):
@@ -264,13 +264,13 @@ def find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid_list):
 def list_to_str(a_list):
     """Convert list item to a single quoted string, concat with a comma and space 
     """
-    ocns = ""
+    new_str = ""
     for item in a_list:
-        if ocns:
-            ocns += ", '" + str(item) + "'"
+        if new_str:
+            new_str += ", '" + str(item) + "'"
         else:
-            ocns = "'" + str(item) + "'"
-    return ocns
+            new_str = "'" + str(item) + "'"
+    return new_str
 
 def formatting_cid_ocn_clusters(cid_ocn_list):
     """Put cid and ocn pairs into clusters by unique cids. 
