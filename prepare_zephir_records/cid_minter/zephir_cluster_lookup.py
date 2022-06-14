@@ -31,10 +31,10 @@ def construct_select_zephir_cluster_by_cid(cids):
     return SELECT_ZEPHIR_BY_OCLC + " " + AND_CID_IN + " (" + cids + ") " + ORDER_BY
 
 def construct_select_zephir_cluster_by_contribsys_id(contribsys_ids):
-    if contribsys_ids:
-        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
-    else:
+    if invalid_sql_in_clause_str(contribsys_ids):
         return None
+
+    return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
 
 def construct_select_contribsys_id_by_cid(cids):
     if invalid_sql_in_clause_str(cids):
@@ -262,14 +262,16 @@ def find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid_list):
 
 
 def list_to_str(a_list):
-    """Convert list item to a single quoted string, concat with a comma and space 
+    """Convert list items to single quoted and comma separated string for MySQL IN Clause use.
+       Replace single quotes in the original list item to two single quotes so it can be matched by MySQL.
     """
     new_str = ""
     for item in a_list:
+        item = str(item).replace("\'", "\'\'")
         if new_str:
-            new_str += ", '" + str(item) + "'"
+            new_str += ", '" + item + "'"
         else:
-            new_str = "'" + str(item) + "'"
+            new_str = "'" + item + "'"
     return new_str
 
 def formatting_cid_id_clusters(cid_id_list, other_id):
@@ -298,7 +300,7 @@ def formatting_cid_id_clusters(cid_id_list, other_id):
     return cid_ids_dict
 
 def valid_sql_in_clause_str(input_str):
-    """Validates if input is comma separated, single quoted strings with only digits.
+    """Validates if input is comma separated, single quoted strings.
 
     Returns:
         True: valid
@@ -306,18 +308,20 @@ def valid_sql_in_clause_str(input_str):
 
         For example:
         True: 
-            "'1', '2345'"
             "'1'"
+            "'1', '2345'"
+            "'a'"
+            "'abc', 'xyz'"
         False: 
             "1, 2345"
-            "'abc', 'xyz'"
             ""
+            " "
     """
 
     if not input_str:
         return False
 
-    if re.search(r"^'(\d+)'(\s)*((\s)*(,)(\s)*('(\d+)'))*$", input_str):
+    if re.search(r"^(\s)*'(.+)'(\s)*((\s)*(,)(\s)*('(.+)'))*$", input_str):
         return True
     
     return False
