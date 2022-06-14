@@ -13,6 +13,7 @@ from zephir_cluster_lookup import find_zephir_clusters_by_cids
 from zephir_cluster_lookup import find_zephir_clusters_by_contribsys_ids
 from zephir_cluster_lookup import find_zephir_clusters_and_contribsys_ids_by_cid
 from zephir_cluster_lookup import zephir_clusters_lookup
+from zephir_cluster_lookup import zephir_clusters_lookup_by_sysids
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -269,6 +270,123 @@ def test_zephir_cluster_lookup_matched_more_than_one_clusters(create_test_db):
     assert result["num_of_matched_zephir_clusters"] == 4
     assert result["inquiry_ocns_zephir"] == ocns_list
     assert result["min_cid"] == '000000280'
+
+"""test zephir_clusters_lookup_by_sysids
+"""
+def test_zephir_clusters_lookup_by_sysids_no_match(create_test_db):
+    zephirDb = create_test_db
+    sysids_lists = {
+        "not_in_zephir": ['1234567890', 'ab'],
+        "empty": [],
+    }
+
+    for k, sysids_list in sysids_lists.items():
+        result = zephir_clusters_lookup_by_sysids(zephirDb, sysids_list)
+        assert result["cid_sysid_list"] == []
+        assert result["cid_sysid_clusters"] == {}
+        assert result["num_of_matched_zephir_clusters"] == 0
+        assert result["inquiry_sysids"] == sysids_list
+        assert result["min_cid"] == None
+
+def test_zephir_clusters_lookup_by_sysids_matched_one_cluster(create_test_db):
+    """Test datasets:
+        000000446|miu000000446
+        000249880|ia-nrlf.b12478852x
+        000249880|ia-srlf334843
+    """
+    zephirDb = create_test_db
+    sysids_lists = {
+        "one_sysid": ['miu000000446'],
+        "two_sysids": ['ia-nrlf.b12478852x', 'ia-srlf334843'],
+        "sysid_not_in_zephir": ['1234567890'],
+    }
+    expected_cid_sysid_list = {
+        "one_sysid": [
+            {"cid": '000000446', "contribsys_id": 'miu000000446'},
+            ],
+        "two_sysids": [
+            {"cid": '000249880', "contribsys_id": 'ia-nrlf.b12478852x'},
+            {"cid": '000249880', "contribsys_id": 'ia-srlf334843'},
+            ],
+        "sysid_not_in_zephir": [],
+    }
+    expected_clusters = {
+        "one_sysid": {'000000446': ['miu000000446']},
+        "two_sysids": {'000249880': ['ia-nrlf.b12478852x', 'ia-srlf334843']},
+        "sysid_not_in_zephir": {},
+    }
+    expected_min_cid = {
+        "one_sysid": '000000446',
+        "two_sysids": '000249880',
+        "sysid_not_in_zephir": None,
+    }
+    expected_matched_clusters = {
+        "one_sysid": 1,
+        "two_sysids": 1,
+        "sysid_not_in_zephir": 0,
+    }
+
+    for k, sysids_list in sysids_lists.items():
+        result = zephir_clusters_lookup_by_sysids(zephirDb, sysids_list)
+        assert result["cid_sysid_list"] == expected_cid_sysid_list[k]
+        assert result["cid_sysid_clusters"] == expected_clusters[k] 
+        assert result["num_of_matched_zephir_clusters"] == expected_matched_clusters[k] 
+        assert result["inquiry_sysids"] == sysids_list
+        assert result["min_cid"] == expected_min_cid[k]
+
+
+def test_zephir_clusters_lookup_by_sysids_matched_more_than_one_cluster(create_test_db):
+    """test datasets:
+    102359219	acme.992222222
+    102359219	acme.b2222222
+    102359222	acme.992222222
+    102359223	acme.992222222
+"""
+    zephirDb = create_test_db
+    sysids_lists = {
+        "one_sysid":  ['acme.992222222'],
+        "two_sysids": ['acme.992222222', 'acme.b2222222'],
+    }
+    expected_cid_sysid_list = {
+        "one_sysid": [
+            {"cid": '102359219', "contribsys_id": 'acme.992222222'},
+            {"cid": '102359222', "contribsys_id": 'acme.992222222'},
+            {"cid": '102359223', "contribsys_id": 'acme.992222222'},
+            ],
+        "two_sysids": [
+            {"cid": '102359219', "contribsys_id": 'acme.992222222'},
+            {"cid": '102359219', "contribsys_id": 'acme.b2222222'},
+            {"cid": '102359222', "contribsys_id": 'acme.992222222'},
+            {"cid": '102359223', "contribsys_id": 'acme.992222222'},
+            ],
+    }
+    expected_clusters = {
+        "one_sysid": {
+            '102359219': ['acme.992222222', 'acme.b2222222'],
+            '102359222': ['acme.992222222'],
+            '102359223': ['acme.992222222']},
+        "two_sysids": {
+            '102359219': ['acme.992222222', 'acme.b2222222'],
+            '102359222': ['acme.992222222'],
+            '102359223': ['acme.992222222']},
+    }
+    expected_min_cid = {
+        "one_sysid": '102359219',
+        "two_sysids": '102359219',
+    }
+    expected_matched_clusters = {
+        "one_sysid": 3,
+        "two_sysids": 3,
+    }
+
+    for k, sysids_list in sysids_lists.items():
+        result = zephir_clusters_lookup_by_sysids(zephirDb, sysids_list)
+        assert result["cid_sysid_list"] == expected_cid_sysid_list[k]
+        assert result["cid_sysid_clusters"] == expected_clusters[k]
+        assert result["num_of_matched_zephir_clusters"] == expected_matched_clusters[k]
+        assert result["inquiry_sysids"] == sysids_list
+        assert result["min_cid"] == expected_min_cid[k]
+ 
 
 def test_list_to_str():
     input_list = {

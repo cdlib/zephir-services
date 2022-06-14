@@ -2851,3 +2851,30 @@ VALUES
 	(629996, 'contrib_sys_id', 'ia-srlf334843');
 
 
+INSERT INTO `zephir_records` (`autoid`, `cid`, `contribsys`, `contribsys_id`, `id`, `source`, `source_collection`, `source_record_number`)
+VALUES
+	(505857, '102359219', 'ALMA', 'acme.992222222', 'acme.222333444', 'ACME', 'ACME', '992222222'),
+	(505858, '102359219', 'III', 'acme.b2222222', 'acme.333444555', 'ACME', 'ACME', 'b2222222'),
+	(505862, '102359222', 'ALMA', 'acme.992222222', 'acme.777888999', 'ACME', 'ACME', '992222222'),
+	(505863, '102359223', 'ALMA', 'acme.992222222', 'acme.888999000', 'ACME', 'ACME', '992222222');
+
+INSERT INTO `zephir_identifiers` (`autoid`, `type`, `identifier`)
+VALUES
+	(1041122, 'cid', '102359219'),
+	(1041129, 'cid', '102359222'),
+	(1041130, 'cid', '102359223'),
+	(1041127, 'contrib_sys_id', 'acme.992222222'),
+	(1041121, 'contrib_sys_id', 'acme.b2222222');
+
+INSERT INTO `zephir_identifier_records` (`record_autoid`, `identifier_autoid`)
+VALUES
+	(505857, 1041122),
+	(505857, 1041127),
+	(505858, 1041121),
+	(505858, 1041122),
+	(505862, 1041127),
+	(505862, 1041129),
+	(505863, 1041127),
+	(505863, 1041130);
+
+
