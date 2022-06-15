@@ -8,40 +8,6 @@ from sqlalchemy import text
 from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
 
-SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
-    FROM zephir_records as z
-    INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
-    INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
-    WHERE z.cid != '0' AND i.type = 'oclc'
-"""
-AND_IDENTIFIER_IN = "AND i.identifier in"
-AND_CID_IN = "AND z.cid in"
-ORDER_BY = "ORDER BY z.cid, i.identifier"
-
-def construct_select_zephir_cluster_by_ocns(ocns):
-    if invalid_sql_in_clause_str(ocns):
-        return None
-
-    return SELECT_ZEPHIR_BY_OCLC + " " + AND_IDENTIFIER_IN + " (" + ocns + ") " + ORDER_BY
-
-def construct_select_zephir_cluster_by_cid(cids):
-    if invalid_sql_in_clause_str(cids):
-        return None
-
-    return SELECT_ZEPHIR_BY_OCLC + " " + AND_CID_IN + " (" + cids + ") " + ORDER_BY
-
-def construct_select_zephir_cluster_by_contribsys_id(contribsys_ids):
-    if invalid_sql_in_clause_str(contribsys_ids):
-        return None
-
-    return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
-
-def construct_select_contribsys_id_by_cid(cids):
-    if invalid_sql_in_clause_str(cids):
-        return None
-    
-    return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE cid in (" + cids + ") order by cid"
-
 class Database:
     def __init__(self, db_connect_str):
         self.engine = create_engine(db_connect_str)
@@ -101,164 +67,202 @@ class Database:
     def close(self):
         self.engine.dispose()
 
-def zephir_clusters_lookup(zephirDb, ocns_list):
+class ZephirDatabase(Database):
+    SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
+    FROM zephir_records as z
+    INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
+    INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
+    WHERE z.cid != '0' AND i.type = 'oclc'
     """
-    Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
-    Args:
-        zephirDb: Database class
-        ocns_list: list of OCNs in integers
-    Return: A dict with:
-        "inquiry_ocns_zephir": input ocns list,
-        "cid_ocn_list": list of dict with keys of "cid" and "ocn",
-        "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
-        "num_of_matched_zephir_clusters": number of matched clusters
-        "min_cid": lowest CID 
-    """
-    zephir_cluster = {
-        "inquiry_ocns_zephir": ocns_list,
-        "cid_ocn_list": [],
-        "cid_ocn_clusters": {},
-        "num_of_matched_zephir_clusters": 0,
-        "min_cid": None,
-    }
+    AND_IDENTIFIER_IN = "AND i.identifier in"
+    AND_CID_IN = "AND z.cid in"
+    ORDER_BY = "ORDER BY z.cid, i.identifier"
 
-    cid_ocn_list_by_ocns = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
-    if not cid_ocn_list_by_ocns:
+    def __init__(self, db_connect_str):
+        super().__init__(db_connect_str)
+
+    def construct_select_zephir_cluster_by_ocns(self, ocns):
+        if invalid_sql_in_clause_str(ocns):
+            return None
+
+        return ZephirDatabase.SELECT_ZEPHIR_BY_OCLC + " " + ZephirDatabase.AND_IDENTIFIER_IN + " (" + ocns + ") " + ZephirDatabase.ORDER_BY
+
+    def construct_select_zephir_cluster_by_cid(self, cids):
+        if invalid_sql_in_clause_str(cids):
+            return None
+
+        return ZephirDatabase.SELECT_ZEPHIR_BY_OCLC + " " + ZephirDatabase.AND_CID_IN + " (" + cids + ") " + ZephirDatabase.ORDER_BY
+
+    def construct_select_zephir_cluster_by_contribsys_id(self, contribsys_ids):
+        if invalid_sql_in_clause_str(contribsys_ids):
+            return None
+
+        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
+
+    def construct_select_contribsys_id_by_cid(self, cids):
+        if invalid_sql_in_clause_str(cids):
+            return None
+        
+        return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE cid in (" + cids + ") order by cid"
+
+    def zephir_clusters_lookup(self, ocns_list):
+        """
+        Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
+        Args:
+            zephirDb: Database class
+            ocns_list: list of OCNs in integers
+        Return: A dict with:
+            "inquiry_ocns_zephir": input ocns list,
+            "cid_ocn_list": list of dict with keys of "cid" and "ocn",
+            "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
+            "num_of_matched_zephir_clusters": number of matched clusters
+            "min_cid": lowest CID 
+        """
+        zephir_cluster = {
+            "inquiry_ocns_zephir": ocns_list,
+            "cid_ocn_list": [],
+            "cid_ocn_clusters": {},
+            "num_of_matched_zephir_clusters": 0,
+            "min_cid": None,
+        }
+
+        cid_ocn_list_by_ocns = self.find_zephir_clusters_by_ocns(ocns_list)
+        if not cid_ocn_list_by_ocns:
+            return zephir_cluster
+
+        # find all OCNs in each cluster
+        cids_list = [cid_ocn.get("cid") for cid_ocn in cid_ocn_list_by_ocns]
+        unique_cids_list = list(set(cids_list))
+        cid_ocn_list = self.find_zephir_clusters_by_cids(unique_cids_list)
+        if not cid_ocn_list:
+            return zephir_cluster
+
+        # convert to a dict with key=cid, value=list of ocns
+        cid_ocn_clusters = formatting_cid_id_clusters(cid_ocn_list, "ocn")
+
+        zephir_cluster = {
+            "inquiry_ocns_zephir": ocns_list,
+            "cid_ocn_list": cid_ocn_list,
+            "cid_ocn_clusters": cid_ocn_clusters,
+            "num_of_matched_zephir_clusters": len(cid_ocn_clusters),
+            "min_cid": min([cid_ocn.get("cid") for cid_ocn in cid_ocn_list])
+        }
         return zephir_cluster
 
-    # find all OCNs in each cluster
-    cids_list = [cid_ocn.get("cid") for cid_ocn in cid_ocn_list_by_ocns]
-    unique_cids_list = list(set(cids_list))
-    cid_ocn_list = find_zephir_clusters_by_cids(zephirDb, unique_cids_list)
-    if not cid_ocn_list:
+    def zephir_clusters_lookup_by_sysids(self, sysids_list):
+        """
+        Finds Zephir clusters by sysids and returns clusters' info including cluster IDs, number of clusters and all SysIds in each cluster. 
+        Args:
+            zephirDb: Database class
+            sysids_list: list of sysids in string
+        Return: A dict with:
+            "inquiry_sysids": input sysids list,
+            "cid_sysid_list": list of dict with keys of "cid" and "sysid",
+            "cid_sysid_clusters": dict with key="cid", value=list of sysids in the cid cluster,
+            "num_of_matched_zephir_clusters": number of matched clusters
+            "min_cid": lowest CID 
+        """
+        zephir_cluster = {
+            "inquiry_sysids": sysids_list,
+            "cid_sysid_list": [],
+            "cid_sysid_clusters": {},
+            "num_of_matched_zephir_clusters": 0,
+            "min_cid": None,
+        }
+
+        cid_sysid_list = self.find_zephir_clusters_by_contribsys_ids(sysids_list)
+        if not cid_sysid_list:
+            return zephir_cluster
+
+        # find all sysids in each cluster
+        cids_list = [cid_sysid.get("cid") for cid_sysid in cid_sysid_list]
+        unique_cids_list = list(set(cids_list))
+        cid_sysid_list_2 = self.find_zephir_clusters_and_contribsys_ids_by_cid(unique_cids_list)
+        if not cid_sysid_list_2:
+            return zephir_cluster
+
+        # convert to a dict with key=cid, value=list of sysids
+        cid_sysid_clusters = formatting_cid_id_clusters(cid_sysid_list_2, "contribsys_id")
+
+        zephir_cluster = {
+            "inquiry_sysids": sysids_list,
+            "cid_sysid_list": cid_sysid_list,
+            "cid_sysid_clusters": cid_sysid_clusters,
+            "num_of_matched_zephir_clusters": len(cid_sysid_clusters),
+            "min_cid": min([cid_sysid.get("cid") for cid_sysid in cid_sysid_list])
+        }
         return zephir_cluster
 
-    # convert to a dict with key=cid, value=list of ocns
-    cid_ocn_clusters = formatting_cid_id_clusters(cid_ocn_list, "ocn")
+    def find_zephir_clusters_by_ocns(self, ocns_list):
+        """
+        Args:
+            zephirDb: Database class
+            ocns_list: list of OCNs in integer 
+        Returns:
+            list of dict with keys "cid" and "ocn"
+            [] when there is no match
+            None: when there is an exception
+        """
+        select_zephir = self.construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
+        if select_zephir:
+            try:
+                results = self.findall(text(select_zephir))
+                return results
+            except:
+                return None
+        return None
 
-    zephir_cluster = {
-        "inquiry_ocns_zephir": ocns_list,
-        "cid_ocn_list": cid_ocn_list,
-        "cid_ocn_clusters": cid_ocn_clusters,
-        "num_of_matched_zephir_clusters": len(cid_ocn_clusters),
-        "min_cid": min([cid_ocn.get("cid") for cid_ocn in cid_ocn_list])
-    }
-    return zephir_cluster
+    def find_zephir_clusters_by_cids(self, cid_list):
+        """
+        Args:
+            zephirDb: Database class
+            cid_list: list of CIDs in string
+        Returns:
+            list of dict with keys "cid" and "ocn"
+        """
+        select_zephir = self.construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
+        if select_zephir:
+            try:
+                results = self.findall(text(select_zephir))
+                return results 
+            except:
+                return None
+        return None
 
-def zephir_clusters_lookup_by_sysids(zephirDb, sysids_list):
-    """
-    Finds Zephir clusters by sysids and returns clusters' info including cluster IDs, number of clusters and all SysIds in each cluster. 
-    Args:
-        zephirDb: Database class
-        sysids_list: list of sysids in string
-    Return: A dict with:
-        "inquiry_sysids": input sysids list,
-        "cid_sysid_list": list of dict with keys of "cid" and "sysid",
-        "cid_sysid_clusters": dict with key="cid", value=list of sysids in the cid cluster,
-        "num_of_matched_zephir_clusters": number of matched clusters
-        "min_cid": lowest CID 
-    """
-    zephir_cluster = {
-        "inquiry_sysids": sysids_list,
-        "cid_sysid_list": [],
-        "cid_sysid_clusters": {},
-        "num_of_matched_zephir_clusters": 0,
-        "min_cid": None,
-    }
+    def find_zephir_clusters_by_contribsys_ids(self, contribsys_id_list):
+        """
+        Args:
+            zephirDb: Database class 
+            contribsys_id_list: list of contribsys IDs in string
+        Returns:
+            list of dict with keys "cid" and "contribsys_id"
+        """
+        select_zephir = self.construct_select_zephir_cluster_by_contribsys_id(list_to_str(contribsys_id_list))
+        if select_zephir:
+            try:
+                results = self.findall(text(select_zephir))
+                return results
+            except:
+                return None
+        return None
 
-    cid_sysid_list = find_zephir_clusters_by_contribsys_ids(zephirDb, sysids_list)
-    if not cid_sysid_list:
-        return zephir_cluster
-
-    # find all sysids in each cluster
-    cids_list = [cid_sysid.get("cid") for cid_sysid in cid_sysid_list]
-    unique_cids_list = list(set(cids_list))
-    cid_sysid_list_2 = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, unique_cids_list)
-    if not cid_sysid_list_2:
-        return zephir_cluster
-
-    # convert to a dict with key=cid, value=list of sysids
-    cid_sysid_clusters = formatting_cid_id_clusters(cid_sysid_list_2, "contribsys_id")
-
-    zephir_cluster = {
-        "inquiry_sysids": sysids_list,
-        "cid_sysid_list": cid_sysid_list,
-        "cid_sysid_clusters": cid_sysid_clusters,
-        "num_of_matched_zephir_clusters": len(cid_sysid_clusters),
-        "min_cid": min([cid_sysid.get("cid") for cid_sysid in cid_sysid_list])
-    }
-    return zephir_cluster
-
-def find_zephir_clusters_by_ocns(zephirDb, ocns_list):
-    """
-    Args:
-        zephirDb: Database class
-        ocns_list: list of OCNs in integer 
-    Returns:
-        list of dict with keys "cid" and "ocn"
-        [] when there is no match
-        None: when there is an exception
-    """
-    select_zephir = construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
-    if select_zephir:
-        try:
-            results = zephirDb.findall(text(select_zephir))
-            return results
-        except:
-            return None
-    return None
-
-def find_zephir_clusters_by_cids(zephirDb, cid_list):
-    """
-    Args:
-        zephirDb: Database class
-        cid_list: list of CIDs in string
-    Returns:
-        list of dict with keys "cid" and "ocn"
-    """
-    select_zephir = construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
-    if select_zephir:
-        try:
-            results = zephirDb.findall(text(select_zephir))
-            return results 
-        except:
-            return None
-    return None
-
-def find_zephir_clusters_by_contribsys_ids(zephirDb, contribsys_id_list):
-    """
-    Args:
-        zephirDb: Database class 
-        contribsys_id_list: list of contribsys IDs in string
-    Returns:
-        list of dict with keys "cid" and "contribsys_id"
-    """
-    select_zephir = construct_select_zephir_cluster_by_contribsys_id(list_to_str(contribsys_id_list))
-    if select_zephir:
-        try:
-            results = zephirDb.findall(text(select_zephir))
-            return results
-        except:
-            return None
-    return None
-
-def find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid_list):
-    """
-    Args:
-        zephirDb: Database class
-        cid: a CID
-        contribsys_id_list: list of contribsys IDs in string
-    Returns:
-        list of dict with keys "cid" and "contribsys_id"
-    """
-    select_zephir = construct_select_contribsys_id_by_cid(list_to_str(cid_list))
-    if select_zephir:
-        try:
-            results = zephirDb.findall(text(select_zephir))
-            return results
-        except:
-            return None
-    return None
+    def find_zephir_clusters_and_contribsys_ids_by_cid(self, cid_list):
+        """
+        Args:
+            zephirDb: Database class
+            cid: a CID
+            contribsys_id_list: list of contribsys IDs in string
+        Returns:
+            list of dict with keys "cid" and "contribsys_id"
+        """
+        select_zephir = self.construct_select_contribsys_id_by_cid(list_to_str(cid_list))
+        if select_zephir:
+            try:
+                results = self.findall(text(select_zephir))
+                return results
+            except:
+                return None
+        return None
 
 
 def list_to_str(a_list):
@@ -342,15 +346,15 @@ def main():
     print(configs)
 
     db_conn_str = str(db_connect_url(configs[env]))
-    zephirDb = Database(db_conn_str)
+    zephirDb = ZephirDatabase(db_conn_str)
 
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
     print("Inquiry OCNs: {}".format(ocns_list))
-    results = zephir_clusters_lookup(zephirDb, ocns_list)
+    results = zephirDb.zephir_clusters_lookup(ocns_list)
     print(results)
 
     sysid_list = ['pur63733', 'nrlf.b100608668']
-    results = zephir_clusters_lookup_by_sysids(zephirDb, sysid_list)
+    results = zephirDb.zephir_clusters_lookup_by_sysids(sysid_list)
     print(results)
 
 if __name__ == '__main__':
