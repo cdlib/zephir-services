@@ -6,7 +6,7 @@ import pytest
 import plyvel
 import json
 
-from cid_inquiry import ZephirDatabase
+from cid_inquiry import Database
 from cid_inquiry import cid_inquiry
 from cid_inquiry import flat_and_dedup_sort_list
 from cid_inquiry import convert_comma_separated_str_to_int_list
@@ -672,7 +672,7 @@ def setup_sqlite(data_dir, tmpdir, scope="session"):
     os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
 
     return {
-        "zephirDb": ZephirDatabase(db_conn_str)
+        "zephirDb": Database(db_conn_str)
     }
 
 # HELPERS

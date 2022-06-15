@@ -42,7 +42,7 @@ def construct_select_contribsys_id_by_cid(cids):
     
     return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE cid in (" + cids + ") order by cid"
 
-class ZephirDatabase:
+class Database:
     def __init__(self, db_connect_str):
         self.engine = create_engine(db_connect_str)
 
@@ -105,7 +105,7 @@ def zephir_clusters_lookup(zephirDb, ocns_list):
     """
     Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
     Args:
-        zephirDb: ZephirDatabase class
+        zephirDb: Database class
         ocns_list: list of OCNs in integers
     Return: A dict with:
         "inquiry_ocns_zephir": input ocns list,
@@ -149,7 +149,7 @@ def zephir_clusters_lookup_by_sysids(zephirDb, sysids_list):
     """
     Finds Zephir clusters by sysids and returns clusters' info including cluster IDs, number of clusters and all SysIds in each cluster. 
     Args:
-        zephirDb: ZephirDatabase class
+        zephirDb: Database class
         sysids_list: list of sysids in string
     Return: A dict with:
         "inquiry_sysids": input sysids list,
@@ -192,7 +192,7 @@ def zephir_clusters_lookup_by_sysids(zephirDb, sysids_list):
 def find_zephir_clusters_by_ocns(zephirDb, ocns_list):
     """
     Args:
-        zephirDb: ZephirDatabase class
+        zephirDb: Database class
         ocns_list: list of OCNs in integer 
     Returns:
         list of dict with keys "cid" and "ocn"
@@ -211,7 +211,7 @@ def find_zephir_clusters_by_ocns(zephirDb, ocns_list):
 def find_zephir_clusters_by_cids(zephirDb, cid_list):
     """
     Args:
-        zephirDb: ZephirDatabase class
+        zephirDb: Database class
         cid_list: list of CIDs in string
     Returns:
         list of dict with keys "cid" and "ocn"
@@ -228,7 +228,7 @@ def find_zephir_clusters_by_cids(zephirDb, cid_list):
 def find_zephir_clusters_by_contribsys_ids(zephirDb, contribsys_id_list):
     """
     Args:
-        zephirDb: ZephirDatabase class 
+        zephirDb: Database class 
         contribsys_id_list: list of contribsys IDs in string
     Returns:
         list of dict with keys "cid" and "contribsys_id"
@@ -245,7 +245,7 @@ def find_zephir_clusters_by_contribsys_ids(zephirDb, contribsys_id_list):
 def find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cid_list):
     """
     Args:
-        zephirDb: ZephirDatabase class
+        zephirDb: Database class
         cid: a CID
         contribsys_id_list: list of contribsys IDs in string
     Returns:
@@ -342,7 +342,7 @@ def main():
     print(configs)
 
     db_conn_str = str(db_connect_url(configs[env]))
-    zephirDb = ZephirDatabase(db_conn_str)
+    zephirDb = Database(db_conn_str)
 
     ocns_list = [6758168, 15437990, 5663662, 33393343, 28477569, 8727632]
     print("Inquiry OCNs: {}".format(ocns_list))

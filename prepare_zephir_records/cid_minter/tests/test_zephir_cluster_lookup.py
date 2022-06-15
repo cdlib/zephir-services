@@ -3,7 +3,7 @@ import os
 import pytest
 import environs
 
-from zephir_cluster_lookup import ZephirDatabase
+from zephir_cluster_lookup import Database
 from zephir_cluster_lookup import valid_sql_in_clause_str
 from zephir_cluster_lookup import invalid_sql_in_clause_str
 from zephir_cluster_lookup import list_to_str
@@ -29,7 +29,7 @@ def create_test_db(data_dir, tmpdir, scope="session"):
 
     db_conn_str = 'sqlite:///{}'.format(database)
     
-    return ZephirDatabase(db_conn_str)
+    return Database(db_conn_str)
 
 def test_find_zephir_cluster_by_no_ocn(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
