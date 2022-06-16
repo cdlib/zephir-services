@@ -3,17 +3,11 @@ import os
 import pytest
 import environs
 
-from zephir_cluster_lookup import Database
+from zephir_cluster_lookup import ZephirDatabase
 from zephir_cluster_lookup import valid_sql_in_clause_str
 from zephir_cluster_lookup import invalid_sql_in_clause_str
 from zephir_cluster_lookup import list_to_str
 from zephir_cluster_lookup import formatting_cid_id_clusters
-from zephir_cluster_lookup import find_zephir_clusters_by_ocns
-from zephir_cluster_lookup import find_zephir_clusters_by_cids
-from zephir_cluster_lookup import find_zephir_clusters_by_contribsys_ids
-from zephir_cluster_lookup import find_zephir_clusters_and_contribsys_ids_by_cid
-from zephir_cluster_lookup import zephir_clusters_lookup
-from zephir_cluster_lookup import zephir_clusters_lookup_by_sysids
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -29,7 +23,7 @@ def create_test_db(data_dir, tmpdir, scope="session"):
 
     db_conn_str = 'sqlite:///{}'.format(database)
     
-    return Database(db_conn_str)
+    return ZephirDatabase(db_conn_str)
 
 def test_find_zephir_cluster_by_no_ocn(create_test_db):
     """ the 'create_test_db' argument here is matched to the name of the
@@ -38,7 +32,7 @@ def test_find_zephir_cluster_by_no_ocn(create_test_db):
     zephirDb = create_test_db
     ocns_list = []
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
+    cid_ocn_list = zephirDb.find_zephir_clusters_by_ocns(ocns_list)
     assert cid_ocn_list == None
 
 def test_find_zephir_cluster_by_ocn_not_in_zephir(create_test_db):
@@ -48,7 +42,7 @@ def test_find_zephir_cluster_by_ocn_not_in_zephir(create_test_db):
     zephirDb = create_test_db
     ocns_list = [12345678901]
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
+    cid_ocn_list = zephirDb.find_zephir_clusters_by_ocns(ocns_list)
     assert cid_ocn_list == []
 
 def test_find_zephir_cluster_by_one_ocn(create_test_db):
@@ -59,7 +53,7 @@ def test_find_zephir_cluster_by_one_ocn(create_test_db):
     ocns_list = [8727632]
     expected_cid_ocn_list = [{"cid": '002492721', "ocn": '8727632'}]
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
+    cid_ocn_list = zephirDb.find_zephir_clusters_by_ocns(ocns_list)
     print(cid_ocn_list)
     assert cid_ocn_list != None
     assert cid_ocn_list == expected_cid_ocn_list
@@ -79,7 +73,7 @@ def test_find_zephir_cluster_by_ocns(create_test_db):
             {"cid": '009547317', "ocn": '33393343'}
         ]
 
-    cid_ocn_list = find_zephir_clusters_by_ocns(zephirDb, ocns_list)
+    cid_ocn_list = zephirDb.find_zephir_clusters_by_ocns(ocns_list)
     print(cid_ocn_list)
     assert cid_ocn_list != None
     assert cid_ocn_list == expected_cid_ocn_list
@@ -109,7 +103,7 @@ def test_find_zephir_cluster_by_cids(create_test_db):
     }
 
     for k, cids in cid_list.items():
-        cid_ocn_list = find_zephir_clusters_by_cids(zephirDb, cids)
+        cid_ocn_list = zephirDb.find_zephir_clusters_by_cids(cids)
         print(cid_ocn_list)
         assert cid_ocn_list == expected_cid_ocn_list[k]
 
@@ -146,7 +140,7 @@ def test_find_zephir_cluster_by_contribsys_ids(create_test_db):
     }
 
     for k, sysids in sysid_list.items():
-        cid_sysid_list = find_zephir_clusters_by_contribsys_ids(zephirDb, sysids)
+        cid_sysid_list = zephirDb.find_zephir_clusters_by_contribsys_ids(sysids)
         print(cid_sysid_list)
         assert cid_sysid_list == expected_cid_sysid_list[k]
 
@@ -184,7 +178,7 @@ def test_find_zephir_cluster_and_contribsys_ids_by_cids(create_test_db):
     }
 
     for k, cids in cid_list.items():
-        cid_sysid_list = find_zephir_clusters_and_contribsys_ids_by_cid(zephirDb, cids)
+        cid_sysid_list = zephirDb.find_zephir_clusters_and_contribsys_ids_by_cid(cids)
         print(cid_sysid_list)
         assert cid_sysid_list == expected_cid_sysid_list[k]
 
@@ -196,7 +190,7 @@ def test_zephir_cluster_lookup_no_matched_cluster(create_test_db):
     }
 
     for k, ocns_list in ocns_lists.items():
-        result = zephir_clusters_lookup(zephirDb, ocns_list)
+        result = zephirDb.zephir_clusters_lookup(ocns_list)
         assert result["cid_ocn_list"] == [] 
         assert result["cid_ocn_clusters"] == {}
         assert result["num_of_matched_zephir_clusters"] == 0 
@@ -238,7 +232,7 @@ def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
     }
 
     for k, ocns_list in ocns_lists.items():
-        result = zephir_clusters_lookup(zephirDb, ocns_list)
+        result = zephirDb.zephir_clusters_lookup(ocns_list)
         assert result["cid_ocn_list"] == expected_cid_ocn_list[k]
         assert result["cid_ocn_clusters"] == expected_clusters[k]
         assert result["num_of_matched_zephir_clusters"] == 1 
@@ -264,7 +258,7 @@ def test_zephir_cluster_lookup_matched_more_than_one_clusters(create_test_db):
             '002492721': [ '8727632'],
             '009547317': ['28477569', '33393343'],
         }
-    result = zephir_clusters_lookup(zephirDb, ocns_list)
+    result = zephirDb.zephir_clusters_lookup(ocns_list)
     assert result["cid_ocn_list"] == expected_cid_ocn_list
     assert result["cid_ocn_clusters"] == expected_clusters
     assert result["num_of_matched_zephir_clusters"] == 4
@@ -281,7 +275,7 @@ def test_zephir_clusters_lookup_by_sysids_no_match(create_test_db):
     }
 
     for k, sysids_list in sysids_lists.items():
-        result = zephir_clusters_lookup_by_sysids(zephirDb, sysids_list)
+        result = zephirDb.zephir_clusters_lookup_by_sysids(sysids_list)
         assert result["cid_sysid_list"] == []
         assert result["cid_sysid_clusters"] == {}
         assert result["num_of_matched_zephir_clusters"] == 0
@@ -327,7 +321,7 @@ def test_zephir_clusters_lookup_by_sysids_matched_one_cluster(create_test_db):
     }
 
     for k, sysids_list in sysids_lists.items():
-        result = zephir_clusters_lookup_by_sysids(zephirDb, sysids_list)
+        result = zephirDb.zephir_clusters_lookup_by_sysids(sysids_list)
         assert result["cid_sysid_list"] == expected_cid_sysid_list[k]
         assert result["cid_sysid_clusters"] == expected_clusters[k] 
         assert result["num_of_matched_zephir_clusters"] == expected_matched_clusters[k] 
@@ -380,7 +374,7 @@ def test_zephir_clusters_lookup_by_sysids_matched_more_than_one_cluster(create_t
     }
 
     for k, sysids_list in sysids_lists.items():
-        result = zephir_clusters_lookup_by_sysids(zephirDb, sysids_list)
+        result = zephirDb.zephir_clusters_lookup_by_sysids(sysids_list)
         assert result["cid_sysid_list"] == expected_cid_sysid_list[k]
         assert result["cid_sysid_clusters"] == expected_clusters[k]
         assert result["num_of_matched_zephir_clusters"] == expected_matched_clusters[k]

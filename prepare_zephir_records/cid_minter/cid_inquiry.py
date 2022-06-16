@@ -10,8 +10,7 @@ from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
 
 from oclc_lookup import lookup_ocns_from_oclc
-from zephir_cluster_lookup import Database
-from zephir_cluster_lookup import zephir_clusters_lookup
+from zephir_cluster_lookup import ZephirDatabase
 
 def cid_inquiry(ocns, zephirDb, primary_db_path, cluster_db_path):
     """Find Zephir clusters by given OCNs and their associated OCLC OCNs.
@@ -42,7 +41,7 @@ def cid_inquiry(ocns, zephirDb, primary_db_path, cluster_db_path):
     combined_ocns_list = flat_and_dedup_sort_list([ocns] + oclc_ocns_list)
 
     # Finds Zephir clusters by list of OCNs and returns compiled results
-    zephir_clusters_result = zephir_clusters_lookup(zephirDb, combined_ocns_list)
+    zephir_clusters_result = zephirDb.zephir_clusters_lookup(combined_ocns_list)
 
     return {**oclc_lookup_result, **zephir_clusters_result}
 
@@ -126,7 +125,7 @@ def main():
     PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
     CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
-    zephirDb = Database(DB_CONNECT_STR)
+    zephirDb = ZephirDatabase(DB_CONNECT_STR)
 
     if (len(sys.argv) == 3):
         ocns_list = convert_comma_separated_str_to_int_list(sys.argv[2])
