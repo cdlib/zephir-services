@@ -81,25 +81,25 @@ class ZephirDatabase(Database):
     def __init__(self, db_connect_str):
         super().__init__(db_connect_str)
 
-    def construct_select_zephir_cluster_by_ocns(self, ocns):
+    def _construct_select_zephir_cluster_by_ocns(self, ocns):
         if invalid_sql_in_clause_str(ocns):
             return None
 
         return ZephirDatabase.SELECT_ZEPHIR_BY_OCLC + " " + ZephirDatabase.AND_IDENTIFIER_IN + " (" + ocns + ") " + ZephirDatabase.ORDER_BY
 
-    def construct_select_zephir_cluster_by_cid(self, cids):
+    def _construct_select_zephir_cluster_by_cid(self, cids):
         if invalid_sql_in_clause_str(cids):
             return None
 
         return ZephirDatabase.SELECT_ZEPHIR_BY_OCLC + " " + ZephirDatabase.AND_CID_IN + " (" + cids + ") " + ZephirDatabase.ORDER_BY
 
-    def construct_select_zephir_cluster_by_contribsys_id(self, contribsys_ids):
+    def _construct_select_zephir_cluster_by_contribsys_id(self, contribsys_ids):
         if invalid_sql_in_clause_str(contribsys_ids):
             return None
 
         return "SELECT distinct cid, contribsys_id FROM zephir_records WHERE contribsys_id in (" + contribsys_ids + ") order by cid"
 
-    def construct_select_contribsys_id_by_cid(self, cids):
+    def _construct_select_contribsys_id_by_cid(self, cids):
         if invalid_sql_in_clause_str(cids):
             return None
         
@@ -193,6 +193,15 @@ class ZephirDatabase(Database):
         }
         return zephir_cluster
 
+    def _get_query_results(self, query):
+        if query:
+            try:
+                results = self.findall(text(query))
+                return results
+            except:
+                return None
+        return None
+
     def find_zephir_clusters_by_ocns(self, ocns_list):
         """
         Args:
@@ -203,14 +212,8 @@ class ZephirDatabase(Database):
             [] when there is no match
             None: when there is an exception
         """
-        select_zephir = self.construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
-        if select_zephir:
-            try:
-                results = self.findall(text(select_zephir))
-                return results
-            except:
-                return None
-        return None
+        query = self._construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
+        return self._get_query_results(query)
 
     def find_zephir_clusters_by_cids(self, cid_list):
         """
@@ -220,14 +223,8 @@ class ZephirDatabase(Database):
         Returns:
             list of dict with keys "cid" and "ocn"
         """
-        select_zephir = self.construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
-        if select_zephir:
-            try:
-                results = self.findall(text(select_zephir))
-                return results 
-            except:
-                return None
-        return None
+        query = self._construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
+        return self._get_query_results(query)
 
     def find_zephir_clusters_by_contribsys_ids(self, contribsys_id_list):
         """
@@ -237,14 +234,8 @@ class ZephirDatabase(Database):
         Returns:
             list of dict with keys "cid" and "contribsys_id"
         """
-        select_zephir = self.construct_select_zephir_cluster_by_contribsys_id(list_to_str(contribsys_id_list))
-        if select_zephir:
-            try:
-                results = self.findall(text(select_zephir))
-                return results
-            except:
-                return None
-        return None
+        query = self._construct_select_zephir_cluster_by_contribsys_id(list_to_str(contribsys_id_list))
+        return self._get_query_results(query)
 
     def find_zephir_clusters_and_contribsys_ids_by_cid(self, cid_list):
         """
@@ -255,14 +246,8 @@ class ZephirDatabase(Database):
         Returns:
             list of dict with keys "cid" and "contribsys_id"
         """
-        select_zephir = self.construct_select_contribsys_id_by_cid(list_to_str(cid_list))
-        if select_zephir:
-            try:
-                results = self.findall(text(select_zephir))
-                return results
-            except:
-                return None
-        return None
+        query = self._construct_select_contribsys_id_by_cid(list_to_str(cid_list))
+        return self._get_query_results(query)
 
 
 def list_to_str(a_list):
