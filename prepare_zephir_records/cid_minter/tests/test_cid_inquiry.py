@@ -6,7 +6,7 @@ import pytest
 import plyvel
 import json
 
-from cid_inquiry import ZephirDatabase
+from zephir_cluster_lookup import ZephirDatabase
 from cid_inquiry import cid_inquiry
 from cid_inquiry import flat_and_dedup_sort_list
 from cid_inquiry import convert_comma_separated_str_to_int_list

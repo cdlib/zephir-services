@@ -11,7 +11,6 @@ from lib.utils import get_configs_by_filename
 
 from oclc_lookup import lookup_ocns_from_oclc
 from zephir_cluster_lookup import ZephirDatabase
-from zephir_cluster_lookup import zephir_clusters_lookup
 
 def cid_inquiry(ocns, zephirDb, primary_db_path, cluster_db_path):
     """Find Zephir clusters by given OCNs and their associated OCLC OCNs.
@@ -42,7 +41,7 @@ def cid_inquiry(ocns, zephirDb, primary_db_path, cluster_db_path):
     combined_ocns_list = flat_and_dedup_sort_list([ocns] + oclc_ocns_list)
 
     # Finds Zephir clusters by list of OCNs and returns compiled results
-    zephir_clusters_result = zephir_clusters_lookup(zephirDb, combined_ocns_list)
+    zephir_clusters_result = zephirDb.zephir_clusters_lookup(combined_ocns_list)
 
     return {**oclc_lookup_result, **zephir_clusters_result}
 
