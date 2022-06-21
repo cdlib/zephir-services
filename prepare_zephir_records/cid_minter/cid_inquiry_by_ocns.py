@@ -12,7 +12,7 @@ from lib.utils import get_configs_by_filename
 from oclc_lookup import lookup_ocns_from_oclc
 from zephir_cluster_lookup import ZephirDatabase
 
-def cid_inquiry(ocns, zephirDb, primary_db_path, cluster_db_path):
+def cid_inquiry_by_ocns(ocns, zephirDb, primary_db_path, cluster_db_path):
     """Find Zephir clusters by given OCNs and their associated OCLC OCNs.
        1. Find associated OCLC OCNs
        2. Combine incoming OCNs and OCLC OCNs, remove duplicates  
@@ -130,7 +130,7 @@ def main():
     if (len(sys.argv) == 3):
         ocns_list = convert_comma_separated_str_to_int_list(sys.argv[2])
 
-        results = cid_inquiry(ocns_list, zephirDb, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+        results = cid_inquiry_by_ocns(ocns_list, zephirDb, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
         print(json.dumps(results))
 
         exit(0)

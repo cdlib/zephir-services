@@ -7,12 +7,12 @@ import plyvel
 import json
 
 from zephir_cluster_lookup import ZephirDatabase
-from cid_inquiry import cid_inquiry
-from cid_inquiry import flat_and_dedup_sort_list
-from cid_inquiry import convert_comma_separated_str_to_int_list
-from cid_inquiry import main
+from cid_inquiry_by_ocns import cid_inquiry_by_ocns
+from cid_inquiry_by_ocns import flat_and_dedup_sort_list
+from cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
+from cid_inquiry_by_ocns import main
 
-"""Test cid_inquiry() function which returns a dict with: 
+"""Test cid_inquiry_by_ocns() function which returns a dict with: 
   "iquiry_ocns": input ocns, list of integers.
   "matched_oclc_clusters": OCNs in matched OCLC clusters, list of lists in integers
   "num_of_matched_oclc_clusters": number of matched OCLC clusters#
@@ -60,7 +60,7 @@ def test_case_1_a_i_ii(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters[k]
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -105,7 +105,7 @@ def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters[k]
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -138,7 +138,7 @@ def test_case_1_b_i(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {
         "000249880": ['999531'],
     }
-    result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
 
     print(result["matched_oclc_clusters"])
     print(result["cid_ocn_clusters"])
@@ -188,7 +188,7 @@ def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
     }
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -219,7 +219,7 @@ def test_case_2_b_i(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {
         "000249880": ['999531'],
     }
-    result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
 
     assert result["inquiry_ocns"] == incoming_ocns
     assert result["matched_oclc_clusters"] == expected_oclc_clusters
@@ -269,7 +269,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
     expected_min_cid = "009547317"
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -317,7 +317,7 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
     }
     expected_min_cid = "000000280"
 
-    result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -360,7 +360,7 @@ def test_case_3_a(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
     expected_min_cid = None
 
-    result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -406,7 +406,7 @@ def test_case_3_b(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {"008648991": ['23012053', '4912741', '5066412']}
     expected_min_cid =  "008648991"
 
-    result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -457,7 +457,7 @@ def test_case_3_c(setup_leveldb, setup_sqlite):
             }
     expected_min_cid =  "000002076"
 
-    result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -530,7 +530,7 @@ def test_case_4_abc(setup_leveldb, setup_sqlite):
             "2_cids": '102337774',
     }
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 0 
