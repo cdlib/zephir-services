@@ -6,8 +6,6 @@ import msgpack
 import plyvel
 import click
 
-from prepare_zephir_records.lib.utils import get_configs_by_filename
-
 # convenience methods for converting ints to and from bytes
 def int_to_bytes(inum):
     return inum.to_bytes((inum.bit_length() + 7) // 8, 'big')
@@ -317,43 +315,3 @@ def tests():
     ocns=[]
     assert get_clusters_by_ocns(ocns) == set()
 
-@click.command()
-@click.option('-t', '--test', is_flag=True, help="Will run a set of tests.")
-@click.argument('ocns', nargs=-1)
-def main(test, ocns):
-    """For a given list of OCNs, find all resolved OCNs clusters from the OCLC Concordance Table.
-
-    Provide the OCNs list in space separated integers, for example: 1 123.
-
-    cmd: pipenv run python oclc_lookup.py 1 123
-
-    returns: {(123, 18329830, 67524283), (1, 6567842, 9987701, 53095235, 433981287)}
-    """
-    if test:
-        click.echo("Running tests ...")
-        tests()
-        exit(0)
-
-    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-    ROOT_PATH = os.path.dirname(ROOT_PATH)
-    CONFIG_PATH = os.path.join(ROOT_PATH, 'config')
-
-    configs = get_configs_by_filename(CONFIG_PATH, "cid_minting")
-    primary_db_path = configs["primary_db_path"]
-    cluster_db_path = configs["cluster_db_path"]
-
-    PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
-    CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
-
-    ocns_list = list(int(ocn) for ocn in ocns)
-    if ocns_list:
-        clusters = get_clusters_by_ocns(ocns_list, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
-        click.echo(clusters)
-        exit(0)
-    else:
-        ctx = click.get_current_context()
-        click.echo(ctx.get_help())
-        exit(1)
-
-if __name__ == "__main__":
-    main()
