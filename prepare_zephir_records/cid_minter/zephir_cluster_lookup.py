@@ -5,8 +5,8 @@ import re
 from sqlalchemy import create_engine
 from sqlalchemy import text
 
-from lib.utils import db_connect_url
-from lib.utils import get_configs_by_filename
+from prepare_zephir_records.lib.utils import db_connect_url
+from prepare_zephir_records.lib.utils import get_configs_by_filename
 
 class Database:
     def __init__(self, db_connect_str):
@@ -325,6 +325,7 @@ def main():
         env = "test"
 
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    ROOT_PATH = os.path.dirname(ROOT_PATH)
     CONFIG_PATH = os.path.join(ROOT_PATH, 'config')
 
     configs= get_configs_by_filename(CONFIG_PATH, 'zephir_db')
