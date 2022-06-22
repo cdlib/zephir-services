@@ -6,11 +6,11 @@ import json
 import logging
 import time
 
-from lib.utils import db_connect_url
-from lib.utils import get_configs_by_filename
+from prepare_zephir_records.lib.utils import db_connect_url
+from prepare_zephir_records.lib.utils import get_configs_by_filename
 
-from oclc_lookup import lookup_ocns_from_oclc
-from zephir_cluster_lookup import ZephirDatabase
+from prepare_zephir_records.cid_minter.oclc_lookup import lookup_ocns_from_oclc
+from prepare_zephir_records.cid_minter.zephir_cluster_lookup import ZephirDatabase
 
 def cid_inquiry_by_ocns(ocns, zephirDb, primary_db_path, cluster_db_path):
     """Find Zephir clusters by given OCNs and their associated OCLC OCNs.
@@ -101,12 +101,13 @@ def main():
         exit(1)
 
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+    ROOT_PATH = os.path.dirname(ROOT_PATH)
     CONFIG_PATH = os.path.join(ROOT_PATH, 'config')
 
     zephir_db_config = get_configs_by_filename(CONFIG_PATH, "zephir_db")
     db_connect_str = str(db_connect_url(zephir_db_config[env]))
 
-    cid_minting_config = get_configs_by_filename("config", "cid_minting")
+    cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
     primary_db_path = cid_minting_config["primary_db_path"]
     cluster_db_path = cid_minting_config["cluster_db_path"]
     logfile = cid_minting_config['logpath']

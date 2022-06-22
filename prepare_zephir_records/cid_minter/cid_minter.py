@@ -6,12 +6,12 @@ import json
 import logging
 import time
 
-from lib.utils import db_connect_url
-from lib.utils import get_configs_by_filename
+from prepare_zephir_records.lib.utils import db_connect_url
+from prepare_zephir_records.lib.utils import get_configs_by_filename
 
-from oclc_lookup import lookup_ocns_from_oclc
-from zephir_cluster_lookup import ZephirDatabase
-from cid_inquiry_by_ocns import cid_inquiry_by_ocns
+from prepare_zephir_records.cid_minter.oclc_lookup import lookup_ocns_from_oclc
+from prepare_zephir_records.cid_minter.zephir_cluster_lookup import ZephirDatabase
+from prepare_zephir_records.cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
 
 class CidMinter:
     def __init__(self, config, ids):

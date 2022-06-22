@@ -6,11 +6,11 @@ import pytest
 import plyvel
 import json
 
-from zephir_cluster_lookup import ZephirDatabase
-from cid_inquiry_by_ocns import cid_inquiry_by_ocns
-from cid_inquiry_by_ocns import flat_and_dedup_sort_list
-from cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
-from cid_inquiry_by_ocns import main
+from prepare_zephir_records.cid_minter.zephir_cluster_lookup import ZephirDatabase
+from prepare_zephir_records.cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
+from prepare_zephir_records.cid_inquiry_by_ocns import flat_and_dedup_sort_list
+from prepare_zephir_records.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
+from prepare_zephir_records.cid_inquiry_by_ocns import main
 
 """Test cid_inquiry_by_ocns() function which returns a dict with: 
   "iquiry_ocns": input ocns, list of integers.
