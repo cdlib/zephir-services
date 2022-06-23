@@ -5,13 +5,12 @@ import pytest
 import plyvel
 from click.testing import CliRunner
 
-from oclc_lookup import get_primary_ocn
-from oclc_lookup import get_ocns_cluster_by_primary_ocn
-from oclc_lookup import get_ocns_cluster_by_ocn
-from oclc_lookup import get_clusters_by_ocns
-from oclc_lookup import convert_set_to_list
-from oclc_lookup import lookup_ocns_from_oclc
-from oclc_lookup import main
+from cid_minter.oclc_lookup import get_primary_ocn
+from cid_minter.oclc_lookup import get_ocns_cluster_by_primary_ocn
+from cid_minter.oclc_lookup import get_ocns_cluster_by_ocn
+from cid_minter.oclc_lookup import get_clusters_by_ocns
+from cid_minter.oclc_lookup import convert_set_to_list
+from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 
 # TESTS
 def test_get_primary_ocn(setup):
@@ -219,35 +218,6 @@ def test_lookup_ocns_from_oclc(setup):
         assert result["inquiry_ocns"] == ocns
         assert result["matched_oclc_clusters"] == expected[k]["matched_oclc_clusters"]
         assert result["num_of_matched_oclc_clusters"] == expected[k]["num_of_matched_oclc_clusters"]
-
-# TEST cmd line options
-def test_main(setup):
-
-    runner = CliRunner()
-    result = runner.invoke(main)
-    assert result.exit_code == 1 
-    assert 'Usage' in result.output
-
-    result = runner.invoke(main, ['-t'])
-    #assert result.exit_code == 0 
-    assert 'Running tests ...' in result.output
-
-    result = runner.invoke(main, ['--test'])
-    #assert result.exit_code == 0
-    assert 'Running tests ...' in result.output
-
-    result = runner.invoke(main, ['1'])
-    assert result.output ==  '{(1, 6567842, 9987701, 53095235, 433981287)}\n'
-
-    result = runner.invoke(main, ['2'])
-    assert result.output == '{(2, 9772597, 35597370, 60494959, 813305061, 823937796, 1087342349)}\n'
-
-    result = runner.invoke(main, ['1', '2'])
-    assert result.output == '{(2, 9772597, 35597370, 60494959, 813305061, 823937796, 1087342349), (1, 6567842, 9987701, 53095235, 433981287)}\n'
-
-    # '123' is not in the test db
-    result = runner.invoke(main, ['123'])
-    assert result.output == 'set()\n'
 
 # FIXTURES
 @pytest.fixture

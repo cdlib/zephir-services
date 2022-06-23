@@ -3,11 +3,11 @@ import os
 import pytest
 import environs
 
-from zephir_cluster_lookup import ZephirDatabase
-from zephir_cluster_lookup import valid_sql_in_clause_str
-from zephir_cluster_lookup import invalid_sql_in_clause_str
-from zephir_cluster_lookup import list_to_str
-from zephir_cluster_lookup import formatting_cid_id_clusters
+from cid_minter.zephir_cluster_lookup import ZephirDatabase
+from cid_minter.zephir_cluster_lookup import valid_sql_in_clause_str
+from cid_minter.zephir_cluster_lookup import invalid_sql_in_clause_str
+from cid_minter.zephir_cluster_lookup import list_to_str
+from cid_minter.zephir_cluster_lookup import formatting_cid_id_clusters
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):

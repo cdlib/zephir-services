@@ -10,9 +10,9 @@ from pymarc import Record, Field
 
 import xml.dom.minidom
 
-from prepare_zephir_records.lib.utils import db_connect_url
-from prepare_zephir_records.lib.utils import get_configs_by_filename
-from prepare_zephir_records.cid_minter.cid_minter import CidMinter
+from lib.utils import db_connect_url
+from lib.utils import get_configs_by_filename
+from cid_minter.cid_minter import CidMinter
 
 def output_marc_records(config, input_file, output_file, err_file):
     """Process input records and write records to output files based on specifications.

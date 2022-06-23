@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from my_app import main
+from cid_minter.my_app import main
 
 def test_my_function(capsys):
     with pytest.raises(SystemExit) as pytest_e:
