@@ -84,11 +84,11 @@ def insert_a_record(session, record):
     try:
         session.add(record)
         session.flush()
-    except IntegrityError as e:
+    except Exception as e:
         session.rollback()
         #logging.error("IntegrityError adding record")
         #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
-        return "IntegrityError"
+        return "Database Error: failed to insert a record"
     else:
         session.commit()
         return "Success"
