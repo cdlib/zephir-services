@@ -1,5 +1,5 @@
 import pytest
-from create_sqlite_db import create_connection, execute_sql, insert_query, list_data
+from cid_minter.create_sqlite_db import create_connection, execute_sql, insert_query, list_data
 
 @pytest.fixture
 #def create_test_db(datadir):

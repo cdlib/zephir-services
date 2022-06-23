@@ -5,12 +5,12 @@ import pytest
 import plyvel
 from click.testing import CliRunner
 
-from oclc_lookup import get_primary_ocn
-from oclc_lookup import get_ocns_cluster_by_primary_ocn
-from oclc_lookup import get_ocns_cluster_by_ocn
-from oclc_lookup import get_clusters_by_ocns
-from oclc_lookup import convert_set_to_list
-from oclc_lookup import lookup_ocns_from_oclc
+from cid_minter.oclc_lookup import get_primary_ocn
+from cid_minter.oclc_lookup import get_ocns_cluster_by_primary_ocn
+from cid_minter.oclc_lookup import get_ocns_cluster_by_ocn
+from cid_minter.oclc_lookup import get_clusters_by_ocns
+from cid_minter.oclc_lookup import convert_set_to_list
+from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 
 # TESTS
 def test_get_primary_ocn(setup):

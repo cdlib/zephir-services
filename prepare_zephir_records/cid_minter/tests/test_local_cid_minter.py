@@ -5,7 +5,7 @@ import pytest
 import environs
 import logging
 
-from local_cid_minter import prepare_database, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns, find_cid_by_sysid, main
+from cid_minter.local_cid_minter import prepare_database, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns, find_cid_by_sysid
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
