@@ -3,6 +3,7 @@ from os.path import join, dirname
 import sys
 
 from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -17,7 +18,8 @@ from cid_minter.zephir_cluster_lookup import invalid_sql_in_clause_str
 
 def prepare_database(db_connect_str):
     engine = create_engine(db_connect_str)
-    session = Session(engine)
+    Session = sessionmaker(engine)
+    session = Session()
 
     Base = automap_base()
     # reflect the tables
