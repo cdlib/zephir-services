@@ -15,28 +15,31 @@ from cid_minter.zephir_cluster_lookup import list_to_str
 from cid_minter.zephir_cluster_lookup import valid_sql_in_clause_str
 from cid_minter.zephir_cluster_lookup import invalid_sql_in_clause_str
 
+class LocalMinter:
+    def __init__(self, db_connect_str):
+        self._prepare_database(db_connect_str)
 
-def prepare_database(db_connect_str):
-    engine = create_engine(db_connect_str)
-    Session = sessionmaker(engine)
-    session = Session()
+    def _prepare_database(self, db_connect_str):
+        engine = create_engine(db_connect_str)
+        Session = sessionmaker(engine)
+        session = Session()
 
-    Base = automap_base()
-    # reflect the tables
-    Base.prepare(engine, reflect=True)
-    # map table to class
-    CidMintingStore = Base.classes.cid_minting_store
-    return {
-        'engine': engine, 
-        'session': session, 
-        'table': CidMintingStore}
+        Base = automap_base()
+        # reflect the tables
+        Base.prepare(engine, reflect=True)
+        # map table to class
+        tablename = Base.classes.cid_minting_store
 
-def find_all(CidMintingStore, session):
-    query = session.query(CidMintingStore)
+        self.engine = engine
+        self.session = session
+        self.tablename = tablename
+
+def find_all(tablename, session):
+    query = session.query(tablename)
     return query.all()
 
-def find_by_identifier(CidMintingStore, session, data_type, value):
-    query = session.query(CidMintingStore).filter(CidMintingStore.type==data_type).filter(CidMintingStore.identifier==value)
+def find_by_identifier(tablename, session, data_type, value):
+    query = session.query(tablename).filter(tablename.type==data_type).filter(tablename.identifier==value)
 
     record = query.first()
     return record
@@ -74,9 +77,9 @@ def find_cids_by_ocns(engine, ocns_list):
 
     return matched_cids
 
-def find_cid_by_sysid(CidMintingStore, session, sysid):
+def find_cid_by_sysid(tablename, session, sysid):
     results = {}
-    record = find_by_identifier(CidMintingStore, session, 'sysid', sysid)
+    record = find_by_identifier(tablename, session, 'sysid', sysid)
     if record:
         results['inquiry_sys_id'] = sysid 
         results['matched_cid'] = record.cid

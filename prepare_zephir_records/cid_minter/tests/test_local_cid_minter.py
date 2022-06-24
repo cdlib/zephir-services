@@ -5,7 +5,7 @@ import pytest
 import environs
 import logging
 
-from cid_minter.local_cid_minter import prepare_database, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns, find_cid_by_sysid
+from cid_minter.local_cid_minter import LocalMinter, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns, find_cid_by_sysid
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -30,10 +30,10 @@ def test_find_query(create_test_db):
         fixture above
     """
     db_conn_str = create_test_db['db_conn_str']
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
 
     select_sql = "select type, identifier, cid from cid_minting_store"
     results = find_query(engine, select_sql)
@@ -54,10 +54,10 @@ def test_find_query(create_test_db):
 
 def test_find_by_identifier(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
 
     record = find_by_identifier(CidMintingStore, session, 'ocn', '8727632')
     print(record)
@@ -81,10 +81,10 @@ def test_find_by_identifier(create_test_db):
 
 def test_find_all(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
 
     results = find_all(CidMintingStore, session)
     print(type(results))
@@ -94,10 +94,10 @@ def test_find_all(create_test_db):
 
 def test_find_cids_by_ocns(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
 
     ocns_list = ['8727632', '32882115']
     expected_results = { 
@@ -120,10 +120,10 @@ def test_find_cids_by_ocns(create_test_db):
 
 def test_find_cids_by_ocns_none(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
 
     ocns_list = []
     expected = {
@@ -147,10 +147,10 @@ def test_find_cids_by_ocns_none(create_test_db):
 
 def test_find_cid_by_sysid(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
 
     sysid = ""
     expected = {}
@@ -177,10 +177,10 @@ def test_insert_a_record(caplog, create_test_db):
     caplog.set_level(logging.DEBUG)
 
     db_conn_str = create_test_db['db_conn_str']
-    db = prepare_database(db_conn_str)
-    engine = db["engine"]
-    session = db["session"]
-    CidMintingStore = db["table"]
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
 
     # before insert a record
     results = find_all(CidMintingStore, session)

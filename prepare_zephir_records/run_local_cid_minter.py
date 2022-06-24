@@ -8,7 +8,7 @@ import json
 
 from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
-from cid_minter.local_cid_minter import prepare_database
+from cid_minter.local_cid_minter import LocalMinter 
 from cid_minter.local_cid_minter import find_cids_by_ocns
 from cid_minter.local_cid_minter import find_cid_by_sysid
 from cid_minter.local_cid_minter import insert_a_record
@@ -85,10 +85,10 @@ def main():
 
     DB_CONNECT_STR = os.environ.get('OVERRIDE_DB_CONNECT_STR') or db_config
 
-    db = prepare_database(DB_CONNECT_STR)
-    engine = db['engine']
-    session = db['session']
-    CidMintingStore = db['table']
+    db = LocalMinter(DB_CONNECT_STR)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
 
     results = {} 
     if action == "read":

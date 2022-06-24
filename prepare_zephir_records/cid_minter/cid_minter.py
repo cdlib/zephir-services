@@ -6,12 +6,6 @@ from cid_minter.zephir_cluster_lookup import ZephirDatabase
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
 
 class CidMinter:
-    # define class level varialbes
-    ZEPHIR_DB  = None
-    LOCAL_MINTER_DB = None
-    LEVELDB_PRIMARY_PATH = None
-    LEVELDB_CLUSTER_PATH = None
-
     def __init__(self, config, ids):
         self.config = config
         self.ids = ids 
