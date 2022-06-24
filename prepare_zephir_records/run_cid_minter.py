@@ -10,7 +10,6 @@ from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
 
 from cid_minter.oclc_lookup import lookup_ocns_from_oclc
-from cid_minter.zephir_cluster_lookup import ZephirDatabase
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
 from cid_minter.cid_minter import CidMinter 
 
@@ -86,8 +85,6 @@ def main():
         "leveldb_primary_path": PRIMARY_DB_PATH,
         "leveldb_cluster_path": CLUSTER_DB_PATH,
     }
-
-    zephirDb = ZephirDatabase(DB_CONNECT_STR)
 
     if (len(sys.argv) == 3):
         ocns_list = convert_comma_separated_str_to_int_list(sys.argv[2])
