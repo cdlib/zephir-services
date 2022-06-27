@@ -5,7 +5,7 @@ import pytest
 import environs
 import logging
 
-from cid_minter.local_cid_minter import LocalMinter, find_all, find_by_identifier, find_query, insert_a_record, find_cids_by_ocns, find_cid_by_sysid
+from cid_minter.local_cid_minter import LocalMinter
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -25,58 +25,40 @@ def create_test_db(data_dir, tmpdir, scope="session"):
 
     return {'db_conn_str': db_conn_str}
 
-def test_find_query(create_test_db):
-    """ the 'create_test_db' argument here is matched to the name of the
-        fixture above
-    """
-    db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
-    engine = db.engine
-    session = db.session
-    CidMintingStore = db.tablename
-
-    select_sql = "select type, identifier, cid from cid_minting_store"
-    results = find_query(engine, select_sql)
-    print(results)
-    assert len(results) == 5
-
-    # expected results:
-    expected_results = [
+"""
+    datasets in test DB
             {'type': 'ocn', 'identifier': '8727632', 'cid': '002492721'}, 
             {'type': 'sysid', 'identifier': 'pur215476', 'cid': '002492721'}, 
             {'type': 'ocn', 'identifier': '32882115', 'cid': '011323405'}, 
             {'type': 'sysid', 'identifier': 'pur864352', 'cid': '011323405'}, 
-            {'type': 'sysid', 'identifier': 'uc1234567', 'cid': '011323405'}]
+            {'type': 'sysid', 'identifier': 'uc1234567', 'cid': '011323405'}
+"""
 
-    for record in results:
-        assert any(expected_result == record for expected_result in expected_results)
-
-
-def test_find_by_identifier(create_test_db):
+def test_find_record_by_identifier(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
     db = LocalMinter(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
 
-    record = find_by_identifier(CidMintingStore, session, 'ocn', '8727632')
+    record = db._find_record_by_identifier('ocn', '8727632')
     print(record)
     assert [record.type, record.identifier, record.cid] == ['ocn', '8727632', '002492721']
 
-    record = find_by_identifier(CidMintingStore, session, 'ocn', '1234567890')
+    record = db._find_record_by_identifier('ocn', '1234567890')
     assert record == None 
 
-    record = find_by_identifier(CidMintingStore, session, 'ocn', '')
+    record = db._find_record_by_identifier('ocn', '')
     assert record == None
 
-    record = find_by_identifier(CidMintingStore, session, 'sysid', 'pur215476')
+    record = db._find_record_by_identifier('sysid', 'pur215476')
     print(record)
     assert [record.type, record.identifier, record.cid] == ['sysid', 'pur215476', '002492721']
 
-    record = find_by_identifier(CidMintingStore, session, 'sysid', 'xyz12345')
+    record = db._find_record_by_identifier('sysid', 'xyz12345')
     assert record == None 
 
-    record = find_by_identifier(CidMintingStore, session, 'sysid', '')
+    record = db._find_record_by_identifier('sysid', '')
     assert record == None
 
 def test_find_all(create_test_db):
@@ -86,64 +68,39 @@ def test_find_all(create_test_db):
     session = db.session
     CidMintingStore = db.tablename
 
-    results = find_all(CidMintingStore, session)
+    results = db._find_all()
     print(type(results))
     assert len(results) == 5
     assert any([record.type, record.identifier, record.cid] == ['ocn', '8727632', '002492721'] for record in results)
     assert any([record.type, record.identifier, record.cid] == ['sysid', 'pur864352', '011323405'] for record in results)
 
-def test_find_cids_by_ocns(create_test_db):
+def test_find_cid_by_ocn(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
     db = LocalMinter(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
 
-    ocns_list = ['8727632', '32882115']
-    expected_results = { 
-        'inquiry_ocns': ['8727632', '32882115'],
-        'matched_cids': [{'cid': '002492721'}, {'cid': '011323405'}],
-        'min_cid': '002492721',
-        'num_of_cids': 2,
-    }
+    ocn = ""
+    expected = {}
+    result = db.find_cid("ocn", ocn)
+    print(result)
+    assert result == expected
 
-    results = find_cids_by_ocns(engine, ocns_list)
-    print(results)
+    ocn = "1234567890"
+    expected = {}
+    result = db.find_cid("ocn", ocn)
+    print(result)
+    assert result == expected
 
-    assert results['min_cid'] == expected_results['min_cid']
-    assert results['num_of_cids'] == expected_results['num_of_cids']
-    
-    for result in results['inquiry_ocns']:
-        assert any(expected_result == result for expected_result in expected_results['inquiry_ocns'])
-    for result in results['matched_cids']:
-        assert any(expected_result == result for expected_result in expected_results['matched_cids'])
-
-def test_find_cids_by_ocns_none(create_test_db):
-    db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
-    engine = db.engine
-    session = db.session
-    CidMintingStore = db.tablename
-
-    ocns_list = []
+    ocn = "8727632"
     expected = {
-        'inquiry_ocns': [], 
-        'matched_cids': [], 
-        'min_cid': None, 
-        'num_of_cids': 0
-    }
-    results = find_cids_by_ocns(engine, ocns_list)
-    assert results ==expected
-
-    ocns_list = ['1234567890']
-    expected = {
-        'inquiry_ocns': ['1234567890'], 
-        'matched_cids': [], 
-        'min_cid': None, 
-        'num_of_cids': 0
-    }
-    results = find_cids_by_ocns(engine, ocns_list)
-    assert results == expected
+        'data_type': "ocn",
+        'inquiry_identifier': "8727632",
+        'matched_cid': "002492721"}
+    result = db.find_cid("ocn", ocn)
+    print(result)
+    assert result == expected
 
 def test_find_cid_by_sysid(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
@@ -154,21 +111,22 @@ def test_find_cid_by_sysid(create_test_db):
 
     sysid = ""
     expected = {}
-    result = find_cid_by_sysid(CidMintingStore, session, sysid)
+    result = db.find_cid("sysid", sysid)
     print(result)
     assert result == expected
 
     sysid = "xyz123"
     expected = {}
-    result = find_cid_by_sysid(CidMintingStore, session, sysid)
+    result = db.find_cid("sysid", sysid)
     print(result)
     assert result == expected
 
     sysid = "uc1234567"
     expected = {
-        'inquiry_sys_id': 'uc1234567',
+        'data_type': "sysid",
+        'inquiry_identifier': 'uc1234567',
         'matched_cid': '011323405'}
-    result = find_cid_by_sysid(CidMintingStore, session, sysid)
+    result = db.find_cid("sysid", sysid)
     print(result)
     assert result == expected
 
@@ -183,20 +141,20 @@ def test_insert_a_record(caplog, create_test_db):
     CidMintingStore = db.tablename
 
     # before insert a record
-    results = find_all(CidMintingStore, session)
+    results = db._find_all()
     assert len(results) == 5
 
     record = CidMintingStore(type='ocn', identifier='30461866', cid='011323406')
-    insert_a_record(session, record)
+    db._insert_a_record(record)
     # after insert a record
-    results = find_all(CidMintingStore, session)
+    results = db._find_all()
     assert len(results) == 6
     assert any([record.type, record.identifier, record.cid] == ['ocn', '30461866', '011323406'] for record in results)
 
     # insert the same record
     record = CidMintingStore(type='ocn', identifier='30461866', cid='011323406')
-    ret = insert_a_record(session, record)
+    ret = db._insert_a_record(record)
     assert "Database Error: failed to insert a record" in ret 
-    results = find_all(CidMintingStore, session)
+    results = db._find_all()
     assert len(results) == 6
     assert any([record.type, record.identifier, record.cid] == ['ocn', '30461866', '011323406'] for record in results)

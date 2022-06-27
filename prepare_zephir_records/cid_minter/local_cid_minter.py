@@ -9,11 +9,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import IntegrityError
 
+import json
 import logging
-
-from cid_minter.zephir_cluster_lookup import list_to_str
-from cid_minter.zephir_cluster_lookup import valid_sql_in_clause_str
-from cid_minter.zephir_cluster_lookup import invalid_sql_in_clause_str
 
 class LocalMinter:
     def __init__(self, db_connect_str):
@@ -34,67 +31,47 @@ class LocalMinter:
         self.session = session
         self.tablename = tablename
 
-def find_all(tablename, session):
-    query = session.query(tablename)
-    return query.all()
+    def find_cid(self, data_type, identifier):
+        results = {}
+        record = self._find_record_by_identifier(data_type, identifier)
+        if record:
+            results['data_type'] = data_type
+            results['inquiry_identifier'] = identifier
+            results['matched_cid'] = record.cid
+        return results
 
-def find_by_identifier(tablename, session, data_type, value):
-    query = session.query(tablename).filter(tablename.type==data_type).filter(tablename.identifier==value)
+    def write_identifier(self, data_type, identifier, cid):
+        record = self.tablename(type=data_type, identifier=identifier, cid=cid)
+        inserted_msg = self._insert_a_record(record)
+        return inserted_msg
 
-    record = query.first()
-    return record
 
-def find_query(engine, sql, params=None):
-    with engine.connect() as connection:
-        results = connection.execute(sql, params or ())
-        results_dict = [dict(row) for row in results.fetchall()]
-        return results_dict
+    def _find_all(self):
+        query = self.session.query(self.tablename)
+        return query.all()
 
-def find_cids_by_ocns(engine, ocns_list):
-    """Find matched CIDs by ocns
-    Return: a dict with the following keys:
-      'inquiry_ocns': list of inquiry ocns
-      'matched_cids': list of cids
-      'min_cid': the lowest cid in the matched list
-      'num_of_cids': number of matched cids
-    """
-    matched_cids = {
-        'inquiry_ocns': ocns_list,
-        'matched_cids': [],
-        'min_cid': None,
-        'num_of_cids': 0
-    }
+    def _find_record_by_identifier(self, data_type, value):
+        """Find record from the cid_minting_store table by data type and identifier value.
+           The cid_minting_store table schema: (type, identifier, cid)
+           Sample values:
+           ("ocn", "8727632", "002492721"),
+           ("sysid", "pur215476", "002492721")
+        """
+        query = self.session.query(self.tablename).filter(self.tablename.type==data_type).filter(self.tablename.identifier==value)
 
-    # Convert list item to a single quoted string, concat with a comma and space
-    ocns = list_to_str(ocns_list)
-    if valid_sql_in_clause_str(ocns):
-        sql = "SELECT cid FROM cid_minting_store WHERE type='ocn' AND identifier IN (" + ocns + ")"
-        results = find_query(engine, sql)
-        if results:
-            matched_cids['matched_cids'] = results
-            matched_cids['min_cid'] = min([cid.get("cid") for cid in results])
-            matched_cids['num_of_cids'] = len(results)
+        record = query.first()
+        return record
 
-    return matched_cids
-
-def find_cid_by_sysid(tablename, session, sysid):
-    results = {}
-    record = find_by_identifier(tablename, session, 'sysid', sysid)
-    if record:
-        results['inquiry_sys_id'] = sysid 
-        results['matched_cid'] = record.cid
-    return results 
-
-def insert_a_record(session, record):
-    try:
-        session.add(record)
-        session.flush()
-    except Exception as e:
-        session.rollback()
-        #logging.error("IntegrityError adding record")
-        #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
-        return "Database Error: failed to insert a record"
-    else:
-        session.commit()
-        return "Success"
+    def _insert_a_record(self, record):
+        try:
+            self.session.add(record)
+            self.session.flush()
+        except Exception as e:
+            self.session.rollback()
+            #logging.error("IntegrityError adding record")
+            #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
+            return "Database Error: failed to insert a record"
+        else:
+            self.session.commit()
+            return "Success"
 
