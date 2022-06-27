@@ -10,8 +10,8 @@ from lib.utils import get_configs_by_filename
 from cid_minter.local_cid_minter import LocalMinter 
 
 def usage(script_name):
-        print("Usage: {} env[dev|stg|prd] action[read|write] type[ocn|sysid] data[comma_separated_ocns|sys_id] cid".format(script_name))
-        print("{} dev read ocn 8727632,32882115".format(script_name))
+        print("Usage: {} env[dev|stg|prd] action[read|write] type[ocn|sysid] data[ocn|sys_id] cid".format(script_name))
+        print("{} dev read ocn 8727632".format(script_name))
         print("{} dev read sysid uc1234567".format(script_name))
         print("{} dev write ocn 30461866 011323406".format(script_name))
         print("{} dev write sysid uc1234567 011323407".format(script_name))

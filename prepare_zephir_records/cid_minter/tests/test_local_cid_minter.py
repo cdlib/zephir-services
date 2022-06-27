@@ -130,7 +130,70 @@ def test_find_cid_by_sysid(create_test_db):
     print(result)
     assert result == expected
 
-# keep this test the last one so you can see the changes in the test database
+def test_update_an_existing_record(caplog, create_test_db):
+    caplog.set_level(logging.DEBUG)
+
+    db_conn_str = create_test_db['db_conn_str']
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
+
+    # existing record
+    ocn = "8727632"
+    cid = "002492721"
+    expected = {
+        'data_type': "ocn",
+        'inquiry_identifier': ocn,
+        'matched_cid': cid}
+    result = db.find_cid("ocn", ocn)
+    print(result)
+    assert result == expected
+
+    # updated record
+    cid = "123456789"
+    updated_rd = CidMintingStore(type="ocn", identifier=ocn, cid=cid)
+    ret = db._update_a_record(updated_rd)
+    assert ret == 1
+
+    expected = {
+        'data_type': "ocn",
+        'inquiry_identifier': ocn,
+        'matched_cid': cid}
+    result = db.find_cid("ocn", ocn)
+    print(result)
+    assert result == expected
+
+def test_update_a_non_existing_record(caplog, create_test_db):
+    caplog.set_level(logging.DEBUG)
+
+    db_conn_str = create_test_db['db_conn_str']
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
+
+    # non-existing record
+    ocn = "1234567890123"
+    cid = "9999123456789"
+    expected = {}
+    result = db.find_cid("ocn", ocn)
+    print(result)
+    assert result == expected
+
+    # updated record
+    cid = "123456789"
+    updated_rd = CidMintingStore(type="ocn", identifier=ocn, cid=cid)
+    ret = db._update_a_record(updated_rd)
+    assert ret == 0
+
+    expected = {}
+    result = db.find_cid("ocn", ocn)
+    print(result)
+    assert result == expected
+
+
+# Note: the test database saves all changes from the last test function
 def test_insert_a_record(caplog, create_test_db):
     caplog.set_level(logging.DEBUG)
 

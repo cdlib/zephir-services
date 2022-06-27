@@ -2,6 +2,8 @@ import os
 from os.path import join, dirname
 import sys
 
+# sqlalchemy version: 1.3.18 (legacy)
+# CURRENT RELEASE: 1.4.39, Release Date: June 24, 2022
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session
@@ -75,3 +77,14 @@ class LocalMinter:
             self.session.commit()
             return "Success"
 
+    def _update_a_record(self, record):
+        ret = None
+        try:
+            ret = self.session.query(self.tablename).filter(self.tablename.type == record.type, self.tablename.identifier == record.identifier).update({self.tablename.cid: record.cid}, synchronize_session=False)
+        except Exception as e:
+            self.session.rollback()
+            #logging.error("IntegrityError adding record")
+            #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
+        else:
+            self.session.commit()
+        return ret
