@@ -171,7 +171,7 @@ def test_update_an_existing_record(caplog, create_test_db):
     print(result)
     assert result == expected
 
-    # updated record
+    # update cid for this record
     cid = "123456789"
     updated_rd = CidMintingStore(type="ocn", identifier=ocn, cid=cid)
     ret = db._update_a_record(updated_rd)
@@ -213,8 +213,6 @@ def test_update_a_non_existing_record(caplog, create_test_db):
     print(result)
     assert result == expected
 
-
-# Note: the test database saves all changes from the last test function
 def test_insert_a_record(caplog, create_test_db):
     caplog.set_level(logging.DEBUG)
 
@@ -243,3 +241,56 @@ def test_insert_a_record(caplog, create_test_db):
     results = db._find_all()
     assert len(results) == 6
     assert any([record.type, record.identifier, record.cid] == ['ocn', '30461866', '011323406'] for record in results)
+
+# Note: the test database saves all changes from the last test function
+def test_write_a_record(create_test_db):
+    db_conn_str = create_test_db['db_conn_str']
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
+
+    # existing record
+    ocn = "8727632"
+    cid = "002492721"
+    expected = {
+        'data_type': "ocn",
+        'inquiry_identifier': ocn,
+        'matched_cid': cid}
+    result = db.find_cid("ocn", ocn)
+    print(result)
+    assert result == expected
+
+    ret = db.write_identifier("ocn", ocn, cid)
+    assert ret == "Record exists. No need to update"
+
+    # update cid for this record
+    ocn = "8727632"
+    cid = "123456789"
+    expected = {
+        'data_type': "ocn",
+        'inquiry_identifier': ocn,
+        'matched_cid': cid}
+    ret = db.write_identifier("ocn", ocn, cid)
+    assert ret == "Updated an exsiting record"
+
+    result = db.find_cid("ocn", ocn)
+    assert result == expected
+
+    # insert a new record
+    ocn = "1234567890123"
+    cid = "9999123456789"
+    result = db.find_cid("ocn", ocn)
+    assert result == {}
+
+    expected = {
+        'data_type': "ocn",
+        'inquiry_identifier': ocn,
+        'matched_cid': cid}
+    ret = db.write_identifier("ocn", ocn, cid)
+    assert ret == "Inserted a new record"
+
+    result = db.find_cid("ocn", ocn)
+    assert result == expected
+
+
