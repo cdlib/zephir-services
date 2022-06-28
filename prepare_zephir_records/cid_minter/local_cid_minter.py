@@ -44,13 +44,32 @@ class LocalMinter:
 
     def write_identifier(self, data_type, identifier, cid):
         record = self.tablename(type=data_type, identifier=identifier, cid=cid)
-        inserted_msg = self._insert_a_record(record)
-        return inserted_msg
+        if self._find_record(record):
+            return "Record exists. No need to update"
+        if self._find_record_by_identifier(data_type, identifier):
+            if self._update_a_record(record):
+                return "Updated an exsiting record"
+        else:
+            if self._insert_a_record(record):
+                return "Inserted a new record"
+        return None
 
 
     def _find_all(self):
         query = self.session.query(self.tablename)
         return query.all()
+
+    def _find_record(self, record):
+        """Find record from the cid_minting_store table by data type, identifier value and cid.
+           The cid_minting_store table schema: (type, identifier, cid)
+           Sample values:
+           ("ocn", "8727632", "002492721"),
+           ("sysid", "pur215476", "002492721")
+        """
+        query = self.session.query(self.tablename).filter(self.tablename.type==record.type, self.tablename.identifier==record.identifier, self.tablename.cid==record.cid)
+
+        record = query.first()
+        return record
 
     def _find_record_by_identifier(self, data_type, value):
         """Find record from the cid_minting_store table by data type and identifier value.
@@ -65,17 +84,19 @@ class LocalMinter:
         return record
 
     def _insert_a_record(self, record):
+        ret = None
         try:
             self.session.add(record)
             self.session.flush()
+            ret = 1
         except Exception as e:
             self.session.rollback()
             #logging.error("IntegrityError adding record")
             #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
-            return "Database Error: failed to insert a record"
+            #return "Database Error: failed to insert a record"
         else:
             self.session.commit()
-            return "Success"
+        return ret
 
     def _update_a_record(self, record):
         ret = None

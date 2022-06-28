@@ -61,6 +61,27 @@ def test_find_record_by_identifier(create_test_db):
     record = db._find_record_by_identifier('sysid', '')
     assert record == None
 
+def test_find_record(create_test_db):
+    db_conn_str = create_test_db['db_conn_str']
+    db = LocalMinter(db_conn_str)
+    engine = db.engine
+    session = db.session
+    CidMintingStore = db.tablename
+
+    ocn = "8727632"
+    cid = "002492721"
+    record = CidMintingStore(type="ocn", identifier=ocn, cid=cid)
+
+    ret = db._find_record(record)
+    assert [ret.type, ret.identifier, ret.cid] == [record.type, record.identifier, record.cid]
+
+    ocn = "1234567890"
+    cid = "9912345678"
+    record = CidMintingStore(type="ocn", identifier=ocn, cid=cid)
+
+    ret = db._find_record(record)
+    assert ret == None
+
 def test_find_all(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
     db = LocalMinter(db_conn_str)
@@ -208,7 +229,8 @@ def test_insert_a_record(caplog, create_test_db):
     assert len(results) == 5
 
     record = CidMintingStore(type='ocn', identifier='30461866', cid='011323406')
-    db._insert_a_record(record)
+    ret = db._insert_a_record(record)
+    assert ret == 1   # success insert
     # after insert a record
     results = db._find_all()
     assert len(results) == 6
@@ -217,7 +239,7 @@ def test_insert_a_record(caplog, create_test_db):
     # insert the same record
     record = CidMintingStore(type='ocn', identifier='30461866', cid='011323406')
     ret = db._insert_a_record(record)
-    assert "Database Error: failed to insert a record" in ret 
+    assert ret is None    # failed insert
     results = db._find_all()
     assert len(results) == 6
     assert any([record.type, record.identifier, record.cid] == ['ocn', '30461866', '011323406'] for record in results)
