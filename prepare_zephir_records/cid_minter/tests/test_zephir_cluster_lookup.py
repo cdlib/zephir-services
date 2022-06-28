@@ -381,6 +381,27 @@ def test_zephir_clusters_lookup_by_sysids_matched_more_than_one_cluster(create_t
         assert result["inquiry_sysids"] == sysids_list
         assert result["min_cid"] == expected_min_cid[k]
  
+def test_find_cid_by_htid(create_test_db):
+    """test datasets:
+     ('009547317', 'chi.49298117'),
+     ('002492721', 'pur1.32754075735872'),
+"""
+    zephirDb = create_test_db
+    htids = ["chi.49298117", "pur1.32754075735872"]
+    expected_cids = [
+        {"cid": "009547317"},
+        {"cid": "002492721"},
+    ]
+
+    for i in range(len(htids)):
+        cids = zephirDb.find_cid_by_htid(htids[i])
+        assert len(cids) == 1
+        assert cids[0] == expected_cids[i]
+
+    # item not in Zephir  DB
+    htid = "test.12345"
+    cids = zephirDb.find_cid_by_htid(htid)
+    assert cids == [] 
 
 def test_list_to_str():
     input_list = {
