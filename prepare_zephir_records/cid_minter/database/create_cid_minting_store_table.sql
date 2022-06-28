@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS cid_minting_store (
         identifier text DEFAULT NULL,
         cid text DEFAULT NULL,
 	updated DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE (type,identifier,cid)
+        UNIQUE (type,identifier)
 );  
 

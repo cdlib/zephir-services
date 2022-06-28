@@ -2,94 +2,110 @@ import os
 from os.path import join, dirname
 import sys
 
+# sqlalchemy version: 1.3.18 (legacy)
+# CURRENT RELEASE: 1.4.39, Release Date: June 24, 2022
 from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import IntegrityError
 
+import json
 import logging
 
-from cid_minter.zephir_cluster_lookup import list_to_str
-from cid_minter.zephir_cluster_lookup import valid_sql_in_clause_str
-from cid_minter.zephir_cluster_lookup import invalid_sql_in_clause_str
+class LocalMinter:
+    def __init__(self, db_connect_str):
+        self._prepare_database(db_connect_str)
+
+    def _prepare_database(self, db_connect_str):
+        engine = create_engine(db_connect_str)
+        Session = sessionmaker(engine)
+        session = Session()
+
+        Base = automap_base()
+        # reflect the tables
+        Base.prepare(engine, reflect=True)
+        # map table to class
+        tablename = Base.classes.cid_minting_store
+
+        self.engine = engine
+        self.session = session
+        self.tablename = tablename
+
+    def find_cid(self, data_type, identifier):
+        results = {}
+        record = self._find_record_by_identifier(data_type, identifier)
+        if record:
+            results['data_type'] = data_type
+            results['inquiry_identifier'] = identifier
+            results['matched_cid'] = record.cid
+        return results
+
+    def write_identifier(self, data_type, identifier, cid):
+        record = self.tablename(type=data_type, identifier=identifier, cid=cid)
+        if self._find_record(record):
+            return "Record exists. No need to update"
+        if self._find_record_by_identifier(data_type, identifier):
+            if self._update_a_record(record):
+                return "Updated an exsiting record"
+        else:
+            if self._insert_a_record(record):
+                return "Inserted a new record"
+        return None
 
 
-def prepare_database(db_connect_str):
-    engine = create_engine(db_connect_str)
-    session = Session(engine)
+    def _find_all(self):
+        query = self.session.query(self.tablename)
+        return query.all()
 
-    Base = automap_base()
-    # reflect the tables
-    Base.prepare(engine, reflect=True)
-    # map table to class
-    CidMintingStore = Base.classes.cid_minting_store
-    return {
-        'engine': engine, 
-        'session': session, 
-        'table': CidMintingStore}
+    def _find_record(self, record):
+        """Find record from the cid_minting_store table by data type, identifier value and cid.
+           The cid_minting_store table schema: (type, identifier, cid)
+           Sample values:
+           ("ocn", "8727632", "002492721"),
+           ("sysid", "pur215476", "002492721")
+        """
+        query = self.session.query(self.tablename).filter(self.tablename.type==record.type, self.tablename.identifier==record.identifier, self.tablename.cid==record.cid)
 
-def find_all(CidMintingStore, session):
-    query = session.query(CidMintingStore)
-    return query.all()
+        record = query.first()
+        return record
 
-def find_by_identifier(CidMintingStore, session, data_type, value):
-    query = session.query(CidMintingStore).filter(CidMintingStore.type==data_type).filter(CidMintingStore.identifier==value)
+    def _find_record_by_identifier(self, data_type, value):
+        """Find record from the cid_minting_store table by data type and identifier value.
+           The cid_minting_store table schema: (type, identifier, cid)
+           Sample values:
+           ("ocn", "8727632", "002492721"),
+           ("sysid", "pur215476", "002492721")
+        """
+        query = self.session.query(self.tablename).filter(self.tablename.type==data_type).filter(self.tablename.identifier==value)
 
-    record = query.first()
-    return record
+        record = query.first()
+        return record
 
-def find_query(engine, sql, params=None):
-    with engine.connect() as connection:
-        results = connection.execute(sql, params or ())
-        results_dict = [dict(row) for row in results.fetchall()]
-        return results_dict
+    def _insert_a_record(self, record):
+        ret = None
+        try:
+            self.session.add(record)
+            self.session.flush()
+            ret = 1
+        except Exception as e:
+            self.session.rollback()
+            #logging.error("IntegrityError adding record")
+            #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
+            #return "Database Error: failed to insert a record"
+        else:
+            self.session.commit()
+        return ret
 
-def find_cids_by_ocns(engine, ocns_list):
-    """Find matched CIDs by ocns
-    Return: a dict with the following keys:
-      'inquiry_ocns': list of inquiry ocns
-      'matched_cids': list of cids
-      'min_cid': the lowest cid in the matched list
-      'num_of_cids': number of matched cids
-    """
-    matched_cids = {
-        'inquiry_ocns': ocns_list,
-        'matched_cids': [],
-        'min_cid': None,
-        'num_of_cids': 0
-    }
-
-    # Convert list item to a single quoted string, concat with a comma and space
-    ocns = list_to_str(ocns_list)
-    if valid_sql_in_clause_str(ocns):
-        sql = "SELECT cid FROM cid_minting_store WHERE type='ocn' AND identifier IN (" + ocns + ")"
-        results = find_query(engine, sql)
-        if results:
-            matched_cids['matched_cids'] = results
-            matched_cids['min_cid'] = min([cid.get("cid") for cid in results])
-            matched_cids['num_of_cids'] = len(results)
-
-    return matched_cids
-
-def find_cid_by_sysid(CidMintingStore, session, sysid):
-    results = {}
-    record = find_by_identifier(CidMintingStore, session, 'sysid', sysid)
-    if record:
-        results['inquiry_sys_id'] = sysid 
-        results['matched_cid'] = record.cid
-    return results 
-
-def insert_a_record(session, record):
-    try:
-        session.add(record)
-        session.flush()
-    except IntegrityError as e:
-        session.rollback()
-        #logging.error("IntegrityError adding record")
-        #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
-        return "IntegrityError"
-    else:
-        session.commit()
-        return "Success"
-
+    def _update_a_record(self, record):
+        ret = None
+        try:
+            ret = self.session.query(self.tablename).filter(self.tablename.type == record.type, self.tablename.identifier == record.identifier).update({self.tablename.cid: record.cid}, synchronize_session=False)
+        except Exception as e:
+            self.session.rollback()
+            #logging.error("IntegrityError adding record")
+            #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
+        else:
+            self.session.commit()
+        return ret

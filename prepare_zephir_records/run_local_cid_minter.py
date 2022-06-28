@@ -4,19 +4,14 @@ import sys
 
 import environs
 import logging
-import json
 
 from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
-from cid_minter.local_cid_minter import prepare_database
-from cid_minter.local_cid_minter import find_cids_by_ocns
-from cid_minter.local_cid_minter import find_cid_by_sysid
-from cid_minter.local_cid_minter import insert_a_record
-from cid_minter.local_cid_minter import invalid_sql_in_clause_str
+from cid_minter.local_cid_minter import LocalMinter 
 
 def usage(script_name):
-        print("Usage: {} env[dev|stg|prd] action[read|write] type[ocn|sysid] data[comma_separated_ocns|sys_id] cid".format(script_name))
-        print("{} dev read ocn 8727632,32882115".format(script_name))
+        print("Usage: {} env[dev|stg|prd] action[read|write] type[ocn|sysid] data[ocn|sys_id] cid".format(script_name))
+        print("{} dev read ocn 8727632".format(script_name))
         print("{} dev read sysid uc1234567".format(script_name))
         print("{} dev write ocn 30461866 011323406".format(script_name))
         print("{} dev write sysid uc1234567 011323407".format(script_name))
@@ -85,31 +80,16 @@ def main():
 
     DB_CONNECT_STR = os.environ.get('OVERRIDE_DB_CONNECT_STR') or db_config
 
-    db = prepare_database(DB_CONNECT_STR)
-    engine = db['engine']
-    session = db['session']
-    CidMintingStore = db['table']
+    db = LocalMinter(DB_CONNECT_STR)
 
     results = {} 
     if action == "read":
-        if data_type == "ocn":
-            results = find_cids_by_ocns(engine, data.split(","))
-
-        if data_type == "sysid":
-            results = find_cid_by_sysid(CidMintingStore, session, data)
-        
-        engine.dispose()
-        print(json.dumps(results))
-        exit(0)
+        results = db.find_cid(data_type, data)
+        print(results)
 
     if action == "write":
-        record = CidMintingStore(type=data_type, identifier=data, cid=cid)
-        inserted = insert_a_record(session, record)
-        engine.dispose()
-        if inserted != "Success":
-            exit(1)
-        else:
-            exit(0)
+        ret = db.write_identifier(data_type, data, cid)
+        print(ret)
 
 if __name__ == "__main__":
     main()

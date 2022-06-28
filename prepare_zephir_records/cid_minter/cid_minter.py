@@ -9,14 +9,15 @@ class CidMinter:
     def __init__(self, config, ids):
         self.config = config
         self.ids = ids 
-
+        self._zephir_db = ZephirDatabase(self.config.get("zephirdb_connect_str"))
+        self._local_minter_db = None
+        self._leveldb_primary_path = self.config.get("leveldb_primary_path")
+        self._leveldb_cluster_path = self.config.get("leveldb_cluster_path")
+     
     def mint_cid(self):
         ocns = self.ids.get("ocns")
-        zephirDb = ZephirDatabase(self.config.get("zephirdb_connect_str"))
-        leveldb_primary_path = self.config.get("leveldb_primary_path")
-        leveldb_cluster_path = self.config.get("leveldb_cluster_path")
 
-        results = cid_inquiry_by_ocns(ocns, zephirDb, leveldb_primary_path, leveldb_cluster_path) 
+        results = cid_inquiry_by_ocns(ocns, self._zephir_db, self._leveldb_primary_path, self._leveldb_cluster_path) 
         print(results)
         return results['min_cid']
 
