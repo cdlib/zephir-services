@@ -11,7 +11,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import IntegrityError
 
-import json
 import logging
 
 class LocalMinter:
@@ -45,12 +44,15 @@ class LocalMinter:
     def write_identifier(self, data_type, identifier, cid):
         record = self.tablename(type=data_type, identifier=identifier, cid=cid)
         if self._find_record(record):
+            logging.info("Record exists. No need to update")
             return "Record exists. No need to update"
         if self._find_record_by_identifier(data_type, identifier):
             if self._update_a_record(record):
-                return "Updated an exsiting record"
+                logging.info("Updated an exsiting record")
+                logging.info("Updated an exsiting record")
         else:
             if self._insert_a_record(record):
+                logging.info("Inserted a new record")
                 return "Inserted a new record"
         return None
 
@@ -84,6 +86,8 @@ class LocalMinter:
         return record
 
     def _insert_a_record(self, record):
+        """return 1 when successfully updated a record
+        """
         ret = None
         try:
             self.session.add(record)
@@ -91,21 +95,22 @@ class LocalMinter:
             ret = 1
         except Exception as e:
             self.session.rollback()
-            #logging.error("IntegrityError adding record")
-            #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
-            #return "Database Error: failed to insert a record"
+            logging.error("Database Error: failed to insert a record")
+            logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
         else:
             self.session.commit()
         return ret
 
     def _update_a_record(self, record):
+        """return 1 when successfully updated a record
+        """
         ret = None
         try:
             ret = self.session.query(self.tablename).filter(self.tablename.type == record.type, self.tablename.identifier == record.identifier).update({self.tablename.cid: record.cid}, synchronize_session=False)
         except Exception as e:
             self.session.rollback()
-            #logging.error("IntegrityError adding record")
-            #logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
+            logging.error("Database Error: failed to update a record")
+            logging.info("type: {}, value: {}, cid: {} ".format(record.type, record.identifier, record.cid))
         else:
             self.session.commit()
         return ret
