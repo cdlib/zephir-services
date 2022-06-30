@@ -30,6 +30,23 @@ class CidMinter:
         current_cid = self._zephir_db.find_cid_by_htid(htid)
         logging.info(f"current cid {current_cid}")
 
+        matched_cids = []
+        for ocn in ocns:
+            results = self._local_minter_db.find_cid("ocn", str(ocn))
+            logging.info("minting results from local minter by ocn: {}".format(ocn))
+            logging.info(results)
+            if results:
+                matched_cids.append(results.get('matched_cid'))
+        print(matched_cids)
+        if len(matched_cids) == 0:
+            logging.info("No CID found in local minter")
+        elif len(matched_cids) == 1:
+            assigned_cid = matched_cids[0]
+            logging.info("Found CID by ocn in local minter")
+        else:
+            logging.error("Local minter error: found more than one matches")
+            logging.info(results)
+
         results = cid_inquiry_by_ocns(ocns, self._zephir_db, self._leveldb_primary_path, self._leveldb_cluster_path) 
         logging.info("minting results by ocns:")
         logging.info(results)
