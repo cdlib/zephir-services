@@ -197,10 +197,9 @@ def test_update_a_non_existing_record(caplog, create_test_db):
     # non-existing record
     ocn = "1234567890123"
     cid = "9999123456789"
-    expected = {}
     result = db.find_cid("ocn", ocn)
     print(result)
-    assert result == expected
+    assert result == {} 
 
     # updated record
     cid = "123456789"
@@ -238,6 +237,8 @@ def test_insert_a_record(caplog, create_test_db):
     record = CidMintingStore(type='ocn', identifier='30461866', cid='011323406')
     ret = db._insert_a_record(record)
     assert ret is None    # failed insert
+    assert "database error" in caplog.text.lower()
+
     results = db._find_all()
     assert len(results) == 6
     assert any([record.type, record.identifier, record.cid] == ['ocn', '30461866', '011323406'] for record in results)

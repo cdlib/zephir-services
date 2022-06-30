@@ -69,14 +69,16 @@ class Database:
 
 class ZephirDatabase(Database):
     SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
-    FROM zephir_records as z
-    INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
-    INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
-    WHERE z.cid != '0' AND i.type = 'oclc'
+        FROM zephir_records as z
+        INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
+        INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
+        WHERE z.cid != '0' AND i.type = 'oclc'
     """
     AND_IDENTIFIER_IN = "AND i.identifier in"
     AND_CID_IN = "AND z.cid in"
     ORDER_BY = "ORDER BY z.cid, i.identifier"
+
+    SELECT_CID_BY_HTID = "SELECT cid from zephir_records where id=:id"
 
     def __init__(self, db_connect_str):
         super().__init__(db_connect_str)
@@ -193,10 +195,10 @@ class ZephirDatabase(Database):
         }
         return zephir_cluster
 
-    def _get_query_results(self, query):
+    def _get_query_results(self, query, params=None):
         if query:
             try:
-                results = self.findall(text(query))
+                results = self.findall(text(query), params)
                 return results
             except:
                 return None
@@ -248,6 +250,11 @@ class ZephirDatabase(Database):
         """
         query = self._construct_select_contribsys_id_by_cid(list_to_str(cid_list))
         return self._get_query_results(query)
+
+    def find_cid_by_htid(self, id):
+        query = ZephirDatabase.SELECT_CID_BY_HTID
+        params = {"id": id}
+        return self._get_query_results(query, params)
 
 
 def list_to_str(a_list):
