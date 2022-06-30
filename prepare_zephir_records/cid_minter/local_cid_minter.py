@@ -49,7 +49,7 @@ class LocalMinter:
         if self._find_record_by_identifier(data_type, identifier):
             if self._update_a_record(record):
                 logging.info("Updated an exsiting record")
-                logging.info("Updated an exsiting record")
+                return("Updated an exsiting record")
         else:
             if self._insert_a_record(record):
                 logging.info("Inserted a new record")
