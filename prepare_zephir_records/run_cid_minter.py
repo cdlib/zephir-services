@@ -17,6 +17,21 @@ def usage(script_name):
     print("Parameter error.")
     print("Usage: {} env[dev|stg|prd] path_to_IDs_file".format(script_name))
 
+def config_logger(logfile):
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    log_format = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    # output to file
+    file = logging.FileHandler(logfile)
+    file.setFormatter(log_format)
+
+    # output to console
+    stream = logging.StreamHandler()
+
+    logger.addHandler(file)
+    logger.addHandler(stream)
+
 def main():
     """ Retrieves Zephir clusters by OCNs.
         Command line arguments:
@@ -47,11 +62,8 @@ def main():
     cluster_db_path = localdb_config["cluster_db_path"]
     logfile = localdb_config["logpath"]
 
-    logging.basicConfig(
-            level=logging.DEBUG,
-            filename=logfile,
-            format="%(asctime)s %(levelname)-4s %(message)s",
-        )
+    config_logger(logfile)
+
     logging.info("Start " + os.path.basename(__file__))
     logging.info("Env: {}".format(env))
 

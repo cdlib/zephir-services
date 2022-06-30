@@ -29,20 +29,16 @@ class CidMinter:
 
         current_cid = self._zephir_db.find_cid_by_htid(htid)
         logging.info(f"current cid {current_cid}")
-        print(f"current cid {current_cid}")
 
         results = cid_inquiry_by_ocns(ocns, self._zephir_db, self._leveldb_primary_path, self._leveldb_cluster_path) 
         logging.info("minting results by ocns:")
         logging.info(results)
-        print("minting results by ocns:")
-        print(results)
+
         assigned_cid = results['min_cid']
 
         results = self._zephir_db.find_zephir_clusters_by_contribsys_ids([sysid])
         logging.info("minting results by sysid")
         logging.info(results)
-        print("minting results by sysid")
-        print(results)
 
         return assigned_cid 
 
