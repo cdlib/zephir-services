@@ -37,28 +37,49 @@ class CidMinter:
         else:
             logging.info(f"No CID/item found in Zephir DB by htid: {htid}")
 
-        logging.info(f"Find CID in local minter by OCNs: {ocns}")
-        matched_cids = []
-        for ocn in ocns:
-            results = self._local_minter_db.find_cid("ocn", str(ocn))
-            logging.info(f"Minting results from local minter by OCN: {ocn}: {results}")
-            if results and results.get('matched_cid') not in matched_cids:
-                matched_cids.append(results.get('matched_cid'))
-        if len(matched_cids) == 0:
-            logging.info(f"Local minter: No CID found by OCNs: {ocns}")
-        elif len(matched_cids) == 1:
-            assigned_cid = matched_cids[0]
-            logging.info(f"Local minter: Found matched CID: {matched_cids} by OCNs: {ocns}")
-        else:
-            logging.error(f"Local minter error: Found more than one matched CID: {matched_cids} by OCNs: {ocns}")
-
+        assigned_cid = self._find_cid_in_local_minter("ocn", ocns)
         if assigned_cid:
             if assigned_cid != current_cid:
                 logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
             return assigned_cid
 
+        assigned_cid = self._find_cid_in_zephir_by_ocns(ocns)
+        if assigned_cid:
+            if assigned_cid != current_cid:
+                logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
+            return assigned_cid
+
+        logging.info(f"Find CID in Zephir Database by contribsys IDs: {sysid}")
+        results = self._zephir_db.find_zephir_clusters_by_contribsys_ids([sysid])
+
+        logging.info("Minting results by sysid:")
+        logging.info(results)
+
+        return assigned_cid 
+
+    def _find_cid_in_local_minter(self, id_type, values):
+        logging.info(f"Find CID in local minter by {id_type}: {values}")
+        assigned_cid = None
+        matched_cids = []
+        for value in values:
+            results = self._local_minter_db.find_cid(id_type, str(value))
+            logging.info(f"Minting results from local minter by {id_type}: {value}: {results}")
+            if results and results.get('matched_cid') not in matched_cids:
+                matched_cids.append(results.get('matched_cid'))
+        if len(matched_cids) == 0:
+            logging.info(f"Local minter: No CID found by {id_type}: {values}")
+        elif len(matched_cids) == 1:
+            assigned_cid = matched_cids[0]
+            logging.info(f"Local minter: Found matched CID: {matched_cids} by {id_type}: {values}")
+        else:
+            logging.error(f"Local minter error: Found more than one matched CID: {matched_cids} by {id_type}: {values}")
+
+        return assigned_cid
+
+    def _find_cid_in_zephir_by_ocns(self, ocns):
         logging.info(f"Find CID in Zephir Database by OCNs: {ocns}")
-        results = cid_inquiry_by_ocns(ocns, self._zephir_db, self._leveldb_primary_path, self._leveldb_cluster_path) 
+        assigned_cid = None
+        results = cid_inquiry_by_ocns(ocns, self._zephir_db, self._leveldb_primary_path, self._leveldb_cluster_path)
         logging.info(f"Minting results by OCNs: {results}")
 
         if results:
@@ -82,17 +103,4 @@ class CidMinter:
                 else:
                     logging.warn(f"ZED code: pr0091 - Record with one OCLC matches more than one CID. {msg_detail}")
 
-            if assigned_cid:
-                if assigned_cid != current_cid:
-                    logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
-                return assigned_cid
-
-        logging.info(f"Find CID in Zephir Database by contribsys IDs: {sysid}")
-        results = self._zephir_db.find_zephir_clusters_by_contribsys_ids([sysid])
-
-        logging.info("Minting results by sysid:")
-        logging.info(results)
-
-        return assigned_cid 
-
-
+        return assigned_cid
