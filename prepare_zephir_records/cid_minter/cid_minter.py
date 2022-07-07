@@ -39,13 +39,13 @@ class CidMinter:
 
         assigned_cid = self._find_cid_in_local_minter("ocn", ocns)
         if assigned_cid:
-            if assigned_cid != current_cid:
+            if current_cid and current_cid != assigned_cid:
                 logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
             return assigned_cid
 
         assigned_cid = self._find_cid_in_zephir_by_ocns(ocns)
         if assigned_cid:
-            if assigned_cid != current_cid:
+            if current_cid and current_cid != assigned_cid:
                 logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
             return assigned_cid
 
