@@ -99,8 +99,8 @@ class CidMinter:
             if num_of_matched_zephir_clusters > 1:
                 msg_detail = f"Record with OCLCs ({ocns}) matches {num_of_matched_zephir_clusters} CIDs ({cid_list}) used {assigned_cid}"
                 if len(ocns) > 1:
-                    logging.warn(f"ZED code: pr0090 - Record with OCLC numbers match more than one CID. {msg_detail}")
+                    logging.warning(f"ZED code: pr0090 - Record with OCLC numbers match more than one CID. {msg_detail}")
                 else:
-                    logging.warn(f"ZED code: pr0091 - Record with one OCLC matches more than one CID. {msg_detail}")
+                    logging.warning(f"ZED code: pr0091 - Record with one OCLC matches more than one CID. {msg_detail}")
 
         return assigned_cid
