@@ -58,6 +58,7 @@ def main():
 
     localdb_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
     localdb_conn_str = str(db_connect_url(localdb_config[env]["minter_db"]))
+
     primary_db_path = localdb_config["primary_db_path"]
     cluster_db_path = localdb_config["cluster_db_path"]
     logfile = localdb_config["logpath"]
@@ -84,8 +85,7 @@ def main():
     with open(ids_file) as json_file:
         data = json.load(json_file)
         for ids in data:
-            print(ids)
-    
+            print(f"IDs: {ids}")
             cid_minter = CidMinter(config, ids)
             cid = cid_minter.mint_cid() 
             print(cid)
