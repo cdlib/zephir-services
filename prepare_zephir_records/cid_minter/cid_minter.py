@@ -10,6 +10,8 @@ from cid_minter.local_cid_minter import LocalMinter
 from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
 
 class CidMinter:
+    """Mint CID from local minter and Zephir database based on given record IDs.
+    """
     def __init__(self, config, ids):
         self.config = config
         self.ids = ids 
@@ -20,6 +22,7 @@ class CidMinter:
      
     def mint_cid(self):
         """Assign CID by OCNs, local system IDs or previous local system IDs.
+        Search CID in the local minter first. If there is no matched CID found then search the Zephir database.
         Return assgined CID.
         """
         htid =  None
@@ -41,39 +44,37 @@ class CidMinter:
             raise ValueError("ID error: missing required htid")
 
         logging.info(f"Find current CID by htid: {htid}")
-        if self._zephir_db.find_cid_by_htid(htid):
-            current_cid = self._zephir_db.find_cid_by_htid(htid)[0].get("cid")
+        results = self._zephir_db.find_cid_by_htid(htid)
+        if results:
+            current_cid = results[0].get("cid")
             logging.info(f"Found current CID: {current_cid} by htid: {htid}")
         else:
             logging.info(f"No CID/item found in Zephir DB by htid: {htid}")
 
         if ocns:
             assigned_cid = self._find_cid_in_local_minter("ocn", ocns)
-            if assigned_cid:
-                if current_cid and current_cid != assigned_cid:
-                    logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
-                return assigned_cid
-
-            assigned_cid = self._find_cid_in_zephir_by_ocns(ocns)
-            if assigned_cid:
-                if current_cid and current_cid != assigned_cid:
-                    logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
-                return assigned_cid
+            if not assigned_cid:
+                assigned_cid = self._find_cid_in_zephir_by_ocns(ocns)
         else:
             logging.info(f"No OCLC number: Record {htid} does not contain OCLC number.")
 
-        if sysids:
+        if sysids and not assigned_cid:
             assigned_cid = self._find_cid_in_local_minter("contribsys_id", sysids)
-            if assigned_cid:
-                if current_cid and current_cid != assigned_cid:
-                    logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
-                return assigned_cid
+            if not assigned_cid:
+                assigned_cid = self._find_cid_in_zephir_by_sysids(sysids)
 
-            assigned_cid = self._find_cid_in_zephir_by_sysids(sysids)
+        if assigned_cid and current_cid and current_cid != assigned_cid:
+            logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
 
         return assigned_cid 
 
     def _find_cid_in_local_minter(self, id_type, values):
+        """Find CID in the local minter database.
+        Args:
+           id_type: ID type. Possible values are: ocn, contribsys_id
+           values: list of strings
+        Returns: matched CID in string
+        """
         logging.info(f"Find CID in local minter by {id_type}: {values}")
         assigned_cid = None
         matched_cids = []
