@@ -85,10 +85,14 @@ def main():
     with open(ids_file) as json_file:
         data = json.load(json_file)
         for ids in data:
-            print(f"IDs: {ids}")
-            cid_minter = CidMinter(config, ids)
-            cid = cid_minter.mint_cid() 
-            print(cid)
+            try:
+                print(f"IDs: {ids}")
+                cid_minter = CidMinter(config, ids)
+                cid = cid_minter.mint_cid() 
+                print(f"Minted CID {cid}")
+            except Exception as e:
+                print(f"Exception: {e}")
+                continue
 
 
 if __name__ == "__main__":
