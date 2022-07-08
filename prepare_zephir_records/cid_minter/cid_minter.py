@@ -69,11 +69,7 @@ class CidMinter:
                     logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
                 return assigned_cid
 
-            logging.info(f"Find CID in Zephir Database by contribsys IDs: {sysids}")
-            results = self._zephir_db.find_zephir_clusters_by_contribsys_ids(sysids)
-
-            logging.info("Minting results from Zephir by sysids:")
-            logging.info(results)
+            assigned_cid = self._find_cid_in_zephir_by_sysids(sysids)
 
         return assigned_cid 
 
@@ -83,7 +79,6 @@ class CidMinter:
         matched_cids = []
         for value in values:
             results = self._local_minter_db.find_cid(id_type, str(value))
-            logging.info(f"Minting results from local minter by {id_type}: {value}: {results}")
             if results and results.get('matched_cid') not in matched_cids:
                 matched_cids.append(results.get('matched_cid'))
         if len(matched_cids) == 0:
@@ -97,6 +92,20 @@ class CidMinter:
         return assigned_cid
 
     def _find_cid_in_zephir_by_ocns(self, ocns):
+        """Search Zephir clusters by OCLC numbers.
+           Return matched cluster ID.
+           Sample search results:
+           {
+           'inquiry_ocns': [80274381, 25231018], 
+           'matched_oclc_clusters': [[25231018], [80274381]], 
+           'num_of_matched_oclc_clusters': 2, 
+           'inquiry_ocns_zephir': [25231018, 80274381], 
+           'cid_ocn_list': [{'cid': '009705704', 'ocn': '25231018'}, {'cid': '009705704', 'ocn': '80274381'}], 
+           'cid_ocn_clusters': {'009705704': ['25231018', '80274381']}, 
+           'num_of_matched_zephir_clusters': 1, 
+           'min_cid': '009705704'
+           }
+        """
         logging.info(f"Find CID in Zephir Database by OCNs: {ocns}")
         assigned_cid = None
         results = cid_inquiry_by_ocns(ocns, self._zephir_db, self._leveldb_primary_path, self._leveldb_cluster_path)
@@ -108,8 +117,11 @@ class CidMinter:
             assigned_cid = results.get('min_cid')
             cid_list = list(dict.fromkeys(results.get('cid_ocn_clusters')));
 
-            if num_of_matched_oclc_clusters > 1:
-                logging.info("ZED code: pr0096 - Record OCNs match more than one OCLC Concordance clusters")
+            if num_of_matched_oclc_clusters:
+                if num_of_matched_oclc_clusters > 1:
+                    logging.info(f"ZED code: pr0096 - Record OCNs {ocns} match more than one OCLC Concordance clusters")
+            else:
+                logging.error(f"ZED code: XXXX - OCLC Concordance Table does not contain record OCNs {ocns} ")
 
             if num_of_matched_zephir_clusters == 0:
                 logging.info(f"Zephir minter: No CID found by OCNs: {ocns}")
@@ -119,8 +131,42 @@ class CidMinter:
             if num_of_matched_zephir_clusters > 1:
                 msg_detail = f"Record with OCLCs ({ocns}) matches {num_of_matched_zephir_clusters} CIDs ({cid_list}) used {assigned_cid}"
                 if len(ocns) > 1:
-                    logging.warning(f"ZED code: pr0090 - Record with OCLC numbers match more than one CID. {msg_detail}")
+                    logging.warning(f"ZED code: pr0090 - Record with OCLC numbers match more than one CID. - {msg_detail}")
                 else:
-                    logging.warning(f"ZED code: pr0091 - Record with one OCLC matches more than one CID. {msg_detail}")
+                    logging.warning(f"ZED code: pr0091 - Record with one OCLC matches more than one CID. - {msg_detail}")
 
         return assigned_cid
+
+    def _find_cid_in_zephir_by_sysids(self, sysids):
+        """Search Zephir clusters by contrib sysids.
+           Return matched cluster ID.
+           Sample search results: 
+             [{'cid': '002492721', 'contribsys_id': 'pur215476'}, {'cid': '009705704', 'contribsys_id': 'hvd000012735'}]
+        """
+        logging.info(f"Find CID in Zephir Database by contribsys IDs: {sysids}")
+        assigned_cid = None
+        results = self._zephir_db.find_zephir_clusters_by_contribsys_ids(sysids)
+        logging.info(f"Minting results from Zephir by sysids: {results}")
+        
+        if results:
+            assigned_cid = min(item.get('cid') for item in results )
+            cid_list = list(item.get('cid') for item in results) 
+            logging.info(f"Zephir minter: Found matched CIDs: {cid_list} by contrib sysids: {sysids}")
+            if len(results) > 1:
+                msg_detail = f"Record with local num ({sysids}) matches {len(results)} CIDs ({cid_list}) used {assigned_cid}";
+                logging.warning(f"ZED code: pr0089 - Record with local number matches more than one CID. - {msg_detail} ")
+
+            if self._cluster_contain_multiple_contribsys(assigned_cid):
+                logging.warning(f"Zephir cluster contains records from different contrib systems. Skip this CID ({assigned_cid}) assignment")
+                assigned_cid = None
+        else:
+            logging.info(f"Zephir minter: No CID found by local num: {sysids}")
+
+        return assigned_cid
+
+    def _cluster_contain_multiple_contribsys(self, cid):
+        results = self._zephir_db.find_zephir_clusters_and_contribsys_ids_by_cid([cid])
+        if results and len(results) > 1:
+            return True
+        else:
+            return False

@@ -21,7 +21,7 @@ def config_logger(logfile):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
-    log_format = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    log_format = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s: %(message)s')
     # output to file
     file = logging.FileHandler(logfile)
     file.setFormatter(log_format)

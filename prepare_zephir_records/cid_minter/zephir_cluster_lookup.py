@@ -231,7 +231,6 @@ class ZephirDatabase(Database):
     def find_zephir_clusters_by_contribsys_ids(self, contribsys_id_list):
         """
         Args:
-            zephirDb: Database class 
             contribsys_id_list: list of contribsys IDs in string
         Returns:
             list of dict with keys "cid" and "contribsys_id"
@@ -242,8 +241,7 @@ class ZephirDatabase(Database):
     def find_zephir_clusters_and_contribsys_ids_by_cid(self, cid_list):
         """
         Args:
-            zephirDb: Database class
-            cid: a CID
+            cid_list: list of CIDs
             contribsys_id_list: list of contribsys IDs in string
         Returns:
             list of dict with keys "cid" and "contribsys_id"
