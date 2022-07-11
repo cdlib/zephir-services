@@ -570,6 +570,7 @@ def test_convert_comma_separated_str_to_int_list():
         "error_4": "0",
         "error_5": "0,-123",
         "error_6": "abc,xyz",
+        "none": None
     }
     expected = {
         "1_item": [1],
@@ -585,6 +586,7 @@ def test_convert_comma_separated_str_to_int_list():
         "error_4": [],
         "error_5": [],
         "error_6": [],
+        "none": []
     }
     for k, val in input_list.items():
         assert expected[k] == convert_comma_separated_str_to_int_list(val)

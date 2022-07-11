@@ -21,7 +21,7 @@ def config_logger(logfile):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
-    log_format = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    log_format = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s: %(message)s')
     # output to file
     file = logging.FileHandler(logfile)
     file.setFormatter(log_format)
@@ -85,10 +85,14 @@ def main():
     with open(ids_file) as json_file:
         data = json.load(json_file)
         for ids in data:
-            print(f"IDs: {ids}")
-            cid_minter = CidMinter(config, ids)
-            cid = cid_minter.mint_cid() 
-            print(cid)
+            try:
+                print(f"IDs: {ids}")
+                cid_minter = CidMinter(config, ids)
+                cid = cid_minter.mint_cid() 
+                print(f"Minted CID {cid}")
+            except Exception as e:
+                print(f"Exception: {e}")
+                continue
 
 
 if __name__ == "__main__":
