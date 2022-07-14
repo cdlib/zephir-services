@@ -2,22 +2,22 @@
 {
   "ocns": "80274381,25231018", 
   "contribsys_ids": "hvd000012735,hvd.000012735", 
-  "previous_contribsys_idss": ""
+  "previous_contribsys_ids": ""
 },
 {
   "ocns": "80274381,25231018", 
   "contribsys_ids": "hvd000012735,hvd.000012735", 
-  "previous_contribsys_idss": "", 
+  "previous_contribsys_ids": "", 
   "htid": "hvd.hw5jdo"
 },
 {
   "contribsys_ids": "hvd000012735,hvd.000012735", 
-  "previous_contribsys_idss": "", 
+  "previous_contribsys_ids": "", 
   "htid": "hvd.hw5jdo"
 },
 {
   "contribsys_ids": "hvd000012735,pur215476", 
-  "previous_contribsys_idss": "", 
+  "previous_contribsys_ids": "", 
   "htid": "hvd.hw5jdo"
 },
 {
@@ -27,25 +27,31 @@
 {
   "ocns": "8727632",
   "contribsys_ids": "pur215476,pur.215476",
-  "previous_contribsys_idss": "",
+  "previous_contribsys_ids": "",
   "htid": "pur1.32754075735872"
 },
 {
   "ocns": "8727632,30461866",
   "contribsys_ids": "pur215476",
-  "previous_contribsys_idss": "",
+  "previous_contribsys_ids": "",
   "htid": "pur1.32754075735872"
 },
 {
   "ocns": "222146209,32882115",
   "contribsys_ids":"pur864352",
-  "previous_contribsys_idss": "",
+  "previous_contribsys_ids": "",
   "htid": "pur1.32754066154513"
 },
 {
   "ocns": "1234567890123",
   "contribsys_ids":"pur1234567890",
-  "previous_contribsys_idss": "",
+  "previous_contribsys_ids": "",
   "htid": "pur1.1234567890"
+},
+{
+  "ocns": "",
+  "contribsys_ids":"pur1234567890",
+  "previous_contribsys_ids": "pur215476",
+  "htid": "pur1.12345678901"
 }
 ]

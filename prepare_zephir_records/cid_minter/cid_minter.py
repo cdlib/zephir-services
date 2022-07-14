@@ -1,5 +1,6 @@
 import os
 import sys
+from enum import Enum
 
 import logging
 
@@ -8,6 +9,12 @@ from cid_minter.zephir_cluster_lookup import ZephirDatabase
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
 from cid_minter.local_cid_minter import LocalMinter
 from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
+
+class IdType(Enum):
+    OCN = "ocn"
+    SYSID = "contribsys id" 
+    PREV_SYSID = "previous contribsys id"
+
 
 class CidMinter:
     """Mint CID from local minter and Zephir database based on given record IDs.
@@ -36,8 +43,8 @@ class CidMinter:
         ocns = convert_comma_separated_str_to_int_list(self.ids.get("ocns"))
         if self.ids.get("contribsys_ids"):
             sysids = self.ids.get("contribsys_ids").split(",")
-        if self.ids.get("previous_sysids"):
-            previous_sysids = self.ids.get("previous_sysids").split(",")
+        if self.ids.get("previous_contribsys_ids"):
+            previous_sysids = self.ids.get("previous_contribsys_ids").split(",")
 
         if htid is None:
             logging.error("ID error: missing required htid")
@@ -52,43 +59,60 @@ class CidMinter:
             logging.info(f"No CID/item found in Zephir DB by htid: {htid}")
 
         if ocns:
-            assigned_cid = self._find_cid_in_local_minter("ocn", ocns)
+            assigned_cid = self._find_cid_in_local_minter(IdType.OCN, ocns)
             if not assigned_cid:
                 assigned_cid = self._find_cid_in_zephir_by_ocns(ocns)
         else:
             logging.info(f"No OCLC number: Record {htid} does not contain OCLC number.")
 
         if sysids and not assigned_cid:
-            assigned_cid = self._find_cid_in_local_minter("contribsys_id", sysids)
+            assigned_cid = self._find_cid_in_local_minter(IdType.SYSID, sysids)
             if not assigned_cid:
-                assigned_cid = self._find_cid_in_zephir_by_sysids(sysids)
+                assigned_cid = self._find_cid_in_zephir_by_sysids(IdType.SYSID, sysids)
+
+        if previous_sysids and not assigned_cid:
+            assigned_cid = self._find_cid_in_local_minter(IdType.PREV_SYSID, previous_sysids)
+            if not assigned_cid:
+                assigned_cid = self._find_cid_in_zephir_by_sysids(IdType.PREV_SYSID, previous_sysids)
 
         if assigned_cid and current_cid and current_cid != assigned_cid:
             logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
 
         return assigned_cid 
 
-    def _find_cid_in_local_minter(self, id_type, values):
+    def _find_cid_in_local_minter(self, input_id_type, values):
         """Find CID in the local minter database.
         Args:
-           id_type: ID type. Possible values are: ocn, contribsys_id
+           input_id_type: ID type defined by enum class IDType.
            values: list of strings
         Returns: matched CID in string
         """
-        logging.info(f"Find CID in local minter by {id_type}: {values}")
+        if type(input_id_type) != IdType:
+            err_msg = f"Data type error: ID type should be IdType. Type {type(input_id_type)} was used instead."
+            logging.error(err_msg)
+            raise TypeError(err_msg)
+
+        logging.info(f"Find CID in local minter by {input_id_type.name}: {values}")
+
+        if input_id_type == IdType.OCN:
+            id_type = "ocn"
+        else:
+            id_type = "contribsys_id"
+
         assigned_cid = None
         matched_cids = []
+
         for value in values:
             results = self._local_minter_db.find_cid(id_type, str(value))
             if results and results.get('matched_cid') not in matched_cids:
                 matched_cids.append(results.get('matched_cid'))
         if len(matched_cids) == 0:
-            logging.info(f"Local minter: No CID found by {id_type}: {values}")
+            logging.info(f"Local minter: No CID found by {input_id_type.name}: {values}")
         elif len(matched_cids) == 1:
             assigned_cid = matched_cids[0]
-            logging.info(f"Local minter: Found matched CID: {matched_cids} by {id_type}: {values}")
+            logging.info(f"Local minter: Found matched CID: {matched_cids} by {input_id_type.name}: {values}")
         else:
-            logging.error(f"Local minter error: Found more than one matched CID: {matched_cids} by {id_type}: {values}")
+            logging.error(f"Local minter error: Found more than one matched CID: {matched_cids} by {input_id_type.name}: {values}")
 
         return assigned_cid
 
@@ -138,21 +162,42 @@ class CidMinter:
 
         return assigned_cid
 
-    def _find_cid_in_zephir_by_sysids(self, sysids):
+    def _find_cid_in_zephir_by_sysids(self, input_id_type, sysids):
         """Search Zephir clusters by contrib sysids.
-           Return matched cluster ID.
+        Args:
+           input_id_type: ID type defined by enum class IDType.
+           sysids: list of strings
+        Returns: matched cluster ID.
            Sample search results: 
-             [{'cid': '002492721', 'contribsys_id': 'pur215476'}, {'cid': '009705704', 'contribsys_id': 'hvd000012735'}]
+             [{'cid': '002492721', 'contribsys_id': 'pur215476'}, 
+              {'cid': '009705704', 'contribsys_id': 'hvd000012735'}]
         """
-        logging.info(f"Find CID in Zephir Database by contribsys IDs: {sysids}")
-        assigned_cid = None
+        if type(input_id_type) != IdType:
+            err_msg = f"Data type error: ID type should be IdType. Type {type(input_id_type)} was used instead."
+            logging.error(err_msg)
+            raise TypeError(err_msg)
+
+        logging.info(f"Find CID in Zephir Database by {input_id_type.name}: {sysids}")
+
+        if input_id_type not in [IdType.SYSID, IdType.PREV_SYSID]:
+            err_msg = f"ID type error: ID type should be IdType.SYSID or IdType.PREV_SYSID. {input_id_type.name} was used instead."
+            logging.error(err_msg)
+            raise TypeError(err_msg)
+
         results = self._zephir_db.find_zephir_clusters_by_contribsys_ids(sysids)
-        logging.info(f"Minting results from Zephir by sysids: {results}")
+        logging.info(f"Minting results from Zephir by {input_id_type.name}: {results}")
         
+        if input_id_type == IdType.SYSID:
+            return self._sysid_results(results, sysids)
+        else:
+            return self._previous_sysid_results(results, sysids)
+        
+    def _sysid_results(self, results, sysids):
+        assigned_cid = None
         if results:
             assigned_cid = min(item.get('cid') for item in results )
             cid_list = list(item.get('cid') for item in results) 
-            logging.info(f"Zephir minter: Found matched CIDs: {cid_list} by contrib sysids: {sysids}")
+            logging.info(f"Zephir minter: Found matched CIDs: {cid_list} by contribsys IDs: {sysids}")
             if len(results) > 1:
                 msg_detail = f"Record with local num ({sysids}) matches {len(results)} CIDs ({cid_list}) used {assigned_cid}";
                 logging.warning(f"ZED code: pr0089 - Record with local number matches more than one CID. - {msg_detail} ")
@@ -162,6 +207,24 @@ class CidMinter:
                 assigned_cid = None
         else:
             logging.info(f"Zephir minter: No CID found by local num: {sysids}")
+
+        return assigned_cid
+
+    def _previous_sysid_results(self, results, sysids):
+        assigned_cid = None
+        if results:
+            cid_list = list(item.get('cid') for item in results)
+            logging.info(f"Zephir minter: Found matched CIDs: {cid_list} by previous contribsys IDs: {sysids}")
+            if len(results) > 1:
+                msg_detail = f"Record with previous local num ({sysids}) matches {len(results)} CIDs ({cid_list})";
+                logging.error(f"ZED code: pr0042 - Record with previous local num matches more than one CID. - {msg_detail} ")
+            else:
+                assigned_cid = results[0].get('cid')
+                if self._cluster_contain_multiple_contribsys(assigned_cid):
+                    logging.warning(f"Zephir cluster contains records from different contrib systems. Skip this CID ({assigned_cid}) assignment")
+                    assigned_cid = None
+        else:
+            logging.info(f"Zephir minter: No CID found by previous contribsys IDs: {sysids}")
 
         return assigned_cid
 

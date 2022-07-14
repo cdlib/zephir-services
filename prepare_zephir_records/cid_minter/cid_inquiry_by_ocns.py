@@ -52,7 +52,7 @@ def flat_and_dedup_sort_list(list_of_lists):
     return sorted(new_list)
 
 def convert_comma_separated_str_to_int_list(ocn_str):
-    if ocn_str is None:
+    if not ocn_str or not ocn_str.strip():
         return  [] 
     int_list=[]
     str_list = ocn_str.split(",")

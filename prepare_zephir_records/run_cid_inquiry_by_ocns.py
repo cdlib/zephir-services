@@ -12,22 +12,7 @@ from lib.utils import get_configs_by_filename
 from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 from cid_minter.zephir_cluster_lookup import ZephirDatabase
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
-
-def convert_comma_separated_str_to_int_list(ocn_str):
-    int_list=[]
-    str_list = ocn_str.split(",")
-    for a_str in str_list:
-        try:
-            ocn = int(a_str)
-        except ValueError:
-            logging.error("ValueError: {}".format(a_str))
-            continue
-        if (ocn > 0):
-            int_list.append(ocn)
-        else:
-            logging.error("ValueError: {}".format(a_str))
-
-    return int_list
+from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
 
 def usage(script_name):
     print("Parameter error.")
