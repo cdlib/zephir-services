@@ -6,6 +6,7 @@ import logging
 
 from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 from cid_minter.zephir_cluster_lookup import ZephirDatabase
+from cid_minter.zephir_cluster_lookup import CidMinterTable 
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
 from cid_minter.local_cid_minter import LocalMinter
 from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
@@ -77,6 +78,13 @@ class CidMinter:
 
         if assigned_cid and current_cid and current_cid != assigned_cid:
             logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
+
+        if not assigned_cid:
+            current_minter = self._find_current_minter()
+            logging.info(f"Current minter: {current_minter}")
+            self._minter_new_cid()
+            assigned_cid = self._find_current_minter().get("cid")
+            logging.info(f"New minter: {assigned_cid}")
 
         return assigned_cid 
 
@@ -234,3 +242,13 @@ class CidMinter:
             return True
         else:
             return False
+
+    def _minter_new_cid(self):
+        cid_minter_table = CidMinterTable(self._zephir_db)
+        return cid_minter_table.mint_a_new_cid()
+
+    def _find_current_minter(self):
+        cid_minter_table = CidMinterTable(self._zephir_db)
+        return cid_minter_table.get_cid()
+
+

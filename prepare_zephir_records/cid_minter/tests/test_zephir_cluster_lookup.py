@@ -4,6 +4,7 @@ import pytest
 import environs
 
 from cid_minter.zephir_cluster_lookup import ZephirDatabase
+from cid_minter.zephir_cluster_lookup import CidMinterTable
 from cid_minter.zephir_cluster_lookup import valid_sql_in_clause_str
 from cid_minter.zephir_cluster_lookup import invalid_sql_in_clause_str
 from cid_minter.zephir_cluster_lookup import list_to_str
@@ -402,6 +403,18 @@ def test_find_cid_by_htid(create_test_db):
     htid = "test.12345"
     cids = zephirDb.find_cid_by_htid(htid)
     assert cids == [] 
+
+def test_update_cid_minter_table(create_test_db):
+    zephirDb = create_test_db
+    cid_minter_table = CidMinterTable(zephirDb)
+    cid_init = 100000000
+
+    result = cid_minter_table.get_cid()
+    assert result.get("cid") == str(cid_init)
+
+    cid_minter_table.mint_a_new_cid()
+    result = cid_minter_table.get_cid()
+    assert result.get("cid") == str(cid_init + 1)
 
 def test_list_to_str():
     input_list = {

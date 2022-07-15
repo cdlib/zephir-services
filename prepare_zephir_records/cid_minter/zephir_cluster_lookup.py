@@ -4,6 +4,9 @@ import re
 
 from sqlalchemy import create_engine
 from sqlalchemy import text
+from sqlalchemy import table, column, update
+
+import logging
 
 from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
@@ -22,6 +25,15 @@ class Database:
                 print("DB error: {}".format(e))
                 return None
             
+    def update(self, tablename, values, condition):
+        with self.engine.connect() as conn:
+            try:
+                update_stmt = update(tablename).values(values)
+                if condition:
+                    update_stmt = update_stmt.where(condition)
+                result = conn.execute(update_stmt)
+            except SQLAlchemyError as e:
+                print("DB update error: {}".format(e))
 
     def insert(self, db_table, records):
         """insert multiple records to a db table
@@ -254,6 +266,35 @@ class ZephirDatabase(Database):
         params = {"id": id}
         return self._get_query_results(query, params)
 
+class ZephirTables:
+    def __init__(self, database):
+        self.database = database
+        self.table = None
+
+    def update(self, values, condition):
+        if values:
+            self.database.update(self.table, values, condition)
+
+class CidMinterTable(ZephirTables):
+    def __init__(self, database):
+        super(CidMinterTable, self).__init__(database)
+        self.table = table("cid_minter", column("cid"))
+
+    def get_cid(self):
+        """Return the value in the cid field
+        """
+        results = self.database.findall(text("select cid from cid_minter"))
+        if results:
+            return results[0]
+        else:
+            err_msg = "Database error: No CID was found in the cid_minter table."
+            logging.error(err_msg)
+            raise ValueError(err_msg)
+
+    def mint_a_new_cid(self):
+        """Increase the cid counter by 1
+        """
+        self.update({"cid": self.table.c.cid +1}, condition=None)
 
 def list_to_str(a_list):
     """Convert list items to single quoted and comma separated string for MySQL IN Clause use.
