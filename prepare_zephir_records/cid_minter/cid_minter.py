@@ -66,20 +66,20 @@ class CidMinter:
         else:
             logging.info(f"No OCLC number: Record {htid} does not contain OCLC number.")
 
-        if sysids and not assigned_cid:
+        if sysids and self._cid_not_assigned_yet(assigned_cid):
             assigned_cid = self._find_cid_in_local_minter(IdType.SYSID, sysids)
             if not assigned_cid:
                 assigned_cid = self._find_cid_in_zephir_by_sysids(IdType.SYSID, sysids)
 
-        if previous_sysids and not assigned_cid:
+        if previous_sysids and self._cid_not_assigned_yet(assigned_cid): 
             assigned_cid = self._find_cid_in_local_minter(IdType.PREV_SYSID, previous_sysids)
             if not assigned_cid:
                 assigned_cid = self._find_cid_in_zephir_by_sysids(IdType.PREV_SYSID, previous_sysids)
 
-        if assigned_cid and current_cid and current_cid != assigned_cid:
+        if self._cid_assigned(assigned_cid) and current_cid and current_cid != assigned_cid:
             logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
 
-        if not assigned_cid:
+        if self._cid_not_assigned_yet(assigned_cid):
             current_minter = self._find_current_minter()
             logging.info(f"Current minter: {current_minter}")
             self._minter_new_cid()
@@ -87,6 +87,15 @@ class CidMinter:
             logging.info(f"New minter: {assigned_cid}")
 
         return assigned_cid 
+
+    def _cid_assigned(self, assigned_cid):
+        if assigned_cid and assigned_cid != '0':
+            return True
+        else:
+            return False
+
+    def _cid_not_assigned_yet(self, assigned_cid):
+        return not self._cid_assigned(assigned_cid)
 
     def _find_cid_in_local_minter(self, input_id_type, values):
         """Find CID in the local minter database.
