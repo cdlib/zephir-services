@@ -81,10 +81,9 @@ class CidMinter:
 
         if self._cid_not_assigned_yet(assigned_cid):
             current_minter = self._find_current_minter()
-            logging.info(f"Current minter: {current_minter}")
             self._minter_new_cid()
             assigned_cid = self._find_current_minter().get("cid")
-            logging.info(f"New minter: {assigned_cid}")
+            logging.info(f"Minted a new minter: {assigned_cid} - from current minter: {current_minter}")
 
         return assigned_cid 
 
