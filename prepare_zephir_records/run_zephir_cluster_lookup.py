@@ -7,7 +7,8 @@ from sqlalchemy import text
 
 from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
-from cid_minter.zephir_cluster_lookup import  ZephirDatabase:
+from cid_minter.zephir_cluster_lookup import ZephirDatabase
+from cid_minter.zephir_cluster_lookup import CidMinterTable
 
 def main():
     if (len(sys.argv) > 1):
@@ -32,6 +33,14 @@ def main():
     sysid_list = ['pur63733', 'nrlf.b100608668']
     results = zephirDb.zephir_clusters_lookup_by_sysids(sysid_list)
     print(results)
+
+    cid_minter_table = CidMinterTable(zephirDb)
+    cid = cid_minter_table.get_cid()
+    print(f"cid before update: {cid}")
+    #cid_minter_table.mint_a_new_cid()
+    #cid = cid_minter_table.get_cid()
+    #print(f"cid after update: {cid}")
+
 
 if __name__ == '__main__':
     main()

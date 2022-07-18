@@ -1,3 +1,13 @@
+DROP TABLE IF EXISTS cid_minter;
+
+CREATE TABLE cid_minter (
+  `cid` varchar(11) NOT NULL DEFAULT '',
+  `updated` DATETIME DEFAULT CURRENT_TIMESTAM,
+  PRIMARY KEY (`cid`)
+);
+
+insert into cid_minter (cid)  values (100000000);
+
 DROP TABLE IF EXISTS zephir_records;
 
 CREATE TABLE `zephir_records` (
