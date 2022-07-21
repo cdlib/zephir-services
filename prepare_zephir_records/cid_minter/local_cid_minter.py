@@ -44,18 +44,22 @@ class LocalMinter:
     def write_identifier(self, data_type, identifier, cid):
         record = self.tablename(type=data_type, identifier=identifier, cid=cid)
         if self._find_record(record):
-            logging.info("Record exists. No need to update")
-            return "Record exists. No need to update"
+            msg = "Local minter: Record exists. No need to update"
+            logging.info(msg)
+            return msg 
+
         if self._find_record_by_identifier(data_type, identifier):
             if self._update_a_record(record):
-                logging.info("Updated an exsiting record")
-                return("Updated an exsiting record")
-        else:
-            if self._insert_a_record(record):
-                logging.info("Inserted a new record")
-                return "Inserted a new record"
-        return None
+                msg = "Local minter: Updated an exsiting record"
+                logging.info(msg)
+                return msg
+        
+        if self._insert_a_record(record):
+            msg = "Local minter: Inserted a new record"
+            logging.info(msg)
+            return msg 
 
+        return None
 
     def _find_all(self):
         query = self.session.query(self.tablename)

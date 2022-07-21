@@ -53,5 +53,10 @@
   "contribsys_ids":"pur1234567890",
   "previous_contribsys_ids": "pur215476",
   "htid": "pur1.12345678901"
+},
+{
+  "ocns": "",
+  "contribsys_ids":"pur1234567892",
+  "htid": "pur1.12345678902"
 }
 ]

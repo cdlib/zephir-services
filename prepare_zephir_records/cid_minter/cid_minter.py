@@ -20,15 +20,14 @@ class IdType(Enum):
 class CidMinter:
     """Mint CID from local minter and Zephir database based on given record IDs.
     """
-    def __init__(self, config, ids):
+    def __init__(self, config):
         self.config = config
-        self.ids = ids 
         self._zephir_db = ZephirDatabase(self.config.get("zephirdb_conn_str"))
         self._local_minter_db = LocalMinter(self.config.get("localdb_conn_str"))
         self._leveldb_primary_path = self.config.get("leveldb_primary_path")
         self._leveldb_cluster_path = self.config.get("leveldb_cluster_path")
      
-    def mint_cid(self):
+    def mint_cid(self, ids):
         """Assign CID by OCNs, local system IDs or previous local system IDs.
         Search CID in the local minter first. If there is no matched CID found then search the Zephir database.
         Return assgined CID.
@@ -40,12 +39,12 @@ class CidMinter:
         current_cid = None
         assigned_cid = None
 
-        htid = self.ids.get("htid")
-        ocns = convert_comma_separated_str_to_int_list(self.ids.get("ocns"))
-        if self.ids.get("contribsys_ids"):
-            sysids = self.ids.get("contribsys_ids").split(",")
-        if self.ids.get("previous_contribsys_ids"):
-            previous_sysids = self.ids.get("previous_contribsys_ids").split(",")
+        htid = ids.get("htid")
+        ocns = convert_comma_separated_str_to_int_list(ids.get("ocns"))
+        if ids.get("contribsys_ids"):
+            sysids = ids.get("contribsys_ids").split(",")
+        if ids.get("previous_contribsys_ids"):
+            previous_sysids = ids.get("previous_contribsys_ids").split(",")
 
         if htid is None:
             logging.error("ID error: missing required htid")

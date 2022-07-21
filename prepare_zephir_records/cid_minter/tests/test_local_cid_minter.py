@@ -263,7 +263,7 @@ def test_write_a_record(create_test_db):
     assert result == expected
 
     ret = db.write_identifier("ocn", ocn, cid)
-    assert ret == "Record exists. No need to update"
+    assert ret == "Local minter: Record exists. No need to update"
 
     # update cid for this record
     ocn = "8727632"
@@ -273,7 +273,7 @@ def test_write_a_record(create_test_db):
         'inquiry_identifier': ocn,
         'matched_cid': cid}
     ret = db.write_identifier("ocn", ocn, cid)
-    assert ret == "Updated an exsiting record"
+    assert ret == "Local minter: Updated an exsiting record"
 
     result = db.find_cid("ocn", ocn)
     assert result == expected
@@ -289,7 +289,7 @@ def test_write_a_record(create_test_db):
         'inquiry_identifier': ocn,
         'matched_cid': cid}
     ret = db.write_identifier("ocn", ocn, cid)
-    assert ret == "Inserted a new record"
+    assert ret == "Local minter: Inserted a new record"
 
     result = db.find_cid("ocn", ocn)
     assert result == expected
