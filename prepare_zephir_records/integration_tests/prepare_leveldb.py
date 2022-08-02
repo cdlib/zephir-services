@@ -97,15 +97,14 @@ def create_cluster_db(path, df):
     return db_path
 
 def main():
-    print("main")
     leveldb_dir = "leveldb/"
     data_file = "test_datasets/leveldb_test_datasets.csv"
 
     ret = create_leveldb(leveldb_dir, data_file)
-    print(f"leveldb_dir: {ret.get('leveldb_dir')}")
-    print(f"primary_db_path: {ret.get('primary_db_path')}")
-    print(f"cluster_db_path: {ret.get('cluster_db_path')}")
-    print(f"data file: {ret.get('dfs')}")
+    print("Creating levelDB: Complete")
+    print(f"  leveldb_dir: {ret.get('leveldb_dir')}")
+    print(f"  primary_db_path: {ret.get('primary_db_path')}")
+    print(f"  cluster_db_path: {ret.get('cluster_db_path')}")
 
 if __name__ == "__main__":
     main()
