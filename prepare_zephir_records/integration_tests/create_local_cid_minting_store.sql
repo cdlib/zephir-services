@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS cid_minting_store (
         cid text DEFAULT NULL,
 	updated DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE (type,identifier)
-);
+);  
 
 INSERT INTO cid_minting_store(type, identifier, cid)
 VALUES
