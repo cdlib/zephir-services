@@ -20,6 +20,19 @@ from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_li
   "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
   "num_of_matched_zephir_clusters": num of matched Zephir clusters
   "min_cid": the lowest CID among the clusters
+
+  Test cases are documented in Google drive under D2D/Zephir/Developers
+  Filename: CID Minting Test Cases Using OCLC Concordance Table:
+  Format: Word
+  Note: only contain cases for matching by OCNS
+  Last modified: 08/25/2020
+  URL: https://docs.google.com/document/d/1rjd0NZfiSDLR7Kk4PdaWn8CLoZltJSUPPl_5pn3CAjA/edit#heading=h.yh7pb678uhgs
+
+  Filename: CID_Minting_Test_Cases_Using_OCLC_Concordance_Table
+  Format: Google  Sheet
+  Note:  contain ases for matching by OCNS and by local sysid and previous sysid
+  Last modified: 5/22/2020
+  URL: https://docs.google.com/spreadsheets/d/1Oak1NjbrxX7oP9hRpmqKBgwxAAHTyGw6zUkJ3DwXLok/edit#gid=0
 """
 
 # Test case 1 & 2: Incoming record matches a single primary record in the Concordance Table.
