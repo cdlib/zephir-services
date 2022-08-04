@@ -3,15 +3,8 @@
 #
 # This script creates test databases, populates test datasets, and performs integration tests.
 
-if [ $1 ] ; then
-  pw=$1
-else
-  echo "Ussage: $0 password_for_htmmdba"
-  exit
-fi
-
 echo "## Create the Zephir tstdev database"
-./prepare_zephir_db.sh ${pw}
+./prepare_zephir_db.sh
 
 echo "## Create the Local Minter"
 ./prepare_local_minter.sh

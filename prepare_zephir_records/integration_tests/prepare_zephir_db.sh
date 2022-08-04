@@ -3,23 +3,23 @@
 #
 # This script creates tables and populates test datasets in the Zephir devtst database
 
-if [ $1 ] ; then
-  pw=$1
-else
-  echo "Ussage: $0 password_for_htmmdba"
-  exit
-fi
-
-database="devtst"
-host="rds-d2d-htmm-dev.cmcguhglinoa.us-west-2.rds.amazonaws.com"
-user="htmmdba"
+sql_config="zephir_devtst.config"
+sql_cmd="mysql --defaults-file=${sql_config}"
 
 echo "Creating Zephir tables in the test DB: devtst"
 sql_script="create_zephir_tables.sql"
-mysql -h ${host} -u ${user} ${database} -p${pw} < ${sql_script} 
+$sql_cmd < ${sql_script}
+if [ $? -ne 0 ]; then
+    echo "Command failed: '${sql_cmd} < ${sql_script}'"
+    exit
+fi
 
 echo "Creating OCLC Xref table in the test DB: devtst"
 sql_script="create_oclc_ref_table.sql"
-mysql -h ${host} -u ${user} ${database} -p${pw} < ${sql_script} 
+$sql_cmd < ${sql_script}
+if [ $? -ne 0 ]; then
+    echo "Command failed: '${sql_cmd} < ${sql_script}'"
+    exit
+fi
 
 echo "Creating Zephir test DB: devtst - Complete!"
