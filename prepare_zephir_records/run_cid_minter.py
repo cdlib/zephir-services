@@ -16,7 +16,7 @@ from cid_minter.local_cid_minter import LocalMinter
 
 def usage(script_name):
     print("Parameter error.")
-    print("Usage: {} env[dev|stg|prd] path_to_IDs_file".format(script_name))
+    print("Usage: {} env[test|dev|stg|prd] path_to_IDs_file".format(script_name))
 
 def config_logger(logfile):
     logger = logging.getLogger()
@@ -73,8 +73,8 @@ def main():
     localdb_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
     localdb_conn_str = str(db_connect_url(localdb_config[env]["minter_db"]))
 
-    primary_db_path = localdb_config["primary_db_path"]
-    cluster_db_path = localdb_config["cluster_db_path"]
+    primary_db_path = localdb_config[env]["primary_db_path"]
+    cluster_db_path = localdb_config[env]["cluster_db_path"]
     logfile = localdb_config["logpath"]
 
     config_logger(logfile)

@@ -1,7 +1,7 @@
 #!/bin/bash
-# script: run_integration_tests.sh 
+# script: prepare_test_environment.sh 
 #
-# This script creates test databases, populates test datasets, and performs integration tests.
+# This script creates test databases and populates datasets for integration tests.
 
 echo "## Create the Zephir tstdev database"
 ./prepare_zephir_db.sh
