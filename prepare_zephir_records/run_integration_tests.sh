@@ -10,7 +10,16 @@ cd ..
 echo "Perform integration tests..."
 PIPFILE="/apps/htmm/zephir-services/Pipfile"
 SCRIPT="run_cid_minter.py"
-id_file="./integration_tests/test_datasets/test_ids.json"
-cmd="pipenv run python $SCRIPT test $id_file"
+ENV="test"
+cmd="pipenv run python $SCRIPT"
 
-PIPENV_PIPFILE=$PIPFILE $cmd
+echo "Test case 1: missing required HTID field"
+id_file="./integration_tests/test_datasets/test_case_1.json"
+ret="$(PIPENV_PIPFILE=$PIPFILE $cmd $ENV $id_file)"
+
+if [[ "$ret" == *"missing required htid"* ]]; then
+  echo "Test case 1: PASS"
+else
+  echo "Test case 1: FAIL"
+fi
+
