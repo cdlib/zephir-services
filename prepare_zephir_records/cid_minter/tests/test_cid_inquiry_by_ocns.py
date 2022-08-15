@@ -20,6 +20,19 @@ from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_li
   "cid_ocn_clusters": dict with key="cid", value=list of ocns in the cid cluster,
   "num_of_matched_zephir_clusters": num of matched Zephir clusters
   "min_cid": the lowest CID among the clusters
+
+  Test cases are documented in Google drive under D2D/Zephir/Developers
+  Filename: CID Minting Test Cases Using OCLC Concordance Table:
+  Format: Word
+  Note: only contain cases for matching by OCNS
+  Last modified: 08/25/2020
+  URL: https://docs.google.com/document/d/1rjd0NZfiSDLR7Kk4PdaWn8CLoZltJSUPPl_5pn3CAjA/edit#heading=h.yh7pb678uhgs
+
+  Filename: CID_Minting_Test_Cases_Using_OCLC_Concordance_Table
+  Format: Google  Sheet
+  Note:  contain ases for matching by OCNS and by local sysid and previous sysid
+  Last modified: 5/22/2020
+  URL: https://docs.google.com/spreadsheets/d/1Oak1NjbrxX7oP9hRpmqKBgwxAAHTyGw6zUkJ3DwXLok/edit#gid=0
 """
 
 # Test case 1 & 2: Incoming record matches a single primary record in the Concordance Table.
@@ -80,16 +93,16 @@ def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
          OCLC Cluster with more than one OCNs: [1234, 976940347]
 
          Incoming record OCN:
-           for i: [100000001, 1234567890]
-           for ii: [976940347, 12345678902, 12345678901] (1 other ocn + 2 invalid ocns)
+           for i: [100000001, 123456789010] (1 primary ocn + 1 invalid ocn)
+           for ii: [976940347, 123456789020, 123456789010] (1 other ocn + 2 invalid ocns)
     """
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns_list = {
-        "i_one_ocn_cluster": [100000001, 1234567890],
-        "ii_multiple_ocns_cluster": [976940347, 12345678902, 12345678901],
+        "i_one_ocn_cluster": [100000001, 123456789010],
+        "ii_multiple_ocns_cluster": [976940347, 123456789020, 123456789010],
     }
 
     expected_oclc_clusters = {
@@ -97,8 +110,8 @@ def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
         "ii_multiple_ocns_cluster": [[1234, 976940347]],
     }
     inquiry_ocns_zephir = {
-        "i_one_ocn_cluster": [100000001, 1234567890],
-        "ii_multiple_ocns_cluster": [1234, 976940347, 12345678901, 12345678902],
+        "i_one_ocn_cluster": [100000001, 123456789010],
+        "ii_multiple_ocns_cluster": [1234, 976940347, 123456789010, 123456789020],
     }
     expected_cid_ocn_list = []
     expected_zephir_clsuters = {}
@@ -206,13 +219,13 @@ def test_case_2_b_i(setup_leveldb, setup_sqlite):
         Test datasets:
         Zephir cluster: CID: 000249880; OCN: 999531
         OCLC primary OCN: 999531; other OCNs: None
-        Incoming ocn: 999531, 12345678903
+        Incoming ocn: 999531, 123456789030
     """
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
-    incoming_ocns = [999531, 12345678903]
+    incoming_ocns = [999531, 123456789030]
     expected_oclc_clusters = [[999531]]
     expected_cid_ocn_list = [{"cid": '000249880', "ocn": '999531'}]
     expected_zephir_clsuters = {
@@ -245,7 +258,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
 
         Incoming OCN for test case:
           1) 33393343, 28477569 - Zephir cluster contains the Record OCN
-          2) 44192417, 12345678904 - Zephir cluster doesn't have the Record OCN
+          2) 44192417, 123456789040 - Zephir cluster doesn't have the Record OCN
     """
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
@@ -253,13 +266,13 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
 
     incoming_ocns_list = {
         "case_1_zephir_has_record_ocn": [33393343, 28477569], 
-        "case_2_zephir_does_not_have_record_ocn": [44192417, 12345678904],
+        "case_2_zephir_does_not_have_record_ocn": [44192417, 123456789040],
     }
 
     expected_oclc_clusters = [[28477569, 33393343, 44192417]]
     inquiry_ocns_zephir = {
         "case_1_zephir_has_record_ocn": [28477569, 33393343, 44192417],
-        "case_2_zephir_does_not_have_record_ocn": [28477569, 33393343, 44192417, 12345678904],
+        "case_2_zephir_does_not_have_record_ocn": [28477569, 33393343, 44192417, 123456789040],
     }
     expected_cid_ocn_list = [{"cid": '009547317', "ocn": '28477569'}, {"cid": '009547317', "ocn": '33393343'}]
     expected_zephir_clsuters = {

@@ -41,7 +41,7 @@ def test_find_zephir_cluster_by_ocn_not_in_zephir(create_test_db):
         fixture above
     """
     zephirDb = create_test_db
-    ocns_list = [12345678901]
+    ocns_list = [123456789010]
 
     cid_ocn_list = zephirDb.find_zephir_clusters_by_ocns(ocns_list)
     assert cid_ocn_list == []
@@ -186,7 +186,7 @@ def test_find_zephir_cluster_and_contribsys_ids_by_cids(create_test_db):
 def test_zephir_cluster_lookup_no_matched_cluster(create_test_db):
     zephirDb = create_test_db
     ocns_lists = {
-        "not_in_zephir": [12345678901],
+        "not_in_zephir": [123456789010],
         "empty": [],
     }
 
@@ -204,7 +204,7 @@ def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
         "one_ocn_1_ocn_cluster": [8727632],
         "one_ocn_2_ocns_cluster": [28477569], # Zephir has more OCNs than incoming record
         "two_ocns_3_ocns_cluster": [15437990, 5663662], # Zephir has more OCNs than incoming record
-        "with_ocn_not_in_zephir": [25909, 12345678901], 
+        "with_ocn_not_in_zephir": [25909, 123456789010], 
     }
     expected_cid_ocn_list = {
         "one_ocn_1_ocn_cluster": [{"cid": '002492721', "ocn": '8727632'}],
@@ -242,7 +242,7 @@ def test_zephir_cluster_lookup_matched_1_cluster(create_test_db):
 
 def test_zephir_cluster_lookup_matched_more_than_one_clusters(create_test_db):
     zephirDb = create_test_db
-    ocns_list = [12345678901, 6758168, 28477569, 8727632, 217211158]
+    ocns_list = [123456789010, 6758168, 28477569, 8727632, 217211158]
     expected_cid_ocn_list = [
             {"cid": '000000280', "ocn": '217211158'},
             {"cid": '000000280', "ocn": '25909'},
