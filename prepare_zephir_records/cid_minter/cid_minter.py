@@ -84,6 +84,9 @@ class CidMinter:
             assigned_cid = self._find_current_minter().get("cid")
             logging.info(f"Minted a new minter: {assigned_cid} - from current minter: {current_minter}")
 
+        if assigned_cid:
+            self._update_local_minter(ids, assigned_cid)
+
         return assigned_cid 
 
     def _cid_assigned(self, assigned_cid):
@@ -258,4 +261,15 @@ class CidMinter:
         cid_minter_table = CidMinterTable(self._zephir_db)
         return cid_minter_table.get_cid()
 
+    def _update_local_minter(self, ids, cid):
+        ocns = ids.get("ocns")
+        sysids = ids.get("contribsys_ids")
+        if ocns:
+            for ocn in ocns.split(","):
+                self._local_minter_db.write_identifier("ocn", ocn, cid)
+                logging.info(f"Updated local minter: ocn: {ocn}")
 
+        if sysids:
+            for sysid in sysids.split(","):
+                self._local_minter_db.write_identifier("contribsys_id", sysid, cid)
+                logging.info(f"Updated local minter: contribsys id: {sysid}")
