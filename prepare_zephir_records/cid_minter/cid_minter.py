@@ -271,5 +271,5 @@ class CidMinter:
 
         if sysids:
             for sysid in sysids.split(","):
-                self._local_minter_db.write_identifier("contribsys_id", sysid, cid)
+                self._local_minter_db.write_identifier("sysid", sysid, cid)
                 logging.info(f"Updated local minter: contribsys id: {sysid}")
