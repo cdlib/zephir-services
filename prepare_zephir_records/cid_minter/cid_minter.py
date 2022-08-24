@@ -115,7 +115,7 @@ class CidMinter:
         if input_id_type == IdType.OCN:
             id_type = "ocn"
         else:
-            id_type = "contribsys_id"
+            id_type = "sysid"
 
         assigned_cid = None
         matched_cids = []
