@@ -46,7 +46,7 @@ def test_missing_htid_1(caplog, setup_leveldb, setup_zephir_db, setup_local_mint
             cid = cid_minter.mint_cid(ids)
             assert "ValueError: ID error: missing required htid" in e_info
 
-def test_cid_minter_step_0_a(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_cid_minter_step_0_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Step 0: find record's current CID if exists 
     """
     caplog.set_level(logging.DEBUG)
@@ -73,7 +73,7 @@ def test_cid_minter_step_0_a(caplog, setup_leveldb, setup_zephir_db, setup_local
     cid = cid_minter.mint_cid(input_ids)
     assert "Found current CID: 009705704 by htid: hvd.hw5jdo" in caplog.text
 
-def test_cid_minter_step_0_b(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_cid_minter_step_0_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Step 0: find record's current CID if exists 
     """
     caplog.set_level(logging.DEBUG)
@@ -98,8 +98,8 @@ def test_cid_minter_step_0_b(caplog, setup_leveldb, setup_zephir_db, setup_local
     cid = cid_minter.mint_cid(input_ids)
     assert "No CID/item found in Zephir DB by htid" in caplog.text
 
-def test_cid_minter_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 1a1: Find matched cluster by OCNs in Zephir DB.
+def test_cid_minter_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 1b1: Find matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - found current CID
          - reported warning OCLC Concordance Table does not contain record OCNs
@@ -170,8 +170,8 @@ def test_cid_minter_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_loc
     record = local_minter._find_record_by_identifier("sysid", "hvd000012735")
     assert [record.type, record.identifier, record.cid] == ["sysid", "hvd000012735", expected_cid]
 
-def test_cid_minter_step_1_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 1a2: Find matched cluster by OCNs in Zephir DB.
+def test_cid_minter_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 1b2: Find matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - No CID/item found in Zephir DB by htid
          - Local minter: No CID found by OCN
@@ -245,8 +245,8 @@ def test_cid_minter_step_1_a_2(caplog, setup_leveldb, setup_zephir_db, setup_loc
     minter_new = results[0].get("cid")
     assert int(minter_new) == int(minter) + 1
 
-def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 1b: Find matched CID by OCNs in Local Minter.
+def test_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 1a: Find matched CID by OCNs in Local Minter.
        Also verifies workflow and error conditions:
          - Local minter: found CID found by OCN
     """
@@ -278,8 +278,8 @@ def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
 
     assert "Local minter: Found matched CID" in caplog.text
 
-def test_step_2_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 2a1: Find one matched CID by contribsys ID in Zephir.
+def test_step_2_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 2b1: Find one matched CID by contribsys ID in Zephir.
        Also verifies workflow and error conditions:
     """
     caplog.set_level(logging.DEBUG)
@@ -320,8 +320,8 @@ def test_step_2_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     assert f"Zephir minter: Found matched CIDs: ['{cid}'] by contribsys IDs: ['{sysid}']" in caplog.text
 
 
-def test_step_2_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 2a2: Find more than one matched CID by contribsys IDs in Zephir.
+def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 2b2: Find more than one matched CID by contribsys IDs in Zephir.
        Also verifies workflow and error conditions:
          - found more than one matched CID in Zephir DB
          - record changed CID
