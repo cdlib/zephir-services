@@ -34,47 +34,17 @@ def test_missing_htid_1(caplog, setup_leveldb, setup_zephir_db, setup_local_mint
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
     cid_minter = CidMinter(config)
 
-    input_ids= {"ocn": "123456789"}
-
-    with pytest.raises(Exception) as e_info:
-        cid = cid_minter.mint_cid(input_ids)
-        assert "ValueError: ID error: missing required htid" in e_info
-
-def test_missing_htid_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
+    test_ids = {
+        "no_htid": {"ocn": "123456789"},
+        "empty_htid_1": {"htid": "", "ocn": "123456789"},
+        "empty_htid_2": {"htid": " ", "ocn": "123456789"},
+        "empty_htid_2": {"htid": "  ", "ocn": "123456789"},
     }
 
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    cid_minter = CidMinter(config)
-
-    input_ids= {"htid": "", "ocn": "123456789"}
-
-    with pytest.raises(Exception) as e_info:
-        cid = cid_minter.mint_cid(input_ids)
-        assert "ValueError: ID error: missing required htid" in e_info
-
-def test_missing_htid_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
-
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    cid_minter = CidMinter(config)
-
-    input_ids= {"htid": " ", "ocn": "123456789"}
-
-    with pytest.raises(Exception) as e_info:
-        cid = cid_minter.mint_cid(input_ids)
-        assert "ValueError: ID error: missing required htid" in e_info
+    for ids in test_ids:
+        with pytest.raises(Exception) as e_info:
+            cid = cid_minter.mint_cid(ids)
+            assert "ValueError: ID error: missing required htid" in e_info
 
 def test_cid_minter_step_0_a(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Step 0: find record's current CID if exists 
