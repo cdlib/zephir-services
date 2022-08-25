@@ -245,6 +245,60 @@ def test_cid_minter_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_loc
     minter_new = results[0].get("cid")
     assert int(minter_new) == int(minter) + 1
 
+def test_step_1_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 1b3: Find matched cluster by OCNs in Zephir DB.
+       Also verifies workflow and error conditions:
+         - found current CID
+         - matched more than one clusters, choose the lower one
+         - found CID by OCNs
+         - updated local minter
+    """
+    caplog.set_level(logging.DEBUG)
+    config = {
+        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
+        "localdb_conn_str": setup_local_minter["local_minter"],
+        "leveldb_primary_path": setup_leveldb["primary_db_path"],
+        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
+    }
+
+    cid_minter = CidMinter(config)
+    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
+    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
+
+    input_ids= {"ocns": "80274381,25231018,30461866", "htid": "hvd.hw5jdo"}
+
+    SELECT_ZEPHIR_BY_OCLC = """SELECT distinct z.cid cid, i.identifier ocn
+        FROM zephir_records as z
+        INNER JOIN zephir_identifier_records as r on r.record_autoid = z.autoid
+        INNER JOIN zephir_identifiers as i on i.autoid = r.identifier_autoid
+        WHERE z.cid != '0' AND i.type = 'oclc'
+        AND i.identifier in ('80274381', '25231018', '30461866')
+    """
+
+    # verify CID and OCNs in Zephir DB: ocn/cid are in zephir
+    expected = [{"cid": "009705704", "ocn": "80274381"}, 
+                {"cid": "009705704", "ocn": "25231018"},
+                {"cid": "011323406", "ocn": "30461866"}]
+    results = zephirDb._get_query_results(SELECT_ZEPHIR_BY_OCLC)
+    for result in results:
+        assert result in expected
+
+    # verify in local minter: OCN not in local minter
+    for ocn in ["80274381", "25231018", "30461866"]:
+        record = local_minter._find_record_by_identifier("ocn", ocn)
+        assert record is None
+
+    # test the CidMinter class
+    expected_cid = min(int("009705704"), int("011323406"))
+    cid = cid_minter.mint_cid(input_ids)
+    assert int(cid) == expected_cid
+
+    assert "matches 2 CIDs (['009705704', '011323406']) used 009705704" in caplog.text
+    assert "Zephir minter: Found matched CID" in caplog.text
+
+
 def test_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 1a: Find matched CID by OCNs in Local Minter.
        Also verifies workflow and error conditions:
