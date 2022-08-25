@@ -46,7 +46,7 @@ class CidMinter:
         if ids.get("previous_contribsys_ids"):
             previous_sysids = ids.get("previous_contribsys_ids").split(",")
 
-        if htid is None:
+        if not htid:
             logging.error("ID error: missing required htid")
             raise ValueError("ID error: missing required htid")
 
