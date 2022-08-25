@@ -264,6 +264,7 @@ class CidMinter:
     def _update_local_minter(self, ids, cid):
         ocns = ids.get("ocns")
         sysids = ids.get("contribsys_ids")
+        previous_sysids = ids.get("previous_contribsys_ids")
         if ocns:
             for ocn in ocns.split(","):
                 self._local_minter_db.write_identifier("ocn", ocn, cid)
@@ -273,3 +274,9 @@ class CidMinter:
             for sysid in sysids.split(","):
                 self._local_minter_db.write_identifier("sysid", sysid, cid)
                 logging.info(f"Updated local minter: contribsys id: {sysid}")
+
+        if previous_sysids:
+            for sysid in previous_sysids.split(","):
+                self._local_minter_db.write_identifier("sysid", sysid, cid)
+                logging.info(f"Updated local minter: previous contribsys id: {sysid}")
+
