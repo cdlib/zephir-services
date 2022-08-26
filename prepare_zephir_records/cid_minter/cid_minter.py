@@ -235,7 +235,9 @@ class CidMinter:
             logging.info(f"Zephir minter: Found matched CIDs: {cid_list} by previous contribsys IDs: {sysids}")
             if len(results) > 1:
                 msg_detail = f"Record with previous local num ({sysids}) matches {len(results)} CIDs ({cid_list})";
-                logging.error(f"ZED code: pr0042 - Record with previous local num matches more than one CID. - {msg_detail} ")
+                zed_msg = f"ZED code: pr0042 - Record with previous local num matches more than one CID. - {msg_detail}"
+                logging.error(zed_msg)
+                raise ValueError(zed_msg)
             else:
                 assigned_cid = results[0].get('cid')
                 if self._cluster_contain_multiple_contribsys(assigned_cid):

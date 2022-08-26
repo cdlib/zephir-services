@@ -479,6 +479,55 @@ def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
         record = local_minter._find_record_by_identifier("sysid", sysid)
         assert [record.type, record.identifier, record.cid] == ["sysid", sysid, expected_cid]
 
+def test_step_3_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 3a1: Find one matched CID by previous contribsys ID in local minter.
+       Also verifies workflow and error conditions:
+         - No error.
+    """
+    caplog.set_level(logging.DEBUG)
+    config = {
+        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
+        "localdb_conn_str": setup_local_minter["local_minter"],
+        "leveldb_primary_path": setup_leveldb["primary_db_path"],
+        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
+    }
+
+    cid_minter = CidMinter(config)
+    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
+    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
+
+    input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "pur215476", "htid": "hvd.hw5jdo"}
+
+    # sysid|pur215476|002492721
+    sysid = input_ids.get("contribsys_ids")
+    previous_sysid = input_ids.get("previous_contribsys_ids")
+    expected_cid = "002492721"
+
+    # verify in local minter: sysid/cid are not in local minter
+    record = local_minter._find_record_by_identifier("sysid", sysid)
+    assert record is None
+
+    # verify in local minter: previous sysid/cid are not in local minter
+    record = local_minter._find_record_by_identifier("sysid", previous_sysid)
+    assert [record.type, record.identifier, record.cid] == ["sysid", previous_sysid, expected_cid]
+
+    # test the CidMinter class
+    cid = cid_minter.mint_cid(input_ids)
+    assert cid == expected_cid
+
+    assert f"Local minter: Found matched CID: ['{expected_cid}'] by PREV_SYSID: ['{previous_sysid}']" in caplog.text
+    assert "Local minter: Record exists. No need to update" in caplog.text
+    assert f"Updated local minter: contribsys id: {sysid}" in caplog.text
+    assert f"Updated local minter: previous contribsys id: {previous_sysid}" in caplog.text
+
+    # verify in local minter: previous sysid/cid are in local minter now
+    record = local_minter._find_record_by_identifier("sysid", sysid)
+    assert [record.type, record.identifier, record.cid] == ["sysid", sysid, expected_cid]
+
+    record = local_minter._find_record_by_identifier("sysid", previous_sysid)
+    assert [record.type, record.identifier, record.cid] == ["sysid", previous_sysid, expected_cid]
 
 def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 2b1: Find one matched CID by previous contribsys ID in Zephir.
@@ -535,6 +584,54 @@ def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
 
     record = local_minter._find_record_by_identifier("sysid", previous_sysid)
     assert [record.type, record.identifier, record.cid] == ["sysid", previous_sysid, expected_cid] 
+
+
+def test_step_3_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 3n2: Find one matched CID by previous contribsys ID in Zephir.
+       Also verifies workflow and error conditions:
+         - If the previous system identifiers match more than one Zephir cluster, Report Error and reject the incoming record.
+    """
+    caplog.set_level(logging.DEBUG)
+    config = {
+        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
+        "localdb_conn_str": setup_local_minter["local_minter"],
+        "leveldb_primary_path": setup_leveldb["primary_db_path"],
+        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
+    }
+
+    cid_minter = CidMinter(config)
+    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
+    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
+
+    input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "acme.992222222", "htid": "hvd.hw5jdo"}
+
+    sysid = input_ids.get("contribsys_ids")
+    SELECT_ZEPHIR_BY_SYSID = f"SELECT distinct cid, contribsys_id from zephir_records WHERE contribsys_id = '{sysid}'"
+
+    # verify CID and sysids in Zephir DB: sysid/cid are not in zephir
+    results = zephirDb._get_query_results(SELECT_ZEPHIR_BY_SYSID)
+    assert len(results) == 0 
+
+    # 102359219|acme.992222222
+    # 102359222|acme.992222222
+    # 102359223|acme.992222222
+    previous_sysid = input_ids.get("previous_contribsys_ids")
+    SELECT_ZEPHIR_BY_SYSID = f"SELECT distinct cid, contribsys_id from zephir_records WHERE contribsys_id = '{previous_sysid}'"
+
+    # verify CID and previous_sysids in Zephir DB: previous_sysid/cid are in zephir
+    results = zephirDb._get_query_results(SELECT_ZEPHIR_BY_SYSID)
+    assert len(results) == 3 
+
+    # verify in local minter: previous sysid not in local minter
+    record = local_minter._find_record_by_identifier("sysid", previous_sysid)
+    assert record is None
+
+    # test the CidMinter class
+    with pytest.raises(Exception) as e_info:
+        cid = cid_minter.mint_cid(input_ids)
+        assert "ZED code: pr0042 - Record with previous local num matches more than one CID" in e_info
 
 
 """Test cid_inquiry_by_ocns() function which returns a dict with: 
