@@ -587,7 +587,7 @@ def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
 
 
 def test_step_3_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 3n2: Find one matched CID by previous contribsys ID in Zephir.
+    """Test case 3b2: Find more than one matched CID by previous contribsys ID in Zephir.
        Also verifies workflow and error conditions:
          - If the previous system identifiers match more than one Zephir cluster, Report Error and reject the incoming record.
     """
@@ -633,6 +633,78 @@ def test_step_3_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
         cid = cid_minter.mint_cid(input_ids)
         assert "ZED code: pr0042 - Record with previous local num matches more than one CID" in e_info
 
+def test_step_3_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+    """Test case 3b3: Find one matched CID by previous contribsys ID in Zephir. Mint a new CID as the matched cluster contains records with other contribsys_id. 
+       Also verifies workflow and error conditions:
+         - Zephir cluster contains records from different contrib systems. Skip the matched CID and assign a new one.
+    """
+    caplog.set_level(logging.DEBUG)
+    config = {
+        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
+        "localdb_conn_str": setup_local_minter["local_minter"],
+        "leveldb_primary_path": setup_leveldb["primary_db_path"],
+        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
+    }
+
+    cid_minter = CidMinter(config)
+    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
+    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    primary_db_path = setup_leveldb["primary_db_path"]
+    cluster_db_path = setup_leveldb["cluster_db_path"]
+
+    input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "acme.b2222222", "htid": "test.12345"}
+
+    sysid = input_ids.get("contribsys_ids")
+    SELECT_ZEPHIR_BY_SYSID = f"SELECT distinct cid, contribsys_id from zephir_records WHERE contribsys_id = '{sysid}'"
+
+    # verify CID and sysids in Zephir DB: sysid/cid are not in zephir
+    results = zephirDb._get_query_results(SELECT_ZEPHIR_BY_SYSID)
+    assert len(results) == 0
+
+    # 102359219|acme.992222222
+    # 102359219|acme.b2222222
+
+    previous_sysid = input_ids.get("previous_contribsys_ids")
+    SELECT_ZEPHIR_BY_SYSID = f"SELECT distinct cid, contribsys_id from zephir_records WHERE contribsys_id = '{previous_sysid}'"
+
+    # verify CID and previous_sysids in Zephir DB: previous_sysid/cid are in zephir
+    expected_cid = "102359219"
+    expected = [{"cid": expected_cid, "contribsys_id": previous_sysid}]
+    results = zephirDb._get_query_results(SELECT_ZEPHIR_BY_SYSID)
+    assert len(results) ==  1
+    assert results == expected
+
+    # verify in local minter: previous sysid not in local minter
+    record = local_minter._find_record_by_identifier("sysid", previous_sysid)
+    assert record is None
+
+    SELECT_MINTER = "SELECT cid from cid_minter"
+    results = zephirDb._get_query_results(SELECT_MINTER)
+    assert len(results) == 1
+    minter = results[0].get("cid")
+
+    # test the CidMinter class
+    cid = cid_minter.mint_cid(input_ids)
+    # minted a new CID
+    assert int(cid) == int(minter) + 1 
+
+    assert f"Zephir minter: Found matched CIDs: ['{expected_cid}'] by previous contribsys IDs: ['{previous_sysid}']" in caplog.text
+    assert f"Zephir cluster contains records from different contrib systems. Skip this CID ({expected_cid}) assignment" in caplog.text
+    assert f"Minted a new minter: {cid} - from current minter" in caplog.text
+    assert "Local minter: Inserted a new record" in caplog.text
+    assert f"Updated local minter: contribsys id: {sysid}" in caplog.text
+    assert f"Updated local minter: previous contribsys id: {previous_sysid}" in caplog.text
+
+    # verify local minter has been updated
+    for id in [sysid, previous_sysid]:
+        record = local_minter._find_record_by_identifier("sysid", id)
+        assert [record.type, record.identifier, record.cid] == ["sysid", id, cid]
+
+    # verify cid_minter has been updated
+    results = zephirDb._get_query_results(SELECT_MINTER)
+    assert len(results) == 1
+    minter_new = results[0].get("cid")
+    assert int(minter_new) == int(minter) + 1
 
 
 # FIXTURES
