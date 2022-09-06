@@ -12,7 +12,6 @@ from lib.utils import get_configs_by_filename
 from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
 from cid_minter.cid_minter import CidMinter 
-from cid_minter.local_cid_minter import LocalMinter 
 
 def usage(script_name):
     print("Parameter error.")
@@ -32,19 +31,6 @@ def config_logger(logfile):
 
     logger.addHandler(file)
     logger.addHandler(stream)
-
-def update_local_minter(local_minter, ids, cid):
-    ocns = ids.get("ocns")
-    sysids = ids.get("contribsys_ids")
-    if ocns:
-        for ocn in ocns.split(","):
-            print(f"ocn: {ocn}")
-            local_minter.write_identifier("ocn", ocn, cid)
-
-    if sysids:
-        for sysid in sysids.split(","):
-            print(f"contribsys id: {sysid}")
-            local_minter.write_identifier("contribsys_id", sysid, cid)
 
 def main():
     """ Retrieves Zephir clusters by OCNs.
@@ -95,7 +81,6 @@ def main():
     }
 
     cid_minter = CidMinter(config)
-    local_minter = LocalMinter(LOCALDB_CONN_STR)
 
     # sample IDs in JSON
     # {"ocns": "80274381,25231018", "contribsys_id": "hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
@@ -106,7 +91,6 @@ def main():
                 print(f"IDs: {ids}")
                 cid = cid_minter.mint_cid(ids) 
                 print(f"Minted CID {cid}")
-                update_local_minter(local_minter, ids, cid)
             except Exception as e:
                 print(f"Exception: {e}")
                 continue

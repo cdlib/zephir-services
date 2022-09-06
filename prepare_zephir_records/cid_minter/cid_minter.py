@@ -46,7 +46,7 @@ class CidMinter:
         if ids.get("previous_contribsys_ids"):
             previous_sysids = ids.get("previous_contribsys_ids").split(",")
 
-        if htid is None:
+        if not htid:
             logging.error("ID error: missing required htid")
             raise ValueError("ID error: missing required htid")
 
@@ -84,6 +84,9 @@ class CidMinter:
             assigned_cid = self._find_current_minter().get("cid")
             logging.info(f"Minted a new minter: {assigned_cid} - from current minter: {current_minter}")
 
+        if assigned_cid:
+            self._update_local_minter(ids, assigned_cid)
+
         return assigned_cid 
 
     def _cid_assigned(self, assigned_cid):
@@ -112,7 +115,7 @@ class CidMinter:
         if input_id_type == IdType.OCN:
             id_type = "ocn"
         else:
-            id_type = "contribsys_id"
+            id_type = "sysid"
 
         assigned_cid = None
         matched_cids = []
@@ -232,7 +235,9 @@ class CidMinter:
             logging.info(f"Zephir minter: Found matched CIDs: {cid_list} by previous contribsys IDs: {sysids}")
             if len(results) > 1:
                 msg_detail = f"Record with previous local num ({sysids}) matches {len(results)} CIDs ({cid_list})";
-                logging.error(f"ZED code: pr0042 - Record with previous local num matches more than one CID. - {msg_detail} ")
+                zed_msg = f"ZED code: pr0042 - Record with previous local num matches more than one CID. - {msg_detail}"
+                logging.error(zed_msg)
+                raise ValueError(zed_msg)
             else:
                 assigned_cid = results[0].get('cid')
                 if self._cluster_contain_multiple_contribsys(assigned_cid):
@@ -258,4 +263,22 @@ class CidMinter:
         cid_minter_table = CidMinterTable(self._zephir_db)
         return cid_minter_table.get_cid()
 
+    def _update_local_minter(self, ids, cid):
+        ocns = ids.get("ocns")
+        sysids = ids.get("contribsys_ids")
+        previous_sysids = ids.get("previous_contribsys_ids")
+        if ocns:
+            for ocn in ocns.split(","):
+                self._local_minter_db.write_identifier("ocn", ocn, cid)
+                logging.info(f"Updated local minter: ocn: {ocn}")
+
+        if sysids:
+            for sysid in sysids.split(","):
+                self._local_minter_db.write_identifier("sysid", sysid, cid)
+                logging.info(f"Updated local minter: contribsys id: {sysid}")
+
+        if previous_sysids:
+            for sysid in previous_sysids.split(","):
+                self._local_minter_db.write_identifier("sysid", sysid, cid)
+                logging.info(f"Updated local minter: previous contribsys id: {sysid}")
 
