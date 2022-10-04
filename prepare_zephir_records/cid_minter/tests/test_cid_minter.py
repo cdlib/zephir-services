@@ -46,7 +46,7 @@ def test_missing_htid_1(caplog, setup_leveldb, setup_zephir_db, setup_local_mint
             cid = cid_minter.mint_cid(ids)
             assert "ValueError: ID error: missing required htid" in e_info
 
-def test_cid_minter_step_0_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_0_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Step 0: find record's current CID if exists 
     """
     caplog.set_level(logging.DEBUG)
@@ -73,7 +73,7 @@ def test_cid_minter_step_0_1(caplog, setup_leveldb, setup_zephir_db, setup_local
     cid = cid_minter.mint_cid(input_ids)
     assert "Found current CID: 009705704 by htid: hvd.hw5jdo" in caplog.text
 
-def test_cid_minter_step_0_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_0_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Step 0: find record's current CID if exists 
     """
     caplog.set_level(logging.DEBUG)
@@ -199,7 +199,7 @@ def test_step_1_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     assert "Local minter: No CID found by OCN" in caplog.text
     assert "Find CID in Zephir Database by OCNs" in caplog.text
 
-def test_cid_minter_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 1b1: Found matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - found current CID
@@ -272,7 +272,7 @@ def test_cid_minter_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_loc
     record = local_minter._find_record_by_identifier("sysid", sysid)
     assert [record.type, record.identifier, record.cid] == ["sysid", sysid, expected_cid]
 
-def test_cid_minter_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 1b2: Found matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - No CID/item found in Zephir DB by htid
