@@ -30,7 +30,14 @@ class CidMinter:
     def mint_cid(self, ids):
         """Assign CID by OCNs, local system IDs or previous local system IDs.
         Search CID in the local minter first. If there is no matched CID found then search the Zephir database.
-        Return assgined CID.
+        Args:
+          ids: IDs in a dictionary with following keys: 
+                 "htid",
+                 "ocns",
+                 "contribsys_ids"
+                 "previous_contribsys_ids"
+               Values are strings. Multiple values for the same ID are separated by a comma.
+        Returns: assgined CID.
         """
         htid =  None
         ocns = None
