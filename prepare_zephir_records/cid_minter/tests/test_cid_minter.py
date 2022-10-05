@@ -164,9 +164,13 @@ def test_step_1_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
 
     # test the CidMinter class
     assigned_cid = cid_minter.mint_cid(input_ids)
-
-    assert "Local minter error: Found more than one matched CID" in caplog.text
-    assert "Find CID in Zephir Database by OCNs" in caplog.text
+    
+    expected_events_sequence = [
+        "Local minter error: Found more than one matched CID", 
+        "Find CID in Zephir Database by OCNs"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_1_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 1a3: No matched CID by OCNs in Local Minter.
@@ -196,8 +200,12 @@ def test_step_1_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     # test the CidMinter class
     cid = cid_minter.mint_cid(input_ids)
 
-    assert "Local minter: No CID found by OCN" in caplog.text
-    assert "Find CID in Zephir Database by OCNs" in caplog.text
+    expected_events_sequence = [
+        "Local minter: No CID found by OCN", 
+        "Find CID in Zephir Database by OCNs"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 1b1: Found matched cluster by OCNs in Zephir DB.
@@ -255,14 +263,18 @@ def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert cid == expected_cid
 
-    assert "Found current CID" in caplog.text
-    assert "Local minter: No CID found by OCN" in caplog.text
-    assert "OCLC Concordance Table does not contain record OCNs" in caplog.text
-    assert "Zephir minter: Found matched CID" in caplog.text
-    assert "Local minter: Inserted a new record" in caplog.text
-    assert "Updated local minter: ocn: 80274381" in caplog.text
-    assert "Updated local minter: ocn: 25231018" in caplog.text
-    assert "Updated local minter: contribsys id: hvd000012735" in caplog.text
+    expected_events_sequence = [
+        "Found current CID", 
+        "Local minter: No CID found by OCN", 
+        "OCLC Concordance Table does not contain record OCNs", 
+        "Zephir minter: Found matched CID", 
+        "Local minter: Inserted a new record",
+        "Updated local minter: ocn: 80274381", 
+        "Updated local minter: ocn: 25231018", 
+        "Updated local minter: contribsys id: hvd000012735"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
     # verify local minter has been updated
     for ocn in ["80274381", "25231018"]:
@@ -329,12 +341,17 @@ def test_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     # minted a new cid
     assert int(cid) == int(minter) + 1
 
-    assert "No CID/item found in Zephir DB by htid" in caplog.text
-    assert "match more than one OCLC Concordance clusters" in caplog.text
-    assert "Local minter: No CID found by OCN" in caplog.text
-    assert "Minted a new minter" in caplog.text
-    assert "Local minter: Inserted a new record" in caplog.text
-    assert "Updated local minter: ocn" in caplog.text
+    expected_events_sequence = [
+        "No CID/item found in Zephir DB by htid",
+        "Local minter: No CID found by OCN",
+        "Find CID in Zephir Database by OCNs",
+        "match more than one OCLC Concordance clusters",
+        "Minted a new minter",
+        "Local minter: Inserted a new record",
+        "Updated local minter: ocn"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
     # verify local minter has been updated
     for ocn in ["100", "300"]:
@@ -397,8 +414,12 @@ def test_step_1_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert int(cid) == expected_cid
 
-    assert "matches 2 CIDs (['009705704', '011323406']) used 009705704" in caplog.text
-    assert "Zephir minter: Found matched CID" in caplog.text
+    expected_events_sequence = [
+        "Zephir minter: Found matched CID",
+        "matches 2 CIDs (['009705704', '011323406']) used 009705704",
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_1_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 1b4: No matched cluster by OCNs in Zephir DB.
@@ -422,8 +443,12 @@ def test_step_1_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
 
     cid = cid_minter.mint_cid(input_ids)
 
-    assert "Zephir minter: No CID found by OCNs" in caplog.text
-    assert "Find CID in local minter by SYSID" in caplog.text 
+    expected_events_sequence = [
+        "Zephir minter: No CID found by OCNs",
+        "Find CID in local minter by SYSID"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_2_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 2a1: Found one matched CID by contribsys ID in local minter.
@@ -457,10 +482,15 @@ def test_step_2_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert cid == expected_cid
 
-    assert "Find CID in local minter by SYSID" in caplog.text
-    assert f"Local minter: Found matched CID: ['{expected_cid}'] by SYSID: ['{sysid}']" in caplog.text
     assert "Find CID in Zephir Database by OCNs" not in caplog.text
-    assert "Local minter: Record exists. No need to update" in caplog.text
+
+    expected_events_sequence = [
+        "Find CID in local minter by SYSID",
+        f"Local minter: Found matched CID: ['{expected_cid}'] by SYSID: ['{sysid}']",
+        "Local minter: Record exists. No need to update"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
     # verify local minter: sysid/id are not changed
     record = local_minter._find_record_by_identifier("sysid", sysid)
@@ -505,9 +535,13 @@ def test_step_2_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     # test the CidMinter class
     cid = cid_minter.mint_cid(input_ids)
 
-    assert "Find CID in local minter by SYSID" in caplog.text
-    assert f"Local minter error: Found more than one matched CID: {cids} by SYSID" in caplog.text
-    assert "Find CID in Zephir Database by SYSID" in caplog.text
+    expected_events_sequence = [
+        "Find CID in local minter by SYSID",
+        f"Local minter error: Found more than one matched CID: {cids} by SYSID",
+        "Find CID in Zephir Database by SYSID"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 
 def test_step_2_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
@@ -542,9 +576,14 @@ def test_step_2_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert cid == expected_cid
 
-    assert f"Local minter: Found matched CID: ['{expected_cid}'] by SYSID: ['{sysid}']" in caplog.text
     assert "Find CID in Zephir Database by OCNs" not in caplog.text
-    assert "Local minter: Record exists. No need to update" in caplog.text
+
+    expected_events_sequence = [
+        f"Local minter: Found matched CID: ['{expected_cid}'] by SYSID: ['{sysid}']",
+        "Local minter: Record exists. No need to update"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
     # verify local minter: sysid/id are not changed
     record = local_minter._find_record_by_identifier("sysid", sysid)
@@ -588,8 +627,12 @@ def test_step_2_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert cid == expected_cid
 
-    assert "Local minter: No CID found by SYSID" in caplog.text
-    assert f"Zephir minter: Found matched CIDs: ['{cid}'] by contribsys IDs: ['{sysid}']" in caplog.text
+    expected_events_sequence = [
+        "Local minter: No CID found by SYSID",
+        f"Zephir minter: Found matched CIDs: ['{cid}'] by contribsys IDs: ['{sysid}']"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 2b2: Found more than one matched CID by contribsys IDs in Zephir.
@@ -643,13 +686,17 @@ def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert cid == expected_cid
 
-    assert f"Found current CID: {current_cid} by htid: {htid}" in caplog.text
-    assert "Local minter: No CID found by SYSID" in caplog.text
-    assert "Zephir minter: Found matched CIDs: ['000641789', '009705704'] by contribsys IDs: ['hvd000012735', 'nrlf.b100608668']" in caplog.text
-    assert "Record with local number matches more than one CID" in caplog.text
-    assert f"htid hvd.hw5jdo changed CID from: {current_cid} to: {expected_cid}" in caplog.text
-    assert "Local minter: Inserted a new record" in caplog.text
-    assert "Updated local minter: contribsys id" in caplog.text
+    expected_events_sequence = [
+         f"Found current CID: {current_cid} by htid: {htid}",
+         "Local minter: No CID found by SYSID",
+         "Zephir minter: Found matched CIDs: ['000641789', '009705704'] by contribsys IDs: ['hvd000012735', 'nrlf.b100608668']",
+         "Record with local number matches more than one CID",
+         f"htid hvd.hw5jdo changed CID from: {current_cid} to: {expected_cid}",
+         "Local minter: Inserted a new record",
+         "Updated local minter: contribsys id"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
     # verify local minter has been updated
     for sysid in ["hvd000012735", "nrlf.b100608668"]:
@@ -680,9 +727,13 @@ def test_step_2_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
 
     assigned_cid = cid_minter.mint_cid(input_ids)
 
-    assert "Find CID in Zephir Database by SYSID" in caplog.text
-    assert f"Zephir minter: Found matched CIDs: ['{matched_cid}'] by contribsys IDs" in caplog.text
-    assert "Zephir cluster contains records from different contrib systems. Skip this CID" in caplog.text
+    expected_events_sequence = [
+        "Find CID in Zephir Database by SYSID",
+        f"Zephir minter: Found matched CIDs: ['{matched_cid}'] by contribsys IDs",
+        "Zephir cluster contains records from different contrib systems. Skip this CID"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_2_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 2b4: No matched CID found by contribsys IDs in Zephir.
@@ -706,21 +757,12 @@ def test_step_2_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
 
     assigned_cid = cid_minter.mint_cid(input_ids)
 
-    assert "Zephir minter: No CID found by local num" in caplog.text
-    assert "Find CID in local minter by PREV_SYSID" in caplog.text
-    line_num = 0
-    no_cid_by_sys_line_no = 0
-    find_cid_by_prev_sysid = 0
-    for line in caplog.text.split("\n"):
-        line_num +=1
-        if "Zephir minter: No CID found by local num" in line:
-            no_cid_by_sys_line_no = line_num
-        if "Find CID in local minter by PREV_SYSID" in line:
-            find_cid_by_prev_sysid = line_num
-
-    assert no_cid_by_sys_line_no != 0 and find_cid_by_prev_sysid != 0
-    assert no_cid_by_sys_line_no < find_cid_by_prev_sysid
-
+    expected_events_sequence = [
+        "Zephir minter: No CID found by local num",
+        "Find CID in local minter by PREV_SYSID"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_3_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 3a1: Found one matched CID by previous contribsys ID in local minter.
@@ -759,11 +801,15 @@ def test_step_3_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert cid == expected_cid
 
-    assert f"Local minter: Found matched CID: ['{expected_cid}'] by PREV_SYSID: ['{previous_sysid}']" in caplog.text
     assert "Find CID in Zephir Database by OCNs" not in caplog.text
-    assert "Local minter: Record exists. No need to update" in caplog.text
-    assert f"Updated local minter: contribsys id: {sysid}" in caplog.text
-    assert f"Updated local minter: previous contribsys id: {previous_sysid}" in caplog.text
+
+    expected_events_sequence = [
+        f"Local minter: Found matched CID: ['{expected_cid}'] by PREV_SYSID: ['{previous_sysid}']",
+        f"Updated local minter: contribsys id: {sysid}",
+        f"Updated local minter: previous contribsys id: {previous_sysid}"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
     # verify in local minter: previous sysid/cid are in local minter now
     record = local_minter._find_record_by_identifier("sysid", sysid)
@@ -815,12 +861,16 @@ def test_step_3_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
 
     assert "Find CID in Zephir Database by OCNs" not in caplog.text
-    assert "Local minter: No CID found by SYSID" in caplog.text
-    assert "Find CID in Zephir Database by SYSID" in caplog.text
-    assert "Find CID in local minter by PREV_SYSID" in caplog.text
-    assert f"Local minter error: Found more than one matched CID: {expected_cids} by PREV_SYSID" in caplog.text
-    assert "Find CID in Zephir Database by PREV_SYSID" in caplog.text
 
+    expected_events_sequence = [
+        "Local minter: No CID found by SYSID",
+        "Find CID in Zephir Database by SYSID",
+        "Find CID in local minter by PREV_SYSID",
+        f"Local minter error: Found more than one matched CID: {expected_cids} by PREV_SYSID",
+        "Find CID in Zephir Database by PREV_SYSID"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_3_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 3a3: Found one matched CID by previous contribsys ID in local minter.
@@ -859,12 +909,15 @@ def test_step_3_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert cid == expected_cid
 
-    assert f"Local minter: Found matched CID: ['{expected_cid}'] by PREV_SYSID: ['{previous_sysid}']" in caplog.text
     assert "Find CID in Zephir Database by OCNs" not in caplog.text
-    assert "Local minter: Record exists. No need to update" in caplog.text
-    assert f"Updated local minter: contribsys id: {sysid}" in caplog.text
-    assert f"Updated local minter: previous contribsys id: {previous_sysid}" in caplog.text
 
+    expected_events_sequence = [
+        f"Local minter: Found matched CID: ['{expected_cid}'] by PREV_SYSID: ['{previous_sysid}']",
+        f"Updated local minter: contribsys id: {sysid}",
+        f"Updated local minter: previous contribsys id: {previous_sysid}"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     """Test case 2b1: Found one matched CID by previous contribsys IDs in Zephir.
@@ -912,8 +965,12 @@ def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert cid == expected_cid
 
-    assert f"Local minter: No CID found by PREV_SYSID: ['{previous_sysid}']" in caplog.text
-    assert f"Zephir minter: Found matched CIDs: ['{expected_cid}'] by previous contribsys IDs: ['{previous_sysid}']" in caplog.text
+    expected_events_sequence = [
+        f"Local minter: No CID found by PREV_SYSID: ['{previous_sysid}']",
+        f"Zephir minter: Found matched CIDs: ['{expected_cid}'] by previous contribsys IDs: ['{previous_sysid}']"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
     # verify in local minter: previous sysid/cid are in local minter now
     record = local_minter._find_record_by_identifier("sysid", sysid)
@@ -1024,12 +1081,16 @@ def test_step_3_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     # minted a new CID
     assert int(cid) == int(minter) + 1 
 
-    assert f"Zephir minter: Found matched CIDs: ['{expected_cid}'] by previous contribsys IDs: ['{previous_sysid}']" in caplog.text
-    assert f"Zephir cluster contains records from different contrib systems. Skip this CID ({expected_cid}) assignment" in caplog.text
-    assert f"Minted a new minter: {cid} - from current minter" in caplog.text
-    assert "Local minter: Inserted a new record" in caplog.text
-    assert f"Updated local minter: contribsys id: {sysid}" in caplog.text
-    assert f"Updated local minter: previous contribsys id: {previous_sysid}" in caplog.text
+    expected_events_sequence = [
+        f"Zephir minter: Found matched CIDs: ['{expected_cid}'] by previous contribsys IDs: ['{previous_sysid}']",
+        f"Zephir cluster contains records from different contrib systems. Skip this CID ({expected_cid}) assignment",
+        f"Minted a new minter: {cid} - from current minter",
+        "Local minter: Inserted a new record",
+        f"Updated local minter: contribsys id: {sysid}",
+        f"Updated local minter: previous contribsys id: {previous_sysid}"
+    ]
+    verify_events(caplog.text, expected_events_sequence)
+    verify_sequenced_events(caplog.text, expected_events_sequence)
 
     # verify local minter has been updated
     for id in [sysid, previous_sysid]:
@@ -1041,6 +1102,50 @@ def test_step_3_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     assert len(results) == 1
     minter_new = results[0].get("cid")
     assert int(minter_new) == int(minter) + 1
+
+def verify_events(log, expected_events):
+    """Verify listed events in caplog.
+       Args:
+         log: caplog
+         expected_events: list of expected events.
+    """
+    for event in expected_events:
+        assert event in log
+    
+
+def verify_sequenced_events(log, expected_events_sequence):
+    """Verify sequenced events in caplog
+      Get the actual events order from caplog and and define the envet and order in the
+      actual_events_order dict with:
+        key: event listed in the expected_events_sequence
+        value: sequcne order starting from 0
+      In this case when the expected_events_sequence is:
+      [
+        "Zephir minter: No CID found by local num",
+        "Find CID in local minter by PREV_SYSID"
+      ]
+      The actual_events_order should be:
+      {
+        "Zephir minter: No CID found by local num": 0,
+        "Find CID in local minter by PREV_SYSID": 1
+      }
+      Args:
+        log: caplog
+        expected_events_sequence: list of expected events in time sequence
+    """
+    actual_events_order = {}
+    event_count = 0
+    for line in log.split("\n"):
+        for event in expected_events_sequence:
+            if (event in line) and (event not in actual_events_order):
+                actual_events_order[event] = event_count
+                event_count += 1
+
+    #assert len(expected_events_sequence) == event_count
+
+    for idx, event in enumerate(expected_events_sequence):
+        assert actual_events_order[event] == idx
+        assert expected_events_sequence[idx] == event
 
 
 # FIXTURES
