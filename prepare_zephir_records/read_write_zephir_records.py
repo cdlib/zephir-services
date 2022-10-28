@@ -95,7 +95,7 @@ def get_ids(record):
     htid = None
     sysid = None
     prev_sysids = None
-    campus_code = None
+    campus_code = "" 
     previous_contribsys_ids =  None
 
     for field in record.get_fields("035"):
@@ -122,17 +122,20 @@ def get_ids(record):
 
     if prev_sysids:
         for p_id in prev_sysids.split(","):
-            prefixed_id = f"{campus_code}.{p_id}"
+            prefixed_id = f"{campus_code}.{p_id}" if campus_code else p_id
             previous_contribsys_ids = f"{previous_contribsys_ids},{prefixed_id}" if previous_contribsys_ids else prefixed_id
 
-    ids = {
-        "htid": htid,
-        "ocns": ocns,
-        "contribsys_ids": sysid,
-        "previous_contribsys_ids": previous_contribsys_ids
-        }
-    return ids
+    ids = {}
+    if htid:
+        ids["htid"] = htid
+    if ocns:
+        ids["ocns"] = ocns
+    if sysid:
+        ids["contribsys_ids"] = sysid
+    if previous_contribsys_ids:
+        ids["previous_contribsys_ids"] = previous_contribsys_ids
 
+    return ids
 
 
 def mint_cid(config, ids):
