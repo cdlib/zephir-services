@@ -91,7 +91,7 @@
 </record>
 <record>
   <leader>02059cam a2200469 a 4500</leader>
-  <controlfield tag="001">uc1.$b79686</controlfield>
+  <controlfield tag="001">uc1.record2</controlfield>
   <controlfield tag="003">MiAaHDL</controlfield>
   <controlfield tag="005">20221021000000.0</controlfield>
   <controlfield tag="006">m        d        </controlfield>
@@ -111,6 +111,9 @@
   </datafield>
   <datafield tag="035" ind1=" " ind2=" ">
     <subfield code="a">(OCoLC)2421602</subfield>
+  </datafield>
+  <datafield tag="035" ind1=" " ind2=" ">
+    <subfield code="a">(OCoLC)24216021234</subfield>
   </datafield>
   <datafield tag="035" ind1=" " ind2=" ">
     <subfield code="a">(CUY)UCB-b120746153-01ucs_ber</subfield>
@@ -244,7 +247,7 @@
     <subfield code="a">uc1</subfield>
     <subfield code="b">SDR</subfield>
     <subfield code="c">NRLF</subfield>
-    <subfield code="f">b120746153</subfield>
+    <subfield code="f">b120746153,b1207461531234</subfield>
     <subfield code="p">uc1.$b79686</subfield>
     <subfield code="s">UC</subfield>
     <subfield code="1">991065875169706532</subfield>

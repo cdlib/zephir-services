@@ -94,19 +94,15 @@ def get_ids(record):
     ocns = None
     htid = None
     sysid = None
-    prev_sysid = None
+    prev_sysids = None
     campus_code = None
-    contribsys_ids =  None
-    previous_contribsys_ids = None
+    previous_contribsys_ids =  None
 
     for field in record.get_fields("035"):
         for sub_f in field.get_subfields('a'):
             if sub_f.startswith("(OCoLC)"): 
                 ocn = sub_f.replace("(OCoLC)", "")
-                if ocns:
-                    ocns = f",{ocn}"
-                else:
-                    ocns = ocn
+                ocns = f"{ocns},{ocn}" if ocns else ocn
 
     fields = record.get_fields("CAT")
     if fields and fields[0].get_subfields('c'):
@@ -119,16 +115,21 @@ def get_ids(record):
         if fields[0].get_subfields('0'):
             sysid = fields[0].get_subfields('0')[0]
         if fields[0].get_subfields('f'):
-            prev_sysid = fields[0].get_subfields('f')[0]
+            prev_sysids = fields[0].get_subfields('f')[0]
 
     if sysid:
         sysid = sysid.replace("sdr-", "")
+
+    if prev_sysids:
+        for p_id in prev_sysids.split(","):
+            prefixed_id = f"{campus_code}.{p_id}"
+            previous_contribsys_ids = f"{previous_contribsys_ids},{prefixed_id}" if previous_contribsys_ids else prefixed_id
 
     ids = {
         "htid": htid,
         "ocns": ocns,
         "contribsys_ids": sysid,
-        "previous_contribsys_ids": prev_sysid
+        "previous_contribsys_ids": previous_contribsys_ids
         }
     return ids
 

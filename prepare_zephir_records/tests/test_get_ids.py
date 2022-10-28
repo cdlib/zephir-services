@@ -16,7 +16,13 @@ def test_get_ids_(data_dir):
         "htid": "uc1.b3381876",
         "ocns": "7636130",
         "contribsys_ids": "nrlf.991064139089706532",
-        "previous_contribsys_ids": "b168484869"
+        "previous_contribsys_ids": "nrlf.b168484869"
+    }
+    record_2_ids = {
+        "htid": "uc1.$b79686",
+        "ocns": "2421602,24216021234",
+        "contribsys_ids": "nrlf.991065875169706532",
+        "previous_contribsys_ids": "nrlf.b120746153,nrlf.b1207461531234"
     }
 
     with open(record_file, 'rb') as fh:
@@ -30,5 +36,6 @@ def test_get_ids_(data_dir):
                 ids = get_ids(record)
                 if count == 1: 
                     assert ids == record_1_ids
-                
+                elif count == 2:
+                    assert ids == record_2_ids
 
