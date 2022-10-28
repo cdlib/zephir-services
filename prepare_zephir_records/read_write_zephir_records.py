@@ -35,8 +35,8 @@ def output_marc_records(config, input_file, output_file, err_file):
 
         for record in reader:
             if record:
-                ids = {"ocns": "80274381,25231018", "contribsys_id": "hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
-                #ids = get_ids(record)
+                #ids = {"ocns": "80274381,25231018", "contribsys_id": "hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
+                ids = get_ids(record)
                 cid = mint_cid(config, ids)
                 cid_fields = record.get_fields("CID")
                 if not cid_fields:
@@ -201,40 +201,40 @@ def main():
     logging.info("Start " + os.path.basename(__file__))
     logging.info("Env: {}".format(env))
 
-    """test files:
-    /apps/htmm/import/ucla-5/cidfiles
-    20221019151041.ucla-5.ucla-5-test_OCN_ucla-5_20220930.1.xml
-    20221019140508.ucla-5.ucla-5-ucla-5_20221019.1.xml
-    """
     #input_file = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511.xml"
     #output_file_tmp = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511_output_tmp.xml"
     #output_file = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511_output.xml"
     #err_file_tmp = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511_err_tmp.xml"
     #err_file = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511_err.xml"
 
-    filename = "20221019151041.ucla-5.ucla-5-test_OCN_ucla-5_20220930.1.xml"
-    filename_out = "20221019151041.ucla-5.ucla-5-test_OCN_ucla-5_20220930.1.xml.cid"
-    filename_err = "20221019151041.ucla-5.ucla-5-test_OCN_ucla-5_20220930.1.xml.err"
-    file_dir = "/apps/htmm/import/ucla-5/cidfiles/"
+    # 20221027140504.nrlf-6.nrlf-6-nrlf-6_20221021.1.xml
+    # test_record_nrlf-6_20221021.xml
+
+    filename = "20221027140504.nrlf-6.nrlf-6-nrlf-6_20221021.1.xml"
+    filename_out = f"{filename}.cid"
+    filename_err = f"{filename}.err"
+    file_dir = "/apps/htmm/import/nrlf-6/cidfiles/"
     input_file = f"{file_dir}{filename}"
     output_file = f"{file_dir}{filename_out}"
     err_file = f"{file_dir}{filename_err}"
-    output_file_tmp = f"{filename_out}.tmp"
-    err_file_tmp = f"{filename_err}.tmp"
+    output_file_tmp = f"/tmp/{filename_out}.tmp"
+    err_file_tmp = f"/tmp/{filename_err}.tmp"
 
 
     print("Input file: ", input_file)
     print("Output file: ", output_file)
     print("Error file: ", err_file)
+    print("tmp  out: ",  output_file_tmp)
+    print("tmp error: ", err_file_tmp)
 
     output_marc_records(config, input_file, output_file_tmp, err_file_tmp)
 
     convert_to_pretty_xml(output_file_tmp, output_file)
     convert_to_pretty_xml(err_file_tmp, err_file)
 
-    for file in [output_file_tmp, err_file_tmp]:
-        if os.path.exists(file):
-            os.remove(file)
+    #for file in [output_file_tmp, err_file_tmp]:
+    #    if os.path.exists(file):
+    #        os.remove(file)
 
     print("Finished")
 
