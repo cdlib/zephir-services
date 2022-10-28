@@ -38,16 +38,21 @@ def output_marc_records(config, input_file, output_file, err_file):
                 #ids = {"ocns": "80274381,25231018", "contribsys_id": "hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
                 ids = get_ids(record)
                 cid = mint_cid(config, ids)
-                cid_fields = record.get_fields("CID")
-                if not cid_fields:
-                    record.add_field(Field(tag = 'CID', indicators = [' ',' '], subfields = ['a', cid]))
-                elif len(cid_fields) == 1:
-                    record["CID"]['a'] = cid 
+                if cid:
+                    cid_fields = record.get_fields("CID")
+                    if not cid_fields:
+                        record.add_field(Field(tag = 'CID', indicators = [' ',' '], subfields = ['a', cid]))
+                    elif len(cid_fields) == 1:
+                        record["CID"]['a'] = cid 
+                    else:
+                        print("Error - more than one CID field. log error and skip this record")
+                        writer_err.write(record)
+                        continue
+                    writer.write(record)
                 else:
-                    print("Error - more than one CID field. log error and skip this record")
+                    print("Error - CID minting failed. log error and skip this record")
                     writer_err.write(record)
                     continue
-                writer.write(record)
             elif isinstance(reader.current_exception, exc.FatalReaderError):
                 # data file format error
                 # reader will raise StopIteration
@@ -140,9 +145,13 @@ def get_ids(record):
 
 def mint_cid(config, ids):
     # call cid_minter to assinge a CID
-    cid_minter = CidMinter(config)
-    cid = cid_minter.mint_cid(ids)
-    return cid
+    try:
+        cid_minter = CidMinter(config)
+        cid = cid_minter.mint_cid(ids)
+        return cid
+    except Exception as ex:
+        return None
+
 
 def convert_to_pretty_xml(input_file, output_file):
     dom = xml.dom.minidom.parse(input_file)
@@ -210,7 +219,8 @@ def main():
     # 20221027140504.nrlf-6.nrlf-6-nrlf-6_20221021.1.xml
     # test_record_nrlf-6_20221021.xml
 
-    filename = "20221027140504.nrlf-6.nrlf-6-nrlf-6_20221021.1.xml"
+    #filename = "20221027140504.nrlf-6.nrlf-6-nrlf-6_20221021.1.xml"
+    filename = "test_record_nrlf-6_20221021.xml"
     filename_out = f"{filename}.cid"
     filename_err = f"{filename}.err"
     file_dir = "/apps/htmm/import/nrlf-6/cidfiles/"
