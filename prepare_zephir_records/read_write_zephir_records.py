@@ -70,14 +70,19 @@ def output_marc_records(config, input_file, output_file, err_file):
 
 def get_ids(record):
     """Get IDs from the following fields:
-      OCLC numbers: 035$a. Put a comma in between multiple OCNs. 
-      htid: HOL$p,
-      contribsys_ids: HOL$0 without "sdr-" prefix.
-      previous_contribsys_ids: HOT$f. Prefix previous contribsys ids with campus code stored in CAT$c. 
-      Note:
+      OCLC numbers (OCNs): 035$a fields with prefix (OCoLC)
+      htid: HOL$p
+      contribsys_ids: HOL$0
+      previous_contribsys_ids: HOT$f 
+    Format IDs as:
+      multiple IDs: separate by a comma without any spaces
+      contribsys_ids: remove prefix "sdr-"
+      previous_contribsys_ids: Prefix with the campus code stored in CAT$c.
+    Note:
       Contribsys ID and previous contribsys ID are in the <campus_code>.<local_number> format.
-      Some early Zephir records may have  contribsys IDs without the dot separator <campus_code><local_number>.
-      Construct contribysys and previous contrib sys IDs in both formats to ensure early records without  the dot separator can be matched.
+      Some early Zephir records may have contribsys IDs without the dot separator as: <campus_code><local_number>.
+      Construct contrib and previous contrib sys IDs in both formats to ensure early records without the dot separator can be matched.
+      Output the IDs in the sequence of: <campus_code>.<local_number>,<campus_code><local_number>
     Args: 
       record: MARC record
     Return: dictionary with key and value pairs for different IDs.
@@ -91,8 +96,8 @@ def get_ids(record):
       {
         "htid": "hvd.hw5jdo",
         "ocns": "80274381,25231018", 
-        "contribsys_ids": "hvd000012735,hvd.000012735", 
-        "previous_contribsys_ids": "hvd000660168,hvdO007B00250,hvd.000660168,hvd.O007B00250", 
+        "contribsys_ids": "hvd.000012735,hvd000012735", 
+        "previous_contribsys_ids": "hvd.000660168,hvd.000660168,hvd.O007B00250,hvdO007B00250", 
       }
 
     """
@@ -101,6 +106,7 @@ def get_ids(record):
     sysid = None
     prev_sysids = None
     campus_code = "" 
+    contribsys_ids = None
     previous_contribsys_ids =  None
 
     for field in record.get_fields("035"):
@@ -124,19 +130,30 @@ def get_ids(record):
 
     if sysid:
         sysid = sysid.replace("sdr-", "")
+        if campus_code:
+            sysid_2 = ""
+            if sysid.startswith(f"{campus_code}."):
+                sysid_2 = sysid.replace(f"{campus_code}.", campus_code)
+                contribsys_ids = f"{sysid},{sysid_2}"
+            else:
+                sysid_2 = sysid.replace(campus_code, f"{campus_code}.")
+                contribsys_ids = f"{sysid_2},{sysid}"
+        else:
+            contribsys_ids = sysid
 
     if prev_sysids:
         for p_id in prev_sysids.split(","):
-            prefixed_id = f"{campus_code}.{p_id}" if campus_code else p_id
+            prefixed_id = f"{campus_code}.{p_id},{campus_code}{p_id}" if campus_code else p_id
             previous_contribsys_ids = f"{previous_contribsys_ids},{prefixed_id}" if previous_contribsys_ids else prefixed_id
+            # add code to handle the dot separator
 
     ids = {}
     if htid:
         ids["htid"] = htid
     if ocns:
         ids["ocns"] = ocns
-    if sysid:
-        ids["contribsys_ids"] = sysid
+    if contribsys_ids:
+        ids["contribsys_ids"] = contribsys_ids
     if previous_contribsys_ids:
         ids["previous_contribsys_ids"] = previous_contribsys_ids
 

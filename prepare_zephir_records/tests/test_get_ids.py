@@ -9,7 +9,7 @@ from read_write_zephir_records import get_ids
 
 def test_get_ids_(data_dir):
 
-    filename  = "test_record_nrlf-6.xml"
+    filename  = "test_records_nrlf-6_20221021.xml"
     record_file = os.path.join(data_dir, filename)
 
     expected_ids = []
@@ -17,21 +17,21 @@ def test_get_ids_(data_dir):
     expected_ids.append({
         "htid": "uc1.b3381876",
         "ocns": "7636130",
-        "contribsys_ids": "nrlf.991064139089706532",
-        "previous_contribsys_ids": "nrlf.b168484869"
+        "contribsys_ids": "nrlf.991064139089706532,nrlf991064139089706532",
+        "previous_contribsys_ids": "nrlf.b168484869,nrlfb168484869"
     })
     # 1: multiple values separated by comma
     expected_ids.append({
         "htid": "uc1.$b79686",
         "ocns": "2421602,24216021234",
-        "contribsys_ids": "nrlf.991065875169706532",
-        "previous_contribsys_ids": "nrlf.b120746153,nrlf.b1207461531234"
+        "contribsys_ids": "nrlf.991065875169706532,nrlf991065875169706532",
+        "previous_contribsys_ids": "nrlf.b120746153,nrlfb120746153,nrlf.b1207461531234,nrlfb1207461531234"
     })
     # 2: no ocn
     expected_ids.append({
         "htid": "uc1.b4372349",
-        "contribsys_ids": "nrlf.991069357439706532",
-        "previous_contribsys_ids": "nrlf.b121928342"
+        "contribsys_ids": "nrlf.991069357439706532,nrlf991069357439706532",
+        "previous_contribsys_ids": "nrlf.b121928342,nrlfb121928342"
     })
     # 3: no ids - no subfields
     expected_ids.append({})
