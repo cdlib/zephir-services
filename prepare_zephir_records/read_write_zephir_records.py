@@ -35,7 +35,7 @@ def output_marc_records(config, input_file, output_file, err_file):
 
         for record in reader:
             if record:
-                #ids = {"ocns": "80274381,25231018", "contribsys_id": "hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
+                #ids = {"ocns": "80274381,25231018", "contribsys_id": "hvd.000012735,hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
                 ids = get_ids(record)
                 cid = mint_cid(config, ids)
                 if cid:
