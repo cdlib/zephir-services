@@ -15,7 +15,7 @@ from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
 from cid_minter.cid_minter import CidMinter
 
-def output_marc_records(config, input_file, output_file, err_file):
+def assign_cids(config, input_file, output_file, err_file):
     """Process input records and write records to output files based on specifications.
 
     Args:
@@ -258,7 +258,7 @@ def main():
     print("tmp  out: ",  output_file_tmp)
     print("tmp error: ", err_file_tmp)
 
-    output_marc_records(config, input_file, output_file_tmp, err_file_tmp)
+    assign_cids(config, input_file, output_file_tmp, err_file_tmp)
 
     convert_to_pretty_xml(output_file_tmp, output_file)
     convert_to_pretty_xml(err_file_tmp, err_file)
