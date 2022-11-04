@@ -1,6 +1,7 @@
 import os
 import sys
 
+import argparse
 import logging
 from pathlib import PurePosixPath
 
@@ -14,7 +15,7 @@ from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
 from cid_minter.cid_minter import CidMinter
 
-def output_marc_records(config, input_file, output_file, err_file):
+def assign_cids(config, input_file, output_file, err_file):
     """Process input records and write records to output files based on specifications.
 
     Args:
@@ -45,24 +46,25 @@ def output_marc_records(config, input_file, output_file, err_file):
                     elif len(cid_fields) == 1:
                         record["CID"]['a'] = cid 
                     else:
-                        print("Error - more than one CID field. log error and skip this record")
+                        logging.error("Error - more than one CID field. log error and skip this record")
                         writer_err.write(record)
                         continue
                     writer.write(record)
                 else:
-                    print("Error - CID minting failed. log error and skip this record")
+                    logging.error("Error - CID minting failed. log error and skip this record")
                     writer_err.write(record)
                     continue
             elif isinstance(reader.current_exception, exc.FatalReaderError):
                 # data file format error
                 # reader will raise StopIteration
-                print(reader.current_exception)
-                print(reader.current_chunk)
+                logging.error(f"Pymarc error: {reader.current_exception}")
+                logging.error(f"Current chunk: {reader.current_chunk}")
             else:
                 # fix the record data, skip or stop reading:
-                print(reader.current_exception)
-                print(reader.current_chunk)
+                logging.error(f"Pymarc error: {reader.current_exception}")
+                logging.error(f"Current chunk: {reader.current_chunk}")
                 # break/continue/raise
+                writer_err.write(reader.current_chunk)
                 continue
 
     writer.close()
@@ -176,7 +178,7 @@ def convert_to_pretty_xml(input_file, output_file):
     with open(output_file, 'w') as fh:
         fh.write(pretty_xml_as_string)
 
-def config_logger(logfile):
+def config_logger(logfile, console):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
@@ -185,17 +187,30 @@ def config_logger(logfile):
     file = logging.FileHandler(logfile)
     file.setFormatter(log_format)
 
-    # output to console
-    stream = logging.StreamHandler()
-
     logger.addHandler(file)
-    logger.addHandler(stream)
+
+    if console:   
+        # output to console
+        stream = logging.StreamHandler()
+        logger.addHandler(stream)
 
 def main():
-    env = sys.argv[1]
-    if env not in ["test", "dev", "stg", "prd"]:
-        usage(sys.argv[0])
-        exit(1)
+    parser = argparse.ArgumentParser(description='Assign CID to Zephir records.')
+    parser.add_argument('--console', '-c', action='store_true', dest='console')
+    parser.add_argument('--env', '-e', nargs='?', dest='env', choices=["test", "dev", "stg", "prd"], required=True)
+    parser.add_argument('--source_dir', '-s', nargs='?', dest='source_dir', required=True)
+    parser.add_argument('--target_dir', '-t', nargs='?', dest='target_dir', required=True)
+    parser.add_argument('--infile', '-i', nargs='?', dest='input_filename', required=True)
+    parser.add_argument('--outfile', '-o', nargs='?', dest='output_filename', required=False)
+
+    args = parser.parse_args()
+
+    console = args.console
+    env = args.env
+    source_dir = args.source_dir
+    target_dir = args.target_dir
+    input_filename = args.input_filename
+    output_filename = args.output_filename
 
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
     CONFIG_PATH = os.path.join(ROOT_PATH, "config")
@@ -222,30 +237,19 @@ def main():
         "leveldb_cluster_path": CLUSTER_DB_PATH,
     }
 
-    config_logger(logfile)
+    config_logger(logfile, console)
 
     logging.info("Start " + os.path.basename(__file__))
     logging.info("Env: {}".format(env))
 
-    #input_file = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511.xml"
-    #output_file_tmp = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511_output_tmp.xml"
-    #output_file = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511_output.xml"
-    #err_file_tmp = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511_err_tmp.xml"
-    #err_file = f"{ROOT_PATH}/test_data/test_1_ia-coo-2_20220511_err.xml"
-
-    # 20221027140504.nrlf-6.nrlf-6-nrlf-6_20221021.1.xml
-    # test_record_nrlf-6_20221021.xml
-
-    #filename = "20221027140504.nrlf-6.nrlf-6-nrlf-6_20221021.1.xml"
-    filename = "test_record_nrlf-6_20221021.xml"
-    filename_out = f"{filename}.cid"
-    filename_err = f"{filename}.err"
-    file_dir = "/apps/htmm/import/nrlf-6/cidfiles/"
-    input_file = f"{file_dir}{filename}"
-    output_file = f"{file_dir}{filename_out}"
-    err_file = f"{file_dir}{filename_err}"
-    output_file_tmp = f"/tmp/{filename_out}.tmp"
-    err_file_tmp = f"/tmp/{filename_err}.tmp"
+    if output_filename is None:
+        output_filename = f"{input_filename}.cid"
+    err_filename = f"{input_filename}.err"
+    input_file = os.path.join(source_dir, input_filename)
+    output_file = os.path.join(target_dir, output_filename)
+    err_file = os.path.join(target_dir, err_filename)
+    output_file_tmp = f"/tmp/{output_filename}.tmp"
+    err_file_tmp = f"/tmp/{err_filename}.tmp"
 
 
     print("Input file: ", input_file)
@@ -254,7 +258,7 @@ def main():
     print("tmp  out: ",  output_file_tmp)
     print("tmp error: ", err_file_tmp)
 
-    output_marc_records(config, input_file, output_file_tmp, err_file_tmp)
+    assign_cids(config, input_file, output_file_tmp, err_file_tmp)
 
     convert_to_pretty_xml(output_file_tmp, output_file)
     convert_to_pretty_xml(err_file_tmp, err_file)
@@ -263,7 +267,7 @@ def main():
     #    if os.path.exists(file):
     #        os.remove(file)
 
-    print("Finished")
+    logging.info("Finished " + os.path.basename(__file__))
 
 if __name__ == '__main__':
     main()

@@ -1,11 +1,10 @@
 import os
 
 import pytest
-#from pymarc import MARCReader, MARCWriter, XMLWriter, TextWriter
 from pymarc import marcxml
 from pymarc import Record, Field
 
-from read_write_zephir_records import get_ids
+from assign_cid_to_zephir_records import get_ids
 
 def test_get_ids_(data_dir):
 
