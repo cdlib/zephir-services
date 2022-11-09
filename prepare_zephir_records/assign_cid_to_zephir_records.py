@@ -243,7 +243,8 @@ def main():
     logging.info("Env: {}".format(env))
 
     if output_filename is None:
-        output_filename = f"{input_filename}.cid"
+        output_filename = input_filename
+
     err_filename = f"{input_filename}.err"
     input_file = os.path.join(source_dir, input_filename)
     output_file = os.path.join(target_dir, output_filename)
@@ -251,12 +252,18 @@ def main():
     output_file_tmp = f"/tmp/{output_filename}.tmp"
     err_file_tmp = f"/tmp/{err_filename}.tmp"
 
+    if input_file == output_file:
+        err_msg = f"Filename error: Input and output files share the same path and name. ({input_file})"
+        logging.error(err_msg)
+        print("Exiting ...")
+        print(err_msg)
+        exit(1)
 
-    print("Input file: ", input_file)
-    print("Output file: ", output_file)
-    print("Error file: ", err_file)
-    print("tmp  out: ",  output_file_tmp)
-    print("tmp error: ", err_file_tmp)
+    print("For Testing: Input file: ", input_file)
+    print("For Testing: Output file: ", output_file)
+    print("For Testing: Error file: ", err_file)
+    print("For Testing: tmp output: ",  output_file_tmp)
+    print("For Testing: tmp error: ", err_file_tmp)
 
     assign_cids(config, input_file, output_file_tmp, err_file_tmp)
 
@@ -268,6 +275,7 @@ def main():
     #        os.remove(file)
 
     logging.info("Finished " + os.path.basename(__file__))
+    print("For Testing: Finished " + os.path.basename(__file__))
 
 if __name__ == '__main__':
     main()
