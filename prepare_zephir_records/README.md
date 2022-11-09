@@ -52,7 +52,7 @@ sqlite3 /apps/htmm/minterdb/cid_minting_store.sqlite < create_cid_minting_store_
 pipenv run pytest tests/
 ```
 # How to run the CID minter
-The the CID assignment script `assign_cid_to_zephir_records.py` assigns CIDs to records in a given Zephir records file.
+The CID assignment script `assign_cid_to_zephir_records.py` assigns CIDs to records in a given Zephir records file.
 
 * Directory:/apps/htmm/zephir-services/prepare_zephir_records
 * Script: assign_cid_to_zephir_records.py
