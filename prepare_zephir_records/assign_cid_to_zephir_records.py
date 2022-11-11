@@ -217,24 +217,19 @@ def main():
 
     zephirdb_config = get_configs_by_filename(CONFIG_PATH, "zephir_db")
     zephirdb_conn_str = str(db_connect_url(zephirdb_config[env]))
+    local_minterdb_conn_str = zephirdb_conn_str
 
     localdb_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
-    localdb_conn_str = str(db_connect_url(localdb_config[env]["minter_db"]))
 
     primary_db_path = localdb_config[env]["primary_db_path"]
     cluster_db_path = localdb_config[env]["cluster_db_path"]
     logfile = localdb_config["logpath"]
 
-    ZEPHIRDB_CONN_STR = os.environ.get("OVERRIDE_ZEPHIRDB_CONN_STR") or zephirdb_conn_str
-    LOCALDB_CONN_STR = os.environ.get("OVERRIDE_LOCALDB_CONN_STR") or localdb_conn_str
-    PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
-    CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
-
     config = {
-        "zephirdb_conn_str": ZEPHIRDB_CONN_STR,
-        "localdb_conn_str": LOCALDB_CONN_STR,
-        "leveldb_primary_path": PRIMARY_DB_PATH,
-        "leveldb_cluster_path": CLUSTER_DB_PATH,
+        "zephirdb_conn_str": zephirdb_conn_str,
+        "local_minterdb_conn_str": local_minterdb_conn_str,
+        "leveldb_primary_path": primary_db_path,
+        "leveldb_cluster_path": cluster_db_path,
     }
 
     config_logger(logfile, console)

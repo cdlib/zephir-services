@@ -26,7 +26,7 @@ def test_missing_htid_1(caplog, setup_leveldb, setup_zephir_db, setup_local_mint
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -52,7 +52,7 @@ def test_step_0_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -79,7 +79,7 @@ def test_step_0_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -105,7 +105,7 @@ def test_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -138,7 +138,7 @@ def test_step_1_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -179,7 +179,7 @@ def test_step_1_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -218,7 +218,7 @@ def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"], 
     }
@@ -297,7 +297,7 @@ def test_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -375,7 +375,7 @@ def test_step_1_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -428,7 +428,7 @@ def test_step_1_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -457,7 +457,7 @@ def test_step_2_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -503,7 +503,7 @@ def test_step_2_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -551,7 +551,7 @@ def test_step_2_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -596,7 +596,7 @@ def test_step_2_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -644,7 +644,7 @@ def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -711,7 +711,7 @@ def test_step_2_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -742,7 +742,7 @@ def test_step_2_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -771,7 +771,7 @@ def test_step_3_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -825,7 +825,7 @@ def test_step_3_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -879,7 +879,7 @@ def test_step_3_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -926,7 +926,7 @@ def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -987,7 +987,7 @@ def test_step_3_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -1034,7 +1034,7 @@ def test_step_3_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "local_minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
