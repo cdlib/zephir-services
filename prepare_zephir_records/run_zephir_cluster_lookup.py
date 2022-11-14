@@ -11,10 +11,13 @@ from cid_minter.zephir_cluster_lookup import ZephirDatabase
 from cid_minter.zephir_cluster_lookup import CidMinterTable
 
 def main():
+    print(f"Testing {sys.argv[0]}")
     if (len(sys.argv) > 1):
         env = sys.argv[1]
     else:
-        env = "test"
+        print("Parameter error.")
+        print(f"Usage: {sys.argv[0]} env[test|dev|stg|prd]")
+        exit(1)
 
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
     CONFIG_PATH = os.path.join(ROOT_PATH, 'config')

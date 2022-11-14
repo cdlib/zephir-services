@@ -219,11 +219,11 @@ def main():
     zephirdb_conn_str = str(db_connect_url(zephirdb_config[env]))
     local_minterdb_conn_str = zephirdb_conn_str
 
-    localdb_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
+    cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
 
-    primary_db_path = localdb_config[env]["primary_db_path"]
-    cluster_db_path = localdb_config[env]["cluster_db_path"]
-    logfile = localdb_config["logpath"]
+    primary_db_path = cid_minting_config["primary_db_path"]
+    cluster_db_path = cid_minting_config["cluster_db_path"]
+    logfile = cid_minting_config["logpath"]
 
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,

@@ -1,14 +1,5 @@
-prd:
-  primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
-  cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
-
-dev:
-  primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
-  cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
-
-test:
-  primary_db_path: /apps/htmm/zephir-services/prepare_zephir_records/integration_tests/leveldb/primary 
-  cluster_db_path: /apps/htmm/zephir-services/prepare_zephir_records/integration_tests/leveldb/cluster 
+primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
+cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
 
 logpath: /apps/htmm/log/cid_minting/cid_minting.log
 

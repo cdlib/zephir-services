@@ -10,7 +10,7 @@ from lib.utils import get_configs_by_filename
 from cid_minter.local_cid_minter import LocalMinter 
 
 def usage(script_name):
-        print("Usage: {} env[dev|stg|prd] action[read|write] type[ocn|sysid] data[ocn|sys_id] cid".format(script_name))
+        print("Usage: {} env[test|dev|stg|prd] action[read|write] type[ocn|sysid] data[ocn|sys_id] cid".format(script_name))
         print("{} dev read ocn 8727632".format(script_name))
         print("{} dev read sysid uc1234567".format(script_name))
         print("{} dev write ocn 30461866 011323406".format(script_name))
@@ -66,9 +66,12 @@ def main():
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
     CONFIG_PATH = os.path.join(ROOT_PATH, 'config')
 
-    configs= get_configs_by_filename(CONFIG_PATH, 'cid_minting')
-    logfile = configs['logpath']
-    db_config = str(db_connect_url(configs[env]['minter_db']))
+    zephirdb_config = get_configs_by_filename(CONFIG_PATH, "zephir_db")
+    zephirdb_conn_str = str(db_connect_url(zephirdb_config[env]))
+    local_minterdb_conn_str = zephirdb_conn_str
+
+    cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
+    logfile = cid_minting_config["logpath"]
 
     logging.basicConfig(
             level=logging.DEBUG,
@@ -78,9 +81,7 @@ def main():
     logging.info("Start " + os.path.basename(__file__))
     logging.info(cmd_options)
 
-    DB_CONNECT_STR = os.environ.get('OVERRIDE_DB_CONNECT_STR') or db_config
-
-    db = LocalMinter(DB_CONNECT_STR)
+    db = LocalMinter(local_minterdb_conn_str)
 
     results = {} 
     if action == "read":
