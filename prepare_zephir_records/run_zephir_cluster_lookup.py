@@ -15,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description='Lookup Zephir clusters by ONCs or SysIDs.')
     parser.add_argument('--env', '-e', nargs='?', dest='env', choices=["test", "dev", "stg", "prd"], required=True)
     parser.add_argument('--type', '-t', nargs='?', dest='type', choices=["ocn", "sysid"], required=True, help="ID type. Can be ocn or sysid")
-    parser.add_argument('--ids', '-i', nargs='?', dest='ids', required=True, help="Separate multiple IDs by comma without spaces.")
+    parser.add_argument('ids', help="OCNs or sysIDs separated by a comma without spaces. For example: 6758168,15437990 or pur63733,nrlf.b100608668")
 
     args = parser.parse_args()
     env = args.env
