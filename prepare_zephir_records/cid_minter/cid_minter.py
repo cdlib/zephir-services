@@ -23,7 +23,7 @@ class CidMinter:
     def __init__(self, config):
         self.config = config
         self._zephir_db = ZephirDatabase(self.config.get("zephirdb_conn_str"))
-        self._minter_db = LocalMinter(self.config.get("local_minterdb_conn_str"))
+        self._minter_db = LocalMinter(self.config.get("minterdb_conn_str"))
         self._leveldb_primary_path = self.config.get("leveldb_primary_path")
         self._leveldb_cluster_path = self.config.get("leveldb_cluster_path")
      

@@ -227,7 +227,7 @@ def main():
 
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,
-        "minterdb_conn_str": local_minterdb_conn_str,
+        "minterdb_conn_str": minterdb_conn_str,
         "leveldb_primary_path": primary_db_path,
         "leveldb_cluster_path": cluster_db_path,
     }
