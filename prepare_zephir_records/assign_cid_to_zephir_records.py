@@ -195,13 +195,13 @@ def config_logger(logfile, console):
         logger.addHandler(stream)
 
 def main():
-    parser = argparse.ArgumentParser(description='Assign CID to Zephir records.')
-    parser.add_argument('--console', '-c', action='store_true', dest='console')
-    parser.add_argument('--env', '-e', nargs='?', dest='env', choices=["test", "dev", "stg", "prd"], required=True)
-    parser.add_argument('--source_dir', '-s', nargs='?', dest='source_dir', required=True)
-    parser.add_argument('--target_dir', '-t', nargs='?', dest='target_dir', required=True)
-    parser.add_argument('--infile', '-i', nargs='?', dest='input_filename', required=True)
-    parser.add_argument('--outfile', '-o', nargs='?', dest='output_filename', required=False)
+    parser = argparse.ArgumentParser(description="Assign CID to Zephir records.")
+    parser.add_argument("--console", "-c", action="store_true", dest="console", help="display log entries on screen")
+    parser.add_argument("--env", "-e", nargs="?", dest="env", choices=["test", "dev", "stg", "prd"], required=True, help="define runtime environment")
+    parser.add_argument("--source_dir", "-s", nargs="?", dest="source_dir", required=True, help="source file directory")
+    parser.add_argument("--target_dir", "-t", nargs="?", dest="target_dir", required=True, help="target file directroy")
+    parser.add_argument("--infile", "-i", nargs="?", dest="input_filename", required=True, help="input filename")
+    parser.add_argument("--outfile", "-o", nargs="?", dest="output_filename", required=False, help="output filename")
 
     args = parser.parse_args()
 
