@@ -217,7 +217,7 @@ def main():
 
     zephirdb_config = get_configs_by_filename(CONFIG_PATH, "zephir_db")
     zephirdb_conn_str = str(db_connect_url(zephirdb_config[env]))
-    local_minterdb_conn_str = zephirdb_conn_str
+    minterdb_conn_str = zephirdb_conn_str
 
     cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
 
@@ -227,7 +227,7 @@ def main():
 
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,
-        "local_minterdb_conn_str": local_minterdb_conn_str,
+        "minterdb_conn_str": local_minterdb_conn_str,
         "leveldb_primary_path": primary_db_path,
         "leveldb_cluster_path": cluster_db_path,
     }

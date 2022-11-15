@@ -23,7 +23,7 @@ class CidMinter:
     def __init__(self, config):
         self.config = config
         self._zephir_db = ZephirDatabase(self.config.get("zephirdb_conn_str"))
-        self._local_minter_db = LocalMinter(self.config.get("local_minterdb_conn_str"))
+        self._minter_db = LocalMinter(self.config.get("local_minterdb_conn_str"))
         self._leveldb_primary_path = self.config.get("leveldb_primary_path")
         self._leveldb_cluster_path = self.config.get("leveldb_cluster_path")
      
@@ -128,7 +128,7 @@ class CidMinter:
         matched_cids = []
 
         for value in values:
-            results = self._local_minter_db.find_cid(id_type, str(value))
+            results = self._minter_db.find_cid(id_type, str(value))
             if results and results.get('matched_cid') not in matched_cids:
                 matched_cids.append(results.get('matched_cid'))
         if len(matched_cids) == 0:
@@ -276,16 +276,16 @@ class CidMinter:
         previous_sysids = ids.get("previous_contribsys_ids")
         if ocns:
             for ocn in ocns.split(","):
-                self._local_minter_db.write_identifier("ocn", ocn, cid)
+                self._minter_db.write_identifier("ocn", ocn, cid)
                 logging.info(f"Updated local minter: ocn: {ocn}")
 
         if sysids:
             for sysid in sysids.split(","):
-                self._local_minter_db.write_identifier("sysid", sysid, cid)
+                self._minter_db.write_identifier("sysid", sysid, cid)
                 logging.info(f"Updated local minter: contribsys id: {sysid}")
 
         if previous_sysids:
             for sysid in previous_sysids.split(","):
-                self._local_minter_db.write_identifier("sysid", sysid, cid)
+                self._minter_db.write_identifier("sysid", sysid, cid)
                 logging.info(f"Updated local minter: previous contribsys id: {sysid}")
 
