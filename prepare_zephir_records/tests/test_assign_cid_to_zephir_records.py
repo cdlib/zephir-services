@@ -58,3 +58,5 @@ def test_get_ids_(data_dir):
                     break
                 idx +=1
 
+def test_assign_cids():
+    pass
