@@ -15,7 +15,7 @@ from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
 from cid_minter.cid_minter import CidMinter
 
-def assign_cids(config, input_file, output_file, err_file):
+def assign_cids(cid_minter, input_file, output_file, err_file):
     """Process input records and write records to output files based on specifications.
 
     Args:
@@ -38,7 +38,7 @@ def assign_cids(config, input_file, output_file, err_file):
             if record:
                 #ids = {"ocns": "80274381,25231018", "contribsys_id": "hvd.000012735,hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
                 ids = get_ids(record)
-                cid = mint_cid(config, ids)
+                cid = mint_cid(cid_minter, ids)
                 if cid:
                     cid_fields = record.get_fields("CID")
                     if not cid_fields:
@@ -162,10 +162,9 @@ def get_ids(record):
     return ids
 
 
-def mint_cid(config, ids):
+def mint_cid(cid_minter, ids):
     # call cid_minter to assinge a CID
     try:
-        cid_minter = CidMinter(config)
         cid = cid_minter.mint_cid(ids)
         return cid
     except Exception as ex:
@@ -260,7 +259,8 @@ def main():
     print("For Testing: tmp output: ",  output_file_tmp)
     print("For Testing: tmp error: ", err_file_tmp)
 
-    assign_cids(config, input_file, output_file_tmp, err_file_tmp)
+    cid_minter = CidMinter(config)
+    assign_cids(cid_minter, input_file, output_file_tmp, err_file_tmp)
 
     convert_to_pretty_xml(output_file_tmp, output_file)
     convert_to_pretty_xml(err_file_tmp, err_file)
