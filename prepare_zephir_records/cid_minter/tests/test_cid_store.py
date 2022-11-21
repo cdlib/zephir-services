@@ -5,7 +5,7 @@ import pytest
 import environs
 import logging
 
-from cid_minter.local_cid_minter import LocalMinter
+from cid_minter.cid_store import CidStore
 
 @pytest.fixture
 def create_test_db(data_dir, tmpdir, scope="session"):
@@ -33,7 +33,7 @@ def create_test_db(data_dir, tmpdir, scope="session"):
 
 def test_find_record_by_identifier(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
@@ -60,7 +60,7 @@ def test_find_record_by_identifier(create_test_db):
 
 def test_find_record(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
@@ -81,7 +81,7 @@ def test_find_record(create_test_db):
 
 def test_find_all(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
@@ -94,7 +94,7 @@ def test_find_all(create_test_db):
 
 def test_find_cid_by_ocn(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
@@ -122,7 +122,7 @@ def test_find_cid_by_ocn(create_test_db):
 
 def test_find_cid_by_sysid(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
@@ -152,7 +152,7 @@ def test_update_an_existing_record(caplog, create_test_db):
     caplog.set_level(logging.DEBUG)
 
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
@@ -186,7 +186,7 @@ def test_update_a_non_existing_record(caplog, create_test_db):
     caplog.set_level(logging.DEBUG)
 
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
@@ -213,7 +213,7 @@ def test_insert_a_record(caplog, create_test_db):
     caplog.set_level(logging.DEBUG)
 
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename
@@ -243,7 +243,7 @@ def test_insert_a_record(caplog, create_test_db):
 # Note: the test database saves all changes from the last test function
 def test_write_a_record(create_test_db):
     db_conn_str = create_test_db['db_conn_str']
-    db = LocalMinter(db_conn_str)
+    db = CidStore(db_conn_str)
     engine = db.engine
     session = db.session
     CidMintingStore = db.tablename

@@ -7,7 +7,7 @@ import logging
 
 from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
-from cid_minter.local_cid_minter import LocalMinter 
+from cid_minter.cid_store import CidStore 
 
 def usage(script_name):
         print("Usage: {} env[test|dev|stg|prd] action[read|write] type[ocn|sysid] data[ocn|sys_id] cid".format(script_name))
@@ -81,7 +81,7 @@ def main():
     logging.info("Start " + os.path.basename(__file__))
     logging.info(cmd_options)
 
-    db = LocalMinter(local_minterdb_conn_str)
+    db = CidStore(local_minterdb_conn_str)
 
     results = {} 
     if action == "read":

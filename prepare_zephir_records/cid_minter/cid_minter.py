@@ -8,7 +8,7 @@ from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 from cid_minter.zephir_cluster_lookup import ZephirDatabase
 from cid_minter.zephir_cluster_lookup import CidMinterTable 
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
-from cid_minter.local_cid_minter import LocalMinter
+from cid_minter.cid_store import CidStore
 from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
 
 class IdType(Enum):
@@ -23,7 +23,7 @@ class CidMinter:
     def __init__(self, config):
         self.config = config
         self._zephir_db = ZephirDatabase(self.config.get("zephirdb_conn_str"))
-        self._minter_db = LocalMinter(self.config.get("minterdb_conn_str"))
+        self._minter_db = CidStore(self.config.get("minterdb_conn_str"))
         self._leveldb_primary_path = self.config.get("leveldb_primary_path")
         self._leveldb_cluster_path = self.config.get("leveldb_cluster_path")
      

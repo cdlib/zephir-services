@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 
 import logging
 
-class LocalMinter:
+class CidStore:
     def __init__(self, db_connect_str):
         self._prepare_database(db_connect_str)
 
