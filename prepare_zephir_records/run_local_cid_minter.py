@@ -10,7 +10,7 @@ from lib.utils import get_configs_by_filename
 from cid_minter.cid_store import CidStore 
 
 def usage(script_name):
-        print("Usage: {} env[test|dev|stg|prd] action[read|write] type[ocn|sysid] data[ocn|sys_id] cid".format(script_name))
+        print("Usage: {} env[test|dev] action[read|write] type[ocn|sysid] data[ocn|sys_id] cid".format(script_name))
         print("{} dev read ocn 8727632".format(script_name))
         print("{} dev read sysid uc1234567".format(script_name))
         print("{} dev write ocn 30461866 011323406".format(script_name))
@@ -43,7 +43,7 @@ def main():
     if len(sys.argv) == 6:
         cid = sys.argv[5]
 
-    if env not in ["test", "dev", "stg", "prd"]:
+    if env not in ["test", "dev"]:
         usage(sys.argv[0])
         exit(1)
 
