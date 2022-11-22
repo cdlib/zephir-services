@@ -19,6 +19,8 @@ class IdType(Enum):
 
 class CidMinter:
     """Mint CID from local minter and Zephir database based on given record IDs.
+       Note: We have migrated the "local minter" from SQLite to MySQL based Zephir database. 
+             The term "local minter" in this document is equivalent to the cid_minting_store table in the Zephir DB.
     """
     def __init__(self, config):
         self.config = config
