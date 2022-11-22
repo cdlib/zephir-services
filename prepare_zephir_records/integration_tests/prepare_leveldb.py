@@ -99,6 +99,9 @@ def create_cluster_db(path, df):
 def main():
     leveldb_dir = "leveldb/"
     data_file = "test_datasets/leveldb_test_datasets.csv"
+    
+    shutil.rmtree(leveldb_dir, ignore_errors=True)
+    os.mkdir(leveldb_dir)
 
     ret = create_leveldb(leveldb_dir, data_file)
     print("Creating levelDB: Complete")
