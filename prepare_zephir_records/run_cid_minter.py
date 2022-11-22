@@ -15,7 +15,7 @@ from cid_minter.cid_minter import CidMinter
 
 def usage(script_name):
     print("Parameter error.")
-    print("Usage: {} env[test|dev|stg|prd] path_to_IDs_file".format(script_name))
+    print("Usage: {} env[test|dev] path_to_IDs_file".format(script_name))
 
 def config_logger(logfile):
     logger = logging.getLogger()
@@ -35,7 +35,7 @@ def config_logger(logfile):
 def main():
     """ Retrieves Zephir clusters by OCNs.
         Command line arguments:
-        argv[1]: Server environemnt (Required). Can be test, dev, stg, or prd.
+        argv[1]: Server environemnt (Required). Can be test or dev.
         argv[2]: path to a JSON IDs file
     """
 
@@ -44,7 +44,7 @@ def main():
         exit(1)
 
     env = sys.argv[1]
-    if env not in ["test", "dev", "stg", "prd"]:
+    if env not in ["test", "dev"]:
         usage(sys.argv[0])
         exit(1)
 
@@ -55,7 +55,7 @@ def main():
 
     zephirdb_config = get_configs_by_filename(CONFIG_PATH, "zephir_db")
     zephirdb_conn_str = str(db_connect_url(zephirdb_config[env]))
-    local_minterdb_conn_str = zephirdb_conn_str
+    minterdb_conn_str = zephirdb_conn_str
 
     cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
 
@@ -70,7 +70,7 @@ def main():
 
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,
-        "local_minterdb_conn_str": local_minterdb_conn_str,
+        "minterdb_conn_str": minterdb_conn_str,
         "leveldb_primary_path": primary_db_path,
         "leveldb_cluster_path": cluster_db_path,
     }
