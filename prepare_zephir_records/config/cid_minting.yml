@@ -1,23 +1,5 @@
-prd:
-  minter_db:
-    database:  /apps/htmm/minterdb/cid_minting_store.sqlite
-    drivername: sqlite
-  primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
-  cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
-
-dev:
-  minter_db:
-    database:  /apps/htmm/minterdb/cid_minting_store.sqlite
-    drivername: sqlite
-  primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
-  cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
-
-test:
-  minter_db:
-    database:  /apps/htmm/zephir-services/prepare_zephir_records/integration_tests/local_minter/cid_minting_store.sqlite
-    drivername: sqlite
-  primary_db_path: /apps/htmm/zephir-services/prepare_zephir_records/integration_tests/leveldb/primary 
-  cluster_db_path: /apps/htmm/zephir-services/prepare_zephir_records/integration_tests/leveldb/cluster 
+primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
+cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
 
 logpath: /apps/htmm/log/cid_minting/cid_minting.log
 

@@ -14,6 +14,14 @@ if [ $? -ne 0 ]; then
     exit
 fi
 
+echo "Creating cid_minitng_store table in the test DB: devtst"
+sql_script="create_cid_minting_store.sql"
+$sql_cmd < ${sql_script}
+if [ $? -ne 0 ]; then
+    echo "Command failed: '${sql_cmd} < ${sql_script}'"
+    exit
+fi
+
 echo "Creating OCLC Xref table in the test DB: devtst"
 sql_script="create_oclc_ref_table.sql"
 $sql_cmd < ${sql_script}

@@ -15,37 +15,26 @@ dev:
     database: htmm
     drivername: mysql+mysqlconnector
 ```
-3. Verify CID minter configuration
+3. Verify CID minting configuration
    - The configuration file: /apps/htmm/zephir-services/prepare_zephir_records/config/cid_minting.yml 
    - Configuration entries:
      - logpath
-     - Minter database name
      - LevelDB primary file path
      - LevelDB cluster file path
    - Sample configuraiton:
 ```
-dev:
-  minter_db:
-    database:  /apps/htmm/minterdb/cid_minting_store.sqlite
-    drivername: sqlite
-  primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
-  cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
+primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
+cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
 
 logpath: /apps/htmm/log/cid_minting/cid_minting.log
 ```
-4. Create the SQLite cid_minting_store.sqlite database
-   - Find the db creating script zephir-services.git/prepare_zephir_records/cid_minter/database/cid_minting_store.sqlite 
-   - Create the cid_minting_store.sqlite with the defined full path `/apps/htmm/minterdb/cid_minting_store.sqlite`
-```
-sqlite3 /apps/htmm/minterdb/cid_minting_store.sqlite < create_cid_minting_store_table.sql
-```
-5. Vefiry LevelDB files - make sure they exist and up-to-date
+4. Vefiry LevelDB files - make sure they exist and up-to-date
    - /apps/htmm/leveldb/leveldb_files/primary-lookup
    - /apps/htmm/leveldb/leveldb_files/cluster-lookup
 
-6. Verify the log `/apps/htmm/log/cid_minting/cid_minting.log` exists. If not create a new one.
+5. Verify the log `/apps/htmm/log/cid_minting/cid_minting.log` exists. If not create a new one.
 
-7. Run tests in the following directories:
+6. Run tests in the following directories:
    - zephir-services/prepare_zephir_records
    - zephir-services/prepare_zephir_records/cid_minter
 ```
@@ -59,7 +48,7 @@ The CID assignment script `assign_cid_to_zephir_records.py` assigns CIDs to reco
 
 ### To get help:
 ```
-pipenv run python  assign_cid_to_zephir_records.py -h
+pipenv run python assign_cid_to_zephir_records.py -h
 usage: assign_cid_to_zephir_records.py [-h] [--console] --env
                                        [{test,dev,stg,prd}] --source_dir
                                        [SOURCE_DIR] --target_dir [TARGET_DIR]
@@ -70,12 +59,17 @@ Assign CID to Zephir records.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --console, -c
+  --console, -c         display log entries on screen
   --env [{test,dev,stg,prd}], -e [{test,dev,stg,prd}]
+                        define runtime environment
   --source_dir [SOURCE_DIR], -s [SOURCE_DIR]
+                        source file directory
   --target_dir [TARGET_DIR], -t [TARGET_DIR]
+                        target file directroy
   --infile [INPUT_FILENAME], -i [INPUT_FILENAME]
+                        input filename
   --outfile [OUTPUT_FILENAME], -o [OUTPUT_FILENAME]
+                        output filename
 ```
 
 ### To assign CIDs to Zephir recors in a file

@@ -9,13 +9,13 @@ from pymarc import MARCReader, MARCWriter, XMLWriter, TextWriter
 from pymarc import marcxml
 from pymarc import Record, Field
 
-import xml.dom.minidom
+from lxml import etree
 
 from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
 from cid_minter.cid_minter import CidMinter
 
-def assign_cids(config, input_file, output_file, err_file):
+def assign_cids(cid_minter, input_file, output_file, err_file):
     """Process input records and write records to output files based on specifications.
 
     Args:
@@ -38,7 +38,7 @@ def assign_cids(config, input_file, output_file, err_file):
             if record:
                 #ids = {"ocns": "80274381,25231018", "contribsys_id": "hvd.000012735,hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
                 ids = get_ids(record)
-                cid = mint_cid(config, ids)
+                cid = mint_cid(cid_minter, ids)
                 if cid:
                     cid_fields = record.get_fields("CID")
                     if not cid_fields:
@@ -162,10 +162,9 @@ def get_ids(record):
     return ids
 
 
-def mint_cid(config, ids):
+def mint_cid(cid_minter, ids):
     # call cid_minter to assinge a CID
     try:
-        cid_minter = CidMinter(config)
         cid = cid_minter.mint_cid(ids)
         return cid
     except Exception as ex:
@@ -173,10 +172,14 @@ def mint_cid(config, ids):
 
 
 def convert_to_pretty_xml(input_file, output_file):
-    dom = xml.dom.minidom.parse(input_file)
-    pretty_xml_as_string = dom.toprettyxml()
-    with open(output_file, 'w') as fh:
-        fh.write(pretty_xml_as_string)
+    try:
+        parser = etree.XMLParser(remove_blank_text=True, recover=True)
+        tree = etree.parse(input_file, parser)
+        tree.write(output_file, pretty_print=True)
+    except Exception as ex:
+        err_msg = f"Pretty XMLParser error: {ex}"
+        logging.error(err_msg)
+        print(err_msg)
 
 def config_logger(logfile, console):
     logger = logging.getLogger()
@@ -195,13 +198,13 @@ def config_logger(logfile, console):
         logger.addHandler(stream)
 
 def main():
-    parser = argparse.ArgumentParser(description='Assign CID to Zephir records.')
-    parser.add_argument('--console', '-c', action='store_true', dest='console')
-    parser.add_argument('--env', '-e', nargs='?', dest='env', choices=["test", "dev", "stg", "prd"], required=True)
-    parser.add_argument('--source_dir', '-s', nargs='?', dest='source_dir', required=True)
-    parser.add_argument('--target_dir', '-t', nargs='?', dest='target_dir', required=True)
-    parser.add_argument('--infile', '-i', nargs='?', dest='input_filename', required=True)
-    parser.add_argument('--outfile', '-o', nargs='?', dest='output_filename', required=False)
+    parser = argparse.ArgumentParser(description="Assign CID to Zephir records.")
+    parser.add_argument("--console", "-c", action="store_true", dest="console", help="display log entries on screen")
+    parser.add_argument("--env", "-e", nargs="?", dest="env", choices=["test", "dev", "stg", "prd"], required=True, help="define runtime environment")
+    parser.add_argument("--source_dir", "-s", nargs="?", dest="source_dir", required=True, help="source file directory")
+    parser.add_argument("--target_dir", "-t", nargs="?", dest="target_dir", required=True, help="target file directroy")
+    parser.add_argument("--infile", "-i", nargs="?", dest="input_filename", required=True, help="input filename")
+    parser.add_argument("--outfile", "-o", nargs="?", dest="output_filename", required=False, help="output filename")
 
     args = parser.parse_args()
 
@@ -217,24 +220,19 @@ def main():
 
     zephirdb_config = get_configs_by_filename(CONFIG_PATH, "zephir_db")
     zephirdb_conn_str = str(db_connect_url(zephirdb_config[env]))
+    minterdb_conn_str = zephirdb_conn_str
 
-    localdb_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
-    localdb_conn_str = str(db_connect_url(localdb_config[env]["minter_db"]))
+    cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
 
-    primary_db_path = localdb_config[env]["primary_db_path"]
-    cluster_db_path = localdb_config[env]["cluster_db_path"]
-    logfile = localdb_config["logpath"]
-
-    ZEPHIRDB_CONN_STR = os.environ.get("OVERRIDE_ZEPHIRDB_CONN_STR") or zephirdb_conn_str
-    LOCALDB_CONN_STR = os.environ.get("OVERRIDE_LOCALDB_CONN_STR") or localdb_conn_str
-    PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
-    CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
+    primary_db_path = cid_minting_config["primary_db_path"]
+    cluster_db_path = cid_minting_config["cluster_db_path"]
+    logfile = cid_minting_config["logpath"]
 
     config = {
-        "zephirdb_conn_str": ZEPHIRDB_CONN_STR,
-        "localdb_conn_str": LOCALDB_CONN_STR,
-        "leveldb_primary_path": PRIMARY_DB_PATH,
-        "leveldb_cluster_path": CLUSTER_DB_PATH,
+        "zephirdb_conn_str": zephirdb_conn_str,
+        "minterdb_conn_str": minterdb_conn_str,
+        "leveldb_primary_path": primary_db_path,
+        "leveldb_cluster_path": cluster_db_path,
     }
 
     config_logger(logfile, console)
@@ -265,7 +263,8 @@ def main():
     print("For Testing: tmp output: ",  output_file_tmp)
     print("For Testing: tmp error: ", err_file_tmp)
 
-    assign_cids(config, input_file, output_file_tmp, err_file_tmp)
+    cid_minter = CidMinter(config)
+    assign_cids(cid_minter, input_file, output_file_tmp, err_file_tmp)
 
     convert_to_pretty_xml(output_file_tmp, output_file)
     convert_to_pretty_xml(err_file_tmp, err_file)

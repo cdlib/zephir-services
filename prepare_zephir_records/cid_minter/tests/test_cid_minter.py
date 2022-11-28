@@ -10,7 +10,7 @@ import logging
 from cid_minter.cid_minter import CidMinter
 
 from cid_minter.zephir_cluster_lookup import ZephirDatabase
-from cid_minter.local_cid_minter import LocalMinter
+from cid_minter.cid_store import CidStore
 from cid_minter.oclc_lookup import get_ocns_cluster_by_ocn
 
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
@@ -26,7 +26,7 @@ def test_missing_htid_1(caplog, setup_leveldb, setup_zephir_db, setup_local_mint
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -52,7 +52,7 @@ def test_step_0_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -79,7 +79,7 @@ def test_step_0_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
@@ -99,20 +99,20 @@ def test_step_0_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     assert "No CID/item found in Zephir DB by htid" in caplog.text
 
 def test_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 1a: Found matched CID by OCNs in Local Minter.
+    """Test case 1a: Found matched CID by OCNs in Cid Minting Store.
        Use this CID and do not perform Zephir search.
     """
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -132,20 +132,20 @@ def test_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     assert "Find CID in Zephir Database by OCNs" not in caplog.text
 
 def test_step_1_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 1a2: Found more than one matched CID by OCNs in Local Minter.
+    """Test case 1a2: Found more than one matched CID by OCNs in Cid Minting Store.
        Do not use this CID. Search CID in Zephir DB by OCNs in this case.
     """
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -173,20 +173,20 @@ def test_step_1_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
 def test_step_1_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    """Test case 1a3: No matched CID by OCNs in Local Minter.
+    """Test case 1a3: No matched CID by OCNs in Cid Minting Store.
        Search CID OCNs in Zephir by OCNs in this case.
     """
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -218,14 +218,14 @@ def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"], 
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -297,14 +297,14 @@ def test_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -375,14 +375,14 @@ def test_step_1_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -428,14 +428,14 @@ def test_step_1_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -457,14 +457,14 @@ def test_step_2_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -503,14 +503,14 @@ def test_step_2_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -551,14 +551,14 @@ def test_step_2_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -596,14 +596,14 @@ def test_step_2_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -644,14 +644,14 @@ def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -711,14 +711,14 @@ def test_step_2_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -742,14 +742,14 @@ def test_step_2_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -771,14 +771,14 @@ def test_step_3_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -825,14 +825,14 @@ def test_step_3_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -879,14 +879,14 @@ def test_step_3_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -926,14 +926,14 @@ def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -987,14 +987,14 @@ def test_step_3_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 
@@ -1034,14 +1034,14 @@ def test_step_3_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     caplog.set_level(logging.DEBUG)
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "localdb_conn_str": setup_local_minter["local_minter"],
+        "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
     }
 
     cid_minter = CidMinter(config)
     zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = LocalMinter(setup_local_minter["local_minter"])
+    local_minter = CidStore(setup_local_minter["local_minter"])
     primary_db_path = setup_leveldb["primary_db_path"]
     cluster_db_path = setup_leveldb["cluster_db_path"]
 

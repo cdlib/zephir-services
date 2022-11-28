@@ -173,17 +173,15 @@ def main(test, ocns):
     primary_db_path = configs["primary_db_path"]
     cluster_db_path = configs["cluster_db_path"]
 
-    PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
-    CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
 
     if test:
         click.echo("Running tests ...")
-        tests(PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+        tests(primary_db_path, cluster_db_path)
         exit(0)
 
     ocns_list = list(int(ocn) for ocn in ocns)
     if ocns_list:
-        clusters = get_clusters_by_ocns(ocns_list, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+        clusters = get_clusters_by_ocns(ocns_list, primary_db_path, cluster_db_path)
         click.echo(clusters)
         exit(0)
     else:

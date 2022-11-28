@@ -16,13 +16,13 @@ from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_li
 
 def usage(script_name):
     print("Parameter error.")
-    print("Usage: {} env[dev|stg|prd] comma_separated_ocns".format(script_name))
+    print("Usage: {} env[test|dev|stg|prd] comma_separated_ocns".format(script_name))
     print("{} dev 1,6567842,6758168,8727632".format(script_name))
 
 def main():
     """ Retrieves Zephir clusters by OCNs.
         Command line arguments:
-        argv[1]: Server environemnt (Required). Can be dev, stg, or prd.
+        argv[1]: Server environemnt (Required). Can be test, dev, stg, or prd.
         argv[2]: List of OCNs (Optional).
                  Comma separated strings without spaces in between any two values.
                  For example: 1,6567842,6758168,8727632
@@ -55,8 +55,6 @@ def main():
     primary_db_path = cid_minting_config["primary_db_path"]
     cluster_db_path = cid_minting_config["cluster_db_path"]
     logfile = cid_minting_config['logpath']
-    cid_inquiry_data_dir = cid_minting_config['cid_inquiry_data_dir']
-    cid_inquiry_done_dir = cid_minting_config['cid_inquiry_done_dir']
 
     logging.basicConfig(
             level=logging.DEBUG,
@@ -66,16 +64,12 @@ def main():
     logging.info("Start " + os.path.basename(__file__))
     logging.info("Env: {}".format(env))
 
-    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_str
-    PRIMARY_DB_PATH = os.environ.get("OVERRIDE_PRIMARY_DB_PATH") or primary_db_path
-    CLUSTER_DB_PATH = os.environ.get("OVERRIDE_CLUSTER_DB_PATH") or cluster_db_path
-
-    zephirDb = ZephirDatabase(DB_CONNECT_STR)
+    zephirDb = ZephirDatabase(db_connect_str)
 
     if (len(sys.argv) == 3):
         ocns_list = convert_comma_separated_str_to_int_list(sys.argv[2])
 
-        results = cid_inquiry_by_ocns(ocns_list, zephirDb, PRIMARY_DB_PATH, CLUSTER_DB_PATH)
+        results = cid_inquiry_by_ocns(ocns_list, zephirDb, primary_db_path, cluster_db_path)
         print(json.dumps(results))
 
         exit(0)
