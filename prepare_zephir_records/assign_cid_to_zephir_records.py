@@ -9,7 +9,7 @@ from pymarc import MARCReader, MARCWriter, XMLWriter, TextWriter
 from pymarc import marcxml
 from pymarc import Record, Field
 
-import xml.dom.minidom
+from lxml import etree
 
 from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
@@ -172,10 +172,14 @@ def mint_cid(cid_minter, ids):
 
 
 def convert_to_pretty_xml(input_file, output_file):
-    dom = xml.dom.minidom.parse(input_file)
-    pretty_xml_as_string = dom.toprettyxml()
-    with open(output_file, 'w') as fh:
-        fh.write(pretty_xml_as_string)
+    try:
+        parser = etree.XMLParser(remove_blank_text=True, recover=True)
+        tree = etree.parse(input_file, parser)
+        tree.write(output_file, pretty_print=True)
+    except Exception as ex:
+        err_msg = f"Pretty XMLParser error: {ex}"
+        logging.error(err_msg)
+        print(err_msg)
 
 def config_logger(logfile, console):
     logger = logging.getLogger()
