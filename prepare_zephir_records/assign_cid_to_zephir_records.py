@@ -1,5 +1,6 @@
 import os
 import sys
+from glob import glob
 
 import argparse
 import logging
@@ -197,6 +198,85 @@ def config_logger(logfile, console):
         stream = logging.StreamHandler()
         logger.addHandler(stream)
 
+def process_one_file(config, source_dir, target_dir, input_filename, output_filename):
+    err_filename = f"{input_filename}.err"
+    input_file = os.path.join(source_dir, input_filename)
+    output_file = os.path.join(target_dir, output_filename)
+    err_file = os.path.join(target_dir, err_filename)
+    output_file_tmp = f"/tmp/{output_filename}.tmp"
+    err_file_tmp = f"/tmp/{err_filename}.tmp"
+
+    print("For Testing: Input file: ", input_file)
+    print("For Testing: Output file: ", output_file)
+    print("For Testing: Error file: ", err_file)
+    print("For Testing: tmp output: ",  output_file_tmp)
+    print("For Testing: tmp error: ", err_file_tmp)
+
+    cid_minter = CidMinter(config)
+    assign_cids(cid_minter, input_file, output_file_tmp, err_file_tmp)
+
+    convert_to_pretty_xml(output_file_tmp, output_file)
+    convert_to_pretty_xml(err_file_tmp, err_file)
+
+def locate_a_dir_for_cid_minting(preparedfile_dirs):
+    """Locate a directory for CID minting.
+       Identify a dirctory that contains at least one Zephir prepared file with .xml extension but does not contain a process.cid file;
+       Mark the identified directory as "under CID minting" status by putting a process.cid file underneath;
+    Args:
+      preparedfile_dirs: a list of directories that contain Zephir prepared files
+      pid: current PID
+    Returns:
+      dirname_locked: the identified directory
+    """
+    for prepared_dir in glob(preparedfile_dirs):
+        #print(f"examing dir: {prepared_dir}")
+        process_dot_cid = os.path.join(prepared_dir, "process.cid")
+        if os.path.exists(process_dot_cid):
+            print(f"Another CID minter is processing files in directroy {prepared_dir} - pass this dir")
+            continue
+        else:
+            xml_files = os.path.join(prepared_dir, "*.xml")
+            for file in glob(xml_files):
+                print(f"Found an xml file to process: {file}")
+                print("Lock this directory")
+                with open(process_dot_cid, 'w') as fp:
+                    pass
+                return os.path.dirname(file)
+    return None
+
+def locate_a_file_for_cid_minting(preparedfile_dir, pid):
+    """Locate a file for CID minting.
+       Identify a dirctory that contains at least one Zephir prepared file with .xml extension but does not contain a process.cid file;
+       Mark the identified directory as "under CID minting" status by putting a process.cid file underneath; 
+       Find an .xml file in the identified directory;
+       Lock the identified file by renaming it to filename.pid.
+       The identified directory is in <htmm_home_dir>/import/<zephir_config_name>/prepared_files/ format.
+    Args:
+      preparedfile_dirs: a list of directories that contain Zephir prepared files
+      pid: current PID
+    Returns: 
+      dirname_locked: the identified directory <htmm_home_dir>/import/<zephir_config_name>/prepared_files/ 
+      filename_org: the name of the identified file
+      filename_locked: the new filename with a .PID attached 
+       
+    """
+    dirname_locked = None
+    filename_org = None
+    filename_locked = None
+
+    xml_files = os.path.join(preparedfile_dir, "*.xml")
+    for file in glob(xml_files):
+        print(f"Found an xml file to process: {file}")
+        print("Lock this file for CID minting")
+        dirname_locked, filename_org = os.path.split(file)
+        filename_locked = f"{filename_org}.{pid}"
+        print(dirname_locked)
+        print(filename_org)
+        print(filename_locked)
+        os.rename(file, os.path.join(dirname_locked, filename_locked))
+        return dirname_locked, filename_org, filename_locked 
+    return dirname_locked, filename_org, filename_locked 
+
 def main():
     parser = argparse.ArgumentParser(description="Assign CID to Zephir records.")
     parser.add_argument("--console", "-c", action="store_true", dest="console", help="display log entries on screen")
@@ -205,6 +285,7 @@ def main():
     parser.add_argument("--target_dir", "-t", nargs="?", dest="target_dir", required=True, help="target file directroy")
     parser.add_argument("--infile", "-i", nargs="?", dest="input_filename", required=True, help="input filename")
     parser.add_argument("--outfile", "-o", nargs="?", dest="output_filename", required=False, help="output filename")
+    parser.add_argument("--batch", "-b", action="store_true", dest="batch", help="assign CID in batch")
 
     args = parser.parse_args()
 
@@ -243,35 +324,37 @@ def main():
     if output_filename is None:
         output_filename = input_filename
 
-    err_filename = f"{input_filename}.err"
-    input_file = os.path.join(source_dir, input_filename)
-    output_file = os.path.join(target_dir, output_filename)
-    err_file = os.path.join(target_dir, err_filename)
-    output_file_tmp = f"/tmp/{output_filename}.tmp"
-    err_file_tmp = f"/tmp/{err_filename}.tmp"
-
-    if input_file == output_file:
+    if os.path.join(source_dir, input_filename) == os.path.join(target_dir, output_filename):
         err_msg = f"Filename error: Input and output files share the same path and name. ({input_file})"
         logging.error(err_msg)
         print("Exiting ...")
         print(err_msg)
-        exit(1)
+        return False
 
-    print("For Testing: Input file: ", input_file)
-    print("For Testing: Output file: ", output_file)
-    print("For Testing: Error file: ", err_file)
-    print("For Testing: tmp output: ",  output_file_tmp)
-    print("For Testing: tmp error: ", err_file_tmp)
+    process_one_file(config, source_dir, target_dir, input_filename, output_filename)
 
-    cid_minter = CidMinter(config)
-    assign_cids(cid_minter, input_file, output_file_tmp, err_file_tmp)
+    preparedfile_dirs = "/apps/htmm/import/*/prepared_files/"
+    pid = os.getpid()
+    parent_dir = None
+    source_dir = None
+    target_dir = None
 
-    convert_to_pretty_xml(output_file_tmp, output_file)
-    convert_to_pretty_xml(err_file_tmp, err_file)
-
-    #for file in [output_file_tmp, err_file_tmp]:
-    #    if os.path.exists(file):
-    #        os.remove(file)
+    preparedfile_dir = locate_a_dir_for_cid_minting(preparedfile_dirs)
+    while preparedfile_dir:
+        dirname_locked, filename_org, filename_locked = locate_a_file_for_cid_minting(preparedfile_dir, pid)
+        print(dirname_locked)
+        print(filename_org)
+        print(filename_locked)
+        if dirname_locked and filename_org and filename_locked:
+            parent_dir = os.path.dirname(dirname_locked)
+            source_dir = os.path.join(parent_dir, "prepared_files")
+            target_dir = os.path.join(parent_dir, "cidfiles")
+            process_one_file(config=config, source_dir=source_dir, target_dir=target_dir, input_filename=filename_locked, output_filename=filename_org)
+        else:
+            # remove process.cid file
+            if source_dir and os.path.exists(os.path.join(source_dir, "process.cid")):
+                os.remove(os.path.join(source_dir, "process.cid"))
+            break
 
     logging.info("Finished " + os.path.basename(__file__))
     print("For Testing: Finished " + os.path.basename(__file__))
