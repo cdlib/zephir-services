@@ -229,7 +229,6 @@ def locate_a_dir_for_cid_minting(preparedfile_dirs):
       dirname_locked: the identified directory
     """
     for prepared_dir in glob(preparedfile_dirs):
-        #print(f"examing dir: {prepared_dir}")
         process_dot_cid = os.path.join(prepared_dir, "process.cid")
         if os.path.exists(process_dot_cid):
             print(f"Another CID minter is processing files in directroy {prepared_dir} - pass this dir")
@@ -245,22 +244,17 @@ def locate_a_dir_for_cid_minting(preparedfile_dirs):
     return None
 
 def locate_a_file_for_cid_minting(preparedfile_dir, pid):
-    """Locate a file for CID minting.
-       Identify a dirctory that contains at least one Zephir prepared file with .xml extension but does not contain a process.cid file;
-       Mark the identified directory as "under CID minting" status by putting a process.cid file underneath; 
+    """Locate an .xml file in the specified directory for CID minting.
        Find an .xml file in the identified directory;
        Lock the identified file by renaming it to filename.pid.
-       The identified directory is in <htmm_home_dir>/import/<zephir_config_name>/prepared_files/ format.
     Args:
-      preparedfile_dirs: a list of directories that contain Zephir prepared files
+      preparedfile_dir: a directory that contain Zephir prepared files
       pid: current PID
     Returns: 
       dirname_locked: the identified directory <htmm_home_dir>/import/<zephir_config_name>/prepared_files/ 
       filename_org: the name of the identified file
       filename_locked: the new filename with a .PID attached 
-       
     """
-    dirname_locked = None
     filename_org = None
     filename_locked = None
 
@@ -270,12 +264,9 @@ def locate_a_file_for_cid_minting(preparedfile_dir, pid):
         print("Lock this file for CID minting")
         dirname_locked, filename_org = os.path.split(file)
         filename_locked = f"{filename_org}.{pid}"
-        print(dirname_locked)
-        print(filename_org)
-        print(filename_locked)
         os.rename(file, os.path.join(dirname_locked, filename_locked))
-        return dirname_locked, filename_org, filename_locked 
-    return dirname_locked, filename_org, filename_locked 
+        return filename_org, filename_locked 
+    return filename_org, filename_locked 
 
 def main():
     parser = argparse.ArgumentParser(description="Assign CID to Zephir records.")
@@ -335,26 +326,24 @@ def main():
 
     preparedfile_dirs = "/apps/htmm/import/*/prepared_files/"
     pid = os.getpid()
-    parent_dir = None
-    source_dir = None
-    target_dir = None
 
     preparedfile_dir = locate_a_dir_for_cid_minting(preparedfile_dirs)
-    while preparedfile_dir:
-        dirname_locked, filename_org, filename_locked = locate_a_file_for_cid_minting(preparedfile_dir, pid)
-        print(dirname_locked)
-        print(filename_org)
-        print(filename_locked)
-        if dirname_locked and filename_org and filename_locked:
-            parent_dir = os.path.dirname(dirname_locked)
-            source_dir = os.path.join(parent_dir, "prepared_files")
-            target_dir = os.path.join(parent_dir, "cidfiles")
-            process_one_file(config=config, source_dir=source_dir, target_dir=target_dir, input_filename=filename_locked, output_filename=filename_org)
-        else:
-            # remove process.cid file
-            if source_dir and os.path.exists(os.path.join(source_dir, "process.cid")):
-                os.remove(os.path.join(source_dir, "process.cid"))
-            break
+    if preparedfile_dir:
+        parent_dir = os.path.dirname(preparedfile_dir)
+        target_dir = os.path.join(parent_dir, "cidfiles")
+        # process all identified files
+        while True:
+            filename_org, filename_locked = locate_a_file_for_cid_minting(preparedfile_dir, pid)
+            print(filename_org)
+            print(filename_locked)
+            if filename_org and filename_locked:
+                process_one_file(config=config, source_dir=preparedfile_dir, target_dir=target_dir, input_filename=filename_locked, output_filename=filename_org)
+            else:
+                # remove process.cid file
+                process_dot_cid_file = os.path.join(preparedfile_dir, "process.cid")
+                if os.path.exists(process_dot_cid_file):
+                    os.remove(process_dot_cid_file)
+                break
 
     logging.info("Finished " + os.path.basename(__file__))
     print("For Testing: Finished " + os.path.basename(__file__))
