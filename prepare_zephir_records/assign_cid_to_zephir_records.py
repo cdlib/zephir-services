@@ -28,7 +28,7 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
 
     writer = XMLWriter(open(output_file,'wb'))
     writer_err = XMLWriter(open(err_file,'wb'))
-    had_error = False
+    no_error = True
     with open(input_file, 'rb') as fh:
         reader = marcxml.parse_xml_to_array(fh, strict=True, normalize_form=None)
         """strict=True: check the namespaces for the MARCSlim namespace.
@@ -48,13 +48,13 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
                     elif len(cid_fields) == 1:
                         record["CID"]['a'] = cid 
                     else:
-                        had_error = True
+                        no_error = False
                         logging.error("Error - more than one CID field. log error and skip this record")
                         writer_err.write(record)
                         continue
                     writer.write(record)
                 else:
-                    had_error = True
+                    no_error = False
                     logging.error("Error - CID minting failed. log error and skip this record")
                     writer_err.write(record)
                     continue
@@ -64,7 +64,7 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
                 logging.error(f"Pymarc error: {reader.current_exception}")
                 logging.error(f"Current chunk: {reader.current_chunk}")
             else:
-                had_error = True
+                no_error = False
                 # fix the record data, skip or stop reading:
                 logging.error(f"Pymarc error: {reader.current_exception}")
                 logging.error(f"Current chunk: {reader.current_chunk}")
@@ -74,6 +74,8 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
 
     writer.close()
     writer_err.close()
+    if no_error:
+        os.remove(err_file)
 
 def get_ids(record):
     """Get IDs from the following fields:
