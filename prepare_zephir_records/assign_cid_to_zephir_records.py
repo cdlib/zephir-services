@@ -221,8 +221,10 @@ def process_one_file(config, source_dir, target_dir, input_filename, output_file
     cid_minter = CidMinter(config)
     assign_cids(cid_minter, input_file, output_file_tmp, err_file_tmp)
 
-    convert_to_pretty_xml(output_file_tmp, output_file)
-    convert_to_pretty_xml(err_file_tmp, err_file)
+    if os.path.exists(output_file_tmp):
+        convert_to_pretty_xml(output_file_tmp, output_file)
+    if os.path.exists(err_file_tmp): 
+        convert_to_pretty_xml(err_file_tmp, err_file)
 
 def locate_a_dir_for_cid_minting(preparedfile_dirs):
     """Locate a directory for CID minting.
