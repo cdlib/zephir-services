@@ -20,14 +20,15 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
     """Process input records and write records to output files based on specifications.
 
     Args:
-    input_file:
-    output_file:
-    err_file:
-
+      cid_minter: CidMinter object
+      input_file: full path of input file
+      output_file: full path of output file
+      err_file: full path or error file
     """
 
     writer = XMLWriter(open(output_file,'wb'))
     writer_err = XMLWriter(open(err_file,'wb'))
+    had_error = False
     with open(input_file, 'rb') as fh:
         reader = marcxml.parse_xml_to_array(fh, strict=True, normalize_form=None)
         """strict=True: check the namespaces for the MARCSlim namespace.
@@ -47,11 +48,13 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
                     elif len(cid_fields) == 1:
                         record["CID"]['a'] = cid 
                     else:
+                        had_error = True
                         logging.error("Error - more than one CID field. log error and skip this record")
                         writer_err.write(record)
                         continue
                     writer.write(record)
                 else:
+                    had_error = True
                     logging.error("Error - CID minting failed. log error and skip this record")
                     writer_err.write(record)
                     continue
@@ -61,6 +64,7 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
                 logging.error(f"Pymarc error: {reader.current_exception}")
                 logging.error(f"Current chunk: {reader.current_chunk}")
             else:
+                had_error = True
                 # fix the record data, skip or stop reading:
                 logging.error(f"Pymarc error: {reader.current_exception}")
                 logging.error(f"Current chunk: {reader.current_chunk}")
@@ -321,8 +325,7 @@ def main():
     primary_db_path = cid_minting_config["primary_db_path"]
     cluster_db_path = cid_minting_config["cluster_db_path"]
     logfile = cid_minting_config["logpath"]
-
-    preparedfile_dirs = "/apps/htmm/import/*/prepared_files/"
+    zephir_files_dir = cid_minting_config["zephir_files_dir"]
 
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,
@@ -337,13 +340,11 @@ def main():
     logging.info("Start " + os.path.basename(__file__) + " PID:" + str(pid))
     logging.info("Env: {}".format(env))
 
+    preparedfile_dirs = os.path.join(zephir_files_dir, "*/prepared_files/")
     if zephir_config:
-        preparedfile_dirs = f"/apps/htmm/import/{zephir_config}/prepared_files/"
-        if batch is None:
-            parser.print_help()
-            exit(1)
+        preparedfile_dirs = os.path.join(zephir_files_dir, f"{zephir_config}/prepared_files/")
 
-    if batch:
+    if batch or zephir_config:
         batch_process(config, preparedfile_dirs, pid)
     elif source_dir and target_dir and input_filename:
         if output_filename is None:
