@@ -268,15 +268,35 @@ def locate_a_file_for_cid_minting(preparedfile_dir, pid):
         return filename_org, filename_locked 
     return filename_org, filename_locked 
 
+def batch_process(config, preparedfile_dirs, pid):
+    preparedfile_dir = locate_a_dir_for_cid_minting(preparedfile_dirs)
+    if preparedfile_dir:
+        parent_dir = os.path.dirname(preparedfile_dir)
+        target_dir = os.path.join(parent_dir, "cidfiles")
+        # process all files in dir
+        while True:
+            filename_org, filename_locked = locate_a_file_for_cid_minting(preparedfile_dir, pid)
+            print(filename_org)
+            print(filename_locked)
+            if filename_org and filename_locked:
+                process_one_file(config=config, source_dir=preparedfile_dir, target_dir=target_dir, input_filename=filename_locked, output_filename=filename_org)
+            else:
+                # remove process.cid file
+                process_dot_cid_file = os.path.join(preparedfile_dir, "process.cid")
+                if os.path.exists(process_dot_cid_file):
+                    os.remove(process_dot_cid_file)
+                return
+
 def main():
     parser = argparse.ArgumentParser(description="Assign CID to Zephir records.")
     parser.add_argument("--console", "-c", action="store_true", dest="console", help="display log entries on screen")
     parser.add_argument("--env", "-e", nargs="?", dest="env", choices=["test", "dev", "stg", "prd"], required=True, help="define runtime environment")
-    parser.add_argument("--source_dir", "-s", nargs="?", dest="source_dir", required=True, help="source file directory")
-    parser.add_argument("--target_dir", "-t", nargs="?", dest="target_dir", required=True, help="target file directroy")
-    parser.add_argument("--infile", "-i", nargs="?", dest="input_filename", required=True, help="input filename")
-    parser.add_argument("--outfile", "-o", nargs="?", dest="output_filename", required=False, help="output filename")
+    parser.add_argument("--source_dir", "-s", nargs="?", dest="source_dir", help="source file directory")
+    parser.add_argument("--target_dir", "-t", nargs="?", dest="target_dir", help="target file directroy")
+    parser.add_argument("--infile", "-i", nargs="?", dest="input_filename", help="input filename")
+    parser.add_argument("--outfile", "-o", nargs="?", dest="output_filename", help="output filename")
     parser.add_argument("--batch", "-b", action="store_true", dest="batch", help="assign CID in batch")
+    parser.add_argument("--zephir_config", "-z",  nargs="?", dest="zephir_config", help="assign CID for specified config")
 
     args = parser.parse_args()
 
@@ -286,6 +306,8 @@ def main():
     target_dir = args.target_dir
     input_filename = args.input_filename
     output_filename = args.output_filename
+    batch = args.batch
+    zephir_config = args.zephir_config
 
     ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
     CONFIG_PATH = os.path.join(ROOT_PATH, "config")
@@ -300,50 +322,45 @@ def main():
     cluster_db_path = cid_minting_config["cluster_db_path"]
     logfile = cid_minting_config["logpath"]
 
+    preparedfile_dirs = "/apps/htmm/import/*/prepared_files/"
+
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,
         "minterdb_conn_str": minterdb_conn_str,
         "leveldb_primary_path": primary_db_path,
         "leveldb_cluster_path": cluster_db_path,
     }
+    pid = os.getpid()
 
     config_logger(logfile, console)
 
-    logging.info("Start " + os.path.basename(__file__))
+    logging.info("Start " + os.path.basename(__file__) + " PID:" + str(pid))
     logging.info("Env: {}".format(env))
 
-    if output_filename is None:
-        output_filename = input_filename
+    if zephir_config:
+        preparedfile_dirs = f"/apps/htmm/import/{zephir_config}/prepared_files/"
+        if batch is None:
+            parser.print_help()
+            exit(1)
 
-    if os.path.join(source_dir, input_filename) == os.path.join(target_dir, output_filename):
-        err_msg = f"Filename error: Input and output files share the same path and name. ({input_file})"
-        logging.error(err_msg)
-        print("Exiting ...")
-        print(err_msg)
-        return False
+    if batch:
+        batch_process(config, preparedfile_dirs, pid)
+    elif source_dir and target_dir and input_filename:
+        if output_filename is None:
+            output_filename = input_filename
 
-    process_one_file(config, source_dir, target_dir, input_filename, output_filename)
+        if os.path.join(source_dir, input_filename) == os.path.join(target_dir, output_filename):
+            err_msg = f"Filename error: Input and output files share the same path and name. ({input_file})"
+            logging.error(err_msg)
+            print("Exiting ...")
+            print(err_msg)
+            exit(1)
 
-    preparedfile_dirs = "/apps/htmm/import/*/prepared_files/"
-    pid = os.getpid()
+        process_one_file(config, source_dir, target_dir, input_filename, output_filename)
+    else:
+        parser.print_help()
+        exit(1)
 
-    preparedfile_dir = locate_a_dir_for_cid_minting(preparedfile_dirs)
-    if preparedfile_dir:
-        parent_dir = os.path.dirname(preparedfile_dir)
-        target_dir = os.path.join(parent_dir, "cidfiles")
-        # process all identified files
-        while True:
-            filename_org, filename_locked = locate_a_file_for_cid_minting(preparedfile_dir, pid)
-            print(filename_org)
-            print(filename_locked)
-            if filename_org and filename_locked:
-                process_one_file(config=config, source_dir=preparedfile_dir, target_dir=target_dir, input_filename=filename_locked, output_filename=filename_org)
-            else:
-                # remove process.cid file
-                process_dot_cid_file = os.path.join(preparedfile_dir, "process.cid")
-                if os.path.exists(process_dot_cid_file):
-                    os.remove(process_dot_cid_file)
-                break
 
     logging.info("Finished " + os.path.basename(__file__))
     print("For Testing: Finished " + os.path.basename(__file__))
