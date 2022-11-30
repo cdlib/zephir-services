@@ -3,3 +3,4 @@ cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
 
 logpath: /apps/htmm/log/cid_minting/cid_minting.log
 
+zephir_files_dir: /apps/htmm/import
