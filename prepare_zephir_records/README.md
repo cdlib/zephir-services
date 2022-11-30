@@ -34,7 +34,16 @@ logpath: /apps/htmm/log/cid_minting/cid_minting.log
 
 5. Verify the log `/apps/htmm/log/cid_minting/cid_minting.log` exists. If not create a new one.
 
-6. Run tests in the following directories:
+6. Setup Pipenv environment
+In the project directory /apps/htmm/zephir-services/prepare_zephir_records
+* Verify the Pipfile and Pipfile.lock files are present
+* Remove current pipenv environment
+* Setup pipenv enviroment from Pipfile and Pipfile.lock
+```
+pipenv --rm
+pipenv install
+```
+7. Run tests in the following directories:
    - zephir-services/prepare_zephir_records
    - zephir-services/prepare_zephir_records/cid_minter
 ```

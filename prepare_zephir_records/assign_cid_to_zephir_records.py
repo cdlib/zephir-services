@@ -212,11 +212,12 @@ def process_one_file(config, source_dir, target_dir, input_filename, output_file
     output_file_tmp = f"/tmp/{output_filename}.tmp"
     err_file_tmp = f"/tmp/{err_filename}.tmp"
 
-    print("For Testing: Input file: ", input_file)
-    print("For Testing: Output file: ", output_file)
-    print("For Testing: Error file: ", err_file)
-    print("For Testing: tmp output: ",  output_file_tmp)
-    print("For Testing: tmp error: ", err_file_tmp)
+    if input_file == output_file:
+        err_msg = f"Filename error: Input and output files share the same path and name. ({input_file})"
+        logging.error(err_msg)
+        print("Exiting ...")
+        print(err_msg)
+        return
 
     cid_minter = CidMinter(config)
     assign_cids(cid_minter, input_file, output_file_tmp, err_file_tmp)
@@ -226,23 +227,24 @@ def process_one_file(config, source_dir, target_dir, input_filename, output_file
     if os.path.exists(err_file_tmp): 
         convert_to_pretty_xml(err_file_tmp, err_file)
 
-def locate_a_dir_for_cid_minting(preparedfile_dirs):
+def lock_a_dir_for_cid_minting(dir_path):
     """Locate a directory for CID minting.
        Identify a dirctory that contains at least one Zephir prepared file with .xml extension but does not contain a process.cid file;
-       Mark the identified directory as "under CID minting" status by putting a process.cid file underneath;
+       Lock the identified directory for CID minting by putting a process.cid file underneath.
     Args:
-      preparedfile_dirs: a list of directories that contain Zephir prepared files
-      pid: current PID
+      dir_path: a string for a directroy with or without wildcard char "*". For example:
+        <htmm_home_dir>/import/miu-multi-2/prepared_files/
+        <htmm_home_dir>/import/*/prepared_files/
     Returns:
-      dirname_locked: the identified directory
+      dirname_locked: the identified/locked directory
     """
-    for prepared_dir in glob(preparedfile_dirs):
-        process_dot_cid = os.path.join(prepared_dir, "process.cid")
+    for a_dir in glob(dir_path):
+        process_dot_cid = os.path.join(a_dir, "process.cid")
         if os.path.exists(process_dot_cid):
-            print(f"Another CID minter is processing files in directroy {prepared_dir} - pass this dir")
+            print(f"Another CID minter is processing files in directroy {a_dir} - pass this dir")
             continue
         else:
-            xml_files = os.path.join(prepared_dir, "*.xml")
+            xml_files = os.path.join(a_dir, "*.xml")
             for file in glob(xml_files):
                 print(f"Found an xml file to process: {file}")
                 print("Lock this directory")
@@ -251,12 +253,12 @@ def locate_a_dir_for_cid_minting(preparedfile_dirs):
                 return os.path.dirname(file)
     return None
 
-def locate_a_file_for_cid_minting(preparedfile_dir, pid):
+def lock_a_file_for_cid_minting(a_dir, pid):
     """Locate an .xml file in the specified directory for CID minting.
        Find an .xml file in the identified directory;
        Lock the identified file by renaming it to filename.pid.
     Args:
-      preparedfile_dir: a directory that contain Zephir prepared files
+      a_dir: a directory that contain Zephir prepared files
       pid: current PID
     Returns: 
       dirname_locked: the identified directory <htmm_home_dir>/import/<zephir_config_name>/prepared_files/ 
@@ -266,7 +268,7 @@ def locate_a_file_for_cid_minting(preparedfile_dir, pid):
     filename_org = None
     filename_locked = None
 
-    xml_files = os.path.join(preparedfile_dir, "*.xml")
+    xml_files = os.path.join(a_dir, "*.xml")
     for file in glob(xml_files):
         print(f"Found an xml file to process: {file}")
         print("Lock this file for CID minting")
@@ -276,21 +278,34 @@ def locate_a_file_for_cid_minting(preparedfile_dir, pid):
         return filename_org, filename_locked 
     return filename_org, filename_locked 
 
-def batch_process(config, preparedfile_dirs, pid):
-    preparedfile_dir = locate_a_dir_for_cid_minting(preparedfile_dirs)
-    if preparedfile_dir:
-        parent_dir = os.path.dirname(preparedfile_dir)
+def batch_process(config, dir_path, pid):
+    """Batch process files in an identified directroy
+    Args:
+      config: a Python directroy for configurations 
+      dir_path: a string for a directroy with or without wildcard char "*". For example:
+        <htmm_home_dir>/import/miu-multi-2/prepared_files/
+        <htmm_home_dir>/import/*/prepared_files/
+      pid: PID of current process
+    """
+    locked_dir = lock_a_dir_for_cid_minting(dir_path)
+    if locked_dir:
+        parent_dir = os.path.dirname(locked_dir)
         target_dir = os.path.join(parent_dir, "cidfiles")
-        # process all files in dir
+        # process all files in the locked directory 
         while True:
-            filename_org, filename_locked = locate_a_file_for_cid_minting(preparedfile_dir, pid)
-            print(filename_org)
-            print(filename_locked)
+            filename_org, filename_locked = lock_a_file_for_cid_minting(locked_dir, pid)
             if filename_org and filename_locked:
-                process_one_file(config=config, source_dir=preparedfile_dir, target_dir=target_dir, input_filename=filename_locked, output_filename=filename_org)
+                process_one_file(config=config, 
+                                 source_dir=locked_dir, 
+                                 target_dir=target_dir, 
+                                 input_filename=filename_locked, 
+                                 output_filename=filename_org)
+                locked_file = os.path.join(locked_dir, filename_locked)
+                processed_file = os.path.join(locked_dir, f"{filename_org}.processed")
+                os.rename(locked_file, processed_file)
             else:
-                # remove process.cid file
-                process_dot_cid_file = os.path.join(preparedfile_dir, "process.cid")
+                # unlock the directory
+                process_dot_cid_file = os.path.join(locked_dir, "process.cid")
                 if os.path.exists(process_dot_cid_file):
                     os.remove(process_dot_cid_file)
                 return
@@ -344,22 +359,20 @@ def main():
     logging.info("Start " + os.path.basename(__file__) + " PID:" + str(pid))
     logging.info("Env: {}".format(env))
 
-    preparedfile_dirs = os.path.join(zephir_files_dir, "*/prepared_files/")
+    preparedfile_dir = os.path.join(zephir_files_dir, "*/prepared_files/")
     if zephir_config:
-        preparedfile_dirs = os.path.join(zephir_files_dir, f"{zephir_config}/prepared_files/")
+        preparedfile_dir = os.path.join(zephir_files_dir, f"{zephir_config}/prepared_files/")
+        if not os.path.exists(preparedfile_dir):
+            err_msg = f"Directory error: {preparedfile_dir} does not exist. Verify if {zephir_config} is a valid zephir config"
+            logging.error(err_msg)
+            print(err_msg)
+            exit(1)
 
     if batch or zephir_config:
-        batch_process(config, preparedfile_dirs, pid)
+        batch_process(config, preparedfile_dir, pid)
     elif source_dir and target_dir and input_filename:
         if output_filename is None:
             output_filename = input_filename
-
-        if os.path.join(source_dir, input_filename) == os.path.join(target_dir, output_filename):
-            err_msg = f"Filename error: Input and output files share the same path and name. ({input_file})"
-            logging.error(err_msg)
-            print("Exiting ...")
-            print(err_msg)
-            exit(1)
 
         process_one_file(config, source_dir, target_dir, input_filename, output_filename)
     else:
