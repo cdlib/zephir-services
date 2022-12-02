@@ -10,20 +10,10 @@ class ZedEvent(object):
     """A class for ZED event with following properties:
     Attributes:
     """
-    def __init__():
-        pass
+    def __init__(zed_msg_table_file, zed_event_log):
+        self.zed_msg_table = self.get_zed_msg_table(zed_msg_table_file)
+        self.zed_log_fp = open(zed_event_log, "w")
 
-def test_json():
-
-    dictionary = {
-      "name": "sathiyajith",
-      "rollno": 56,
-      "cgpa": 8.6,
-      "phonenumber": "9976770500"
-    }
-    
-    with open("sample.json", "w") as outfile:
-        json.dump(dictionary, outfile)
 
 """ZED msg table: https://github.com/cdlib/htmm-env/blob/master/zed/msg_tables/columns_prep.csv
 """
@@ -73,50 +63,6 @@ Data model (6/28/2018)
    "event":"<GUID-per-event (cbe8a9f5-4b1a-4da3-82f1-4df390b2fc43)[R]",
    "process":"<GUID-per-process. Shared with event when start or single event.(25476fc6-3047-4cc2-9a5e-49a649c14850)>[R]"
 }
-
-sample zed events
-{
-"timestamp":"2022-11-29T22:54:51.571362723Z",
-"status":{
-  "type":"INFO",
-  "zed_code":"200",
-  "msg_code":"pr0214",
-  "msg":"Zephir record created in Preprun step"
-  },
-"report":{
-  "CID":"102919969",
-  "config_name":"hvd-3",
-  "Rd_seq_no":"1909",
-  "RecordID":"990004416720203941",
-  "dig_src":"google",
-  "collection":"HVD",
-  "record_type":"update"HTID":"hvd.32044143743045"
-  },
-"action":"CreateRecord",
-"type":"Preprun",
-"subject":"hvd-3_20221121",
-"object":"hvd.32044143743045",
-"topic":"Raw",
-"event":"d53254a2-7038-11ed-8148-8e463a075b05",
-"process":"92b1be8b-5fa0-44e5-9796-0a2ab3a4d5f0"
-}
-
-{
-"timestamp":"2022-11-29T22:54:51.577478594Z",
-"status":{
-  "type":"INFO",
-  "zed_code":"200",
-  "msg_code":"pr0215",
-  "msg":"Gobble file created",
-  "details":"INFO: Completed writing output file 1: input 1909, output 1909, filename ./process/20221129145120.hvd-3.hvd-3-hvd-3_20221121.1.xml"},
-"report":{"config_name":"hvd-3"},
-"action":"CreateGobbleFile",
-"type":"Preprun",
-"subject":"hvd-3_20221121",
-"object":"./process/20221129145120.hvd-3.hvd-3-hvd-3_20221121.1.xml",
-"topic":"Raw",
-"event":"d5333390-7038-11ed-8215-8e463a075b05",
-"process":"92b1be8b-5fa0-44e5-9796-0a2ab3a4d5f0"}
 """
 def create_zed_event(zed_msg_table, status_msg_code, event_data):
     """
@@ -159,7 +105,6 @@ def create_zed_event(zed_msg_table, status_msg_code, event_data):
     return zed_event
 
 def main():
-    #test_json()
     zed_msg_table_file= "/apps/htmm/cdl-env/zed/msg_tables/columns_prep.csv"
     zed_msg_table = get_zed_msg_table(zed_msg_table_file)
     print(type(zed_msg_table))
@@ -177,7 +122,16 @@ def main():
         "subject": "test subject",
         "object": "test object",
     }
-    print( create_zed_event(zed_msg_table, msg_code, event_data))
+    zed_event = create_zed_event(zed_msg_table, msg_code, event_data)
+    print(json.dumps(zed_event))
+    fp = open("cid_zed_test.json", "w")
+    json.dump(zed_event, fp)
+    fp.write('\n')
+    json.dump(zed_event, fp)
+    fp.write('\n')
+    fp.close()
+
+
 
 
 if __name__ == '__main__':
