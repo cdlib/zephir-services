@@ -71,7 +71,7 @@ class CidZedEvent(object):
         zed_subject = event_data.get("subject")
         zed_object = event_data.get("object")
 
-        event_default_values = self._get_zed_event_default_values(self.zed_msg_table, status_msg_code)
+        event_default_values = self._get_zed_event_default_values(status_msg_code)
         # handling event_default_values is None here
 
         event_key = str(uuid.uuid4())
