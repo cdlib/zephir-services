@@ -10,6 +10,7 @@ from cid_minter.zephir_cluster_lookup import CidMinterTable
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
 from cid_minter.cid_store import CidStore
 from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_list
+from cid_minter.zed_for_cid import CidZedEvent
 
 class IdType(Enum):
     OCN = "ocn"
@@ -28,7 +29,11 @@ class CidMinter:
         self._minter_db = CidStore(self.config.get("minterdb_conn_str"))
         self._leveldb_primary_path = self.config.get("leveldb_primary_path")
         self._leveldb_cluster_path = self.config.get("leveldb_cluster_path")
+        self.cid_zed_event = CidZedEvent(self.config.get("zed_msg_table"), self.config.get("zed_log"))
      
+    def close(self):
+        self.cid_zed_event.close()
+
     def mint_cid(self, ids):
         """Assign CID by OCNs, local system IDs or previous local system IDs.
         Search CID in the local minter first. If there is no matched CID found then search the Zephir database.
@@ -91,7 +96,26 @@ class CidMinter:
             current_minter = self._find_current_minter()
             self._minter_new_cid()
             assigned_cid = self._find_current_minter().get("cid")
-            logging.info(f"Minted a new minter: {assigned_cid} - from current minter: {current_minter}")
+            msg_code = "pr0212" # assign new CID
+            logging.info(f"ZED: {msg_code} - Minted a new minter: {assigned_cid} - from current minter: {current_minter}")
+            event_data = {
+                "process_key": "92b1be8b-5fa0-44e5-9796-0a2ab3a4d5f0",
+                "msg_detail": "msg details",
+                "report": {"CID": "123456789", "RecordID": "100001", "Rd_seq_no": "1", "config_name": "test_config"},
+                "subject": "test subject",
+                "object": "test object",
+            }
+            self.cid_zed_event.create_zed_event(msg_code, event_data)
+        else:
+            msg_code = "pr0213" # assigned existing CID 
+            event_data = {
+                "process_key": "92b1be8b-5fa0-44e5-9796-0a2ab3a4d5f0",
+                "msg_detail": "msg details",
+                "report": {"CID": "123456789", "RecordID": "100001", "Rd_seq_no": "1", "config_name": "test_config"},
+                "subject": "test subject",
+                "object": "test object",
+            }
+            self.cid_zed_event.create_zed_event(msg_code, event_data)
 
         if assigned_cid:
             self._update_local_minter(ids, assigned_cid)

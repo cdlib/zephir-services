@@ -5,6 +5,7 @@ from glob import glob
 import argparse
 import logging
 from pathlib import PurePosixPath
+from datetime import datatime
 
 from pymarc import MARCReader, MARCWriter, XMLWriter, TextWriter
 from pymarc import marcxml
@@ -343,16 +344,23 @@ def main():
 
     primary_db_path = cid_minting_config["primary_db_path"]
     cluster_db_path = cid_minting_config["cluster_db_path"]
-    logfile = cid_minting_config["logpath"]
+    logfile = cid_minting_config["logfile"]
     zephir_files_dir = cid_minting_config["zephir_files_dir"]
+    zed_log_path = cid_minting_config["zed_log_path"]
+    zed_msg_table = cid_minting_config["zed_msg_table"]
+
+    pid = os.getpid()
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    zed_log = os.path.join(zed_log_path, f"zed_cid_{timestamp}_{pid}")
 
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,
         "minterdb_conn_str": minterdb_conn_str,
         "leveldb_primary_path": primary_db_path,
         "leveldb_cluster_path": cluster_db_path,
+        "zed_log": zed_log,
+        "zed_msg_table": zed_msg_table,
     }
-    pid = os.getpid()
 
     config_logger(logfile, console)
 
