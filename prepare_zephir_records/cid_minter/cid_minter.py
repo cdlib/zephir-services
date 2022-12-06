@@ -52,6 +52,7 @@ class CidMinter:
         previous_sysids = None
         current_cid = None
         assigned_cid = None
+        cid_assigned_by = None
 
         htid = ids.get("htid")
         ocns = convert_comma_separated_str_to_int_list(ids.get("ocns"))
@@ -76,6 +77,8 @@ class CidMinter:
             assigned_cid = self._find_cid_in_local_minter(IdType.OCN, ocns)
             if not assigned_cid:
                 assigned_cid = self._find_cid_in_zephir_by_ocns(ocns)
+            if assigned_cid:
+                cid_assigned_by = "OCLC number(s)"
         else:
             logging.info(f"No OCLC number: Record {htid} does not contain OCLC number.")
 
@@ -83,11 +86,15 @@ class CidMinter:
             assigned_cid = self._find_cid_in_local_minter(IdType.SYSID, sysids)
             if not assigned_cid:
                 assigned_cid = self._find_cid_in_zephir_by_sysids(IdType.SYSID, sysids)
+            if assigned_cid:
+                cid_assigned_by = "campus local number"
 
         if previous_sysids and self._cid_not_assigned_yet(assigned_cid): 
             assigned_cid = self._find_cid_in_local_minter(IdType.PREV_SYSID, previous_sysids)
             if not assigned_cid:
                 assigned_cid = self._find_cid_in_zephir_by_sysids(IdType.PREV_SYSID, previous_sysids)
+            if assigned_cid:
+                cid_assigned_by = "campus previous local number"
 
         if self._cid_assigned(assigned_cid) and current_cid and current_cid != assigned_cid:
             logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
@@ -99,22 +106,16 @@ class CidMinter:
             msg_code = "pr0212" # assign new CID
             logging.info(f"ZED: {msg_code} - Minted a new minter: {assigned_cid} - from current minter: {current_minter}")
             event_data = {
-                "process_key": "92b1be8b-5fa0-44e5-9796-0a2ab3a4d5f0",
-                "msg_detail": "msg details",
-                "report": {"CID": "123456789", "RecordID": "100001", "Rd_seq_no": "1", "config_name": "test_config"},
-                "subject": "test subject",
-                "object": "test object",
+                "msg_detail": f"Assigned new CID: {assigned_cid}",
+                "report": {"CID": assigned_cid}
             }
             self.cid_zed_event.merge_zed_event_data(event_data)
             self.cid_zed_event.create_zed_event(msg_code)
         else:
             msg_code = "pr0213" # assigned existing CID 
             event_data = {
-                "process_key": "92b1be8b-5fa0-44e5-9796-0a2ab3a4d5f0",
-                "msg_detail": "msg details",
-                "report": {"CID": "123456789", "RecordID": "100001", "Rd_seq_no": "1", "config_name": "test_config"},
-                "subject": "test subject",
-                "object": "test object",
+                "msg_detail": f"Assigned exsiting CID: {assigned_cid} - assigned by matching {cid_assigned_by}",
+                "report": {"CID": assigned_cid}
             }
             self.cid_zed_event.merge_zed_event_data(event_data)
             self.cid_zed_event.create_zed_event(msg_code)

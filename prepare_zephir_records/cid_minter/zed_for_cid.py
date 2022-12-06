@@ -45,10 +45,13 @@ class CidZedEvent(object):
         self.zed_event_data = event_data
 
     def merge_zed_event_data(self, event_data):
-        if self.zed_event_data:
-            self.zed_event_data = {**self.zed_event_data, **event_data}
+        self.zed_event_data = self._merge_dict(self.zed_event_data, event_data)
+
+    def _merge_dict(self, dict_1, dict_2):
+        if dict_1 and dict_2:
+            return {**dict_1, **dict_2}
         else:
-            self.zed_event_data = event_data
+            return dict_1 or dict_2
 
     def create_zed_event(self, status_msg_code):
         """ZED event specification https://docs.google.com/document/d/1vhMV3JGeMhrkNK1n0j05OFYsXgdQD0N_/edit
@@ -98,9 +101,8 @@ class CidZedEvent(object):
             "topic": event_default_values.get("topic"),
             "event": event_key,
             "process": self.zed_event_data.get("process_key"),
+            "report": self._merge_dict(self.zed_event_data.get("ids"), self.zed_event_data.get("report"))
         }
-        if self.zed_event_data.get("report"):
-            zed_event["report"] = self.zed_event_data.get("report")
 
         json.dump(zed_event, self.zed_log_fp)
         self.zed_log_fp.write('\n')
