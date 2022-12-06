@@ -97,7 +97,14 @@ class CidMinter:
                 cid_assigned_by = "campus previous local number"
 
         if self._cid_assigned(assigned_cid) and current_cid and current_cid != assigned_cid:
-            logging.info(f"htid {htid} changed CID from: {current_cid} to: {assigned_cid}")
+            msg_code = "pr0059"
+            msg_details = f"WARNING: Hathi-id ({htid}) changed CID from: {current_cid} to: {assigned_cid}"
+            logging.info(f"ZED: {msg_code} - {msg_details}")
+            event_data = {
+                "msg_detail": msg_details,
+            }
+            self.cid_zed_event.merge_zed_event_data(event_data)
+            self.cid_zed_event.create_zed_event(msg_code)
 
         if self._cid_not_assigned_yet(assigned_cid):
             current_minter = self._find_current_minter()
@@ -114,7 +121,7 @@ class CidMinter:
         else:
             msg_code = "pr0213" # assigned existing CID 
             event_data = {
-                "msg_detail": f"Assigned exsiting CID: {assigned_cid} - assigned by matching {cid_assigned_by}",
+                "msg_detail": f"Assigned existing CID: {assigned_cid} - assigned by matching {cid_assigned_by}",
                 "report": {"CID": assigned_cid}
             }
             self.cid_zed_event.merge_zed_event_data(event_data)

@@ -103,7 +103,6 @@ def get_ids(record):
         "ocns",
         "contribsys_ids"
         "previous_contribsys_ids"
-        "config"
       Values are strings. Multiple values for the same ID are separated by a comma without any spaces.
       Sample return:
       {
@@ -111,7 +110,6 @@ def get_ids(record):
         "ocns": "80274381,25231018", 
         "contribsys_ids": "hvd.000012735,hvd000012735", 
         "previous_contribsys_ids": "hvd.000660168,hvd.000660168,hvd.O007B00250,hvdO007B00250", 
-        "config": "mi-multi-2"
       }
 
     """
@@ -170,9 +168,6 @@ def get_ids(record):
         ids["contribsys_ids"] = contribsys_ids
     if previous_contribsys_ids:
         ids["previous_contribsys_ids"] = previous_contribsys_ids
-    # TO-DO get config
-    #if config:
-    #    ids["config"] = config
 
     return ids
 
@@ -229,7 +224,7 @@ def process_one_file(config, source_dir, target_dir, input_filename, output_file
         return
 
     zed_event_data = {
-        "subject": input_file,
+        "subject": input_filename,
         "process_key": config.get("process_key")
     }
 
