@@ -105,7 +105,8 @@ class CidMinter:
                 "subject": "test subject",
                 "object": "test object",
             }
-            self.cid_zed_event.create_zed_event(msg_code, event_data)
+            self.cid_zed_event.merge_zed_event_data(event_data)
+            self.cid_zed_event.create_zed_event(msg_code)
         else:
             msg_code = "pr0213" # assigned existing CID 
             event_data = {
@@ -115,7 +116,8 @@ class CidMinter:
                 "subject": "test subject",
                 "object": "test object",
             }
-            self.cid_zed_event.create_zed_event(msg_code, event_data)
+            self.cid_zed_event.merge_zed_event_data(event_data)
+            self.cid_zed_event.create_zed_event(msg_code)
 
         if assigned_cid:
             self._update_local_minter(ids, assigned_cid)

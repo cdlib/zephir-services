@@ -1,7 +1,7 @@
 import os
 import sys
 
-import datetime
+from datetime import datetime
 import json
 from csv import DictReader
 import uuid
@@ -10,10 +10,10 @@ class CidZedEvent(object):
     """A class for ZED event with following properties:
     Attributes:
     """
-    def __init__(self, zed_msg_table_file, zed_event_log):
+    def __init__(self, zed_msg_table_file, zed_event_log, event_data=None):
         self.zed_msg_table = self._get_zed_msg_table(zed_msg_table_file)
         self.zed_log_fp = open(zed_event_log, "w")
-
+        self.zed_event_data = event_data
 
     """ZED msg table: https://github.com/cdlib/htmm-env/blob/master/zed/msg_tables/columns_prep.csv
     """
@@ -41,7 +41,16 @@ class CidZedEvent(object):
             print(f"Zed msg table lookup error: {ex}")
             return None
 
-    def create_zed_event(self, status_msg_code, event_data):
+    def setup_zed_event_data(self, event_data):
+        self.zed_event_data = event_data
+
+    def merge_zed_event_data(self, event_data):
+        if self.zed_event_data:
+            self.zed_event_data = {**self.zed_event_data, **event_data}
+        else:
+            self.zed_event_data = event_data
+
+    def create_zed_event(self, status_msg_code):
         """ZED event specification https://docs.google.com/document/d/1vhMV3JGeMhrkNK1n0j05OFYsXgdQD0N_/edit
             Data model (6/28/2018)
             ## [R]-Required, [O]-Optional
@@ -65,40 +74,34 @@ class CidZedEvent(object):
             "process":"<GUID-per-process. Shared with event when start or single event.(25476fc6-3047-4cc2-9a5e-49a649c14850)>[R]"
             }
         """
-        process_key = event_data.get("process_key")
-        zed_msg_detail = event_data.get("msg_detail")
-        zed_report = event_data.get("report")
-        zed_subject = event_data.get("subject")
-        zed_object = event_data.get("object")
-
         event_default_values = self._get_zed_event_default_values(status_msg_code)
-        # handling event_default_values is None here
 
         event_key = str(uuid.uuid4())
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-3]
+        timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-3]
 
         status = {
             "type": event_default_values.get("status_type"),
             "zed_code": event_default_values.get("status_zed_code"),
             "msg_code": status_msg_code,
             "msg": event_default_values.get("status_msg"),
-            "details":"INFO: "
             }
-        if event_data.get("msg_detail"):
-            status["details"] = event_data.get("msg_detail") 
+        if self.zed_event_data.get("msg_detail"):
+            status["details"] = self.zed_event_data.get("msg_detail") 
 
         zed_event = {
             "timestamp": timestamp,
             "status": status,
-            "report":{"config_name":"hvd-3"},
             "action": event_default_values.get("action"),
             "type": event_default_values.get("type"),
-            "subject": zed_subject,
-            "object": zed_object,
+            "subject": self.zed_event_data.get("subject"),
+            "object": self.zed_event_data.get("object"),
             "topic": event_default_values.get("topic"),
             "event": event_key,
-            "process": process_key
+            "process": self.zed_event_data.get("process_key"),
         }
+        if self.zed_event_data.get("report"):
+            zed_event["report"] = self.zed_event_data.get("report")
+
         json.dump(zed_event, self.zed_log_fp)
         self.zed_log_fp.write('\n')
 
@@ -118,10 +121,11 @@ def main():
         "subject": "test subject",
         "object": "test object",
     }
-    zed_event.create_zed_event(msg_code, event_data)
+    zed_event.merge_zed_event_data(event_data)
+    zed_event.create_zed_event(msg_code)
 
     msg_code = "pr0213" # Assigned existing CID
-    zed_event.create_zed_event(msg_code, event_data)
+    zed_event.create_zed_event(msg_code)
 
     zed_event.close()
 

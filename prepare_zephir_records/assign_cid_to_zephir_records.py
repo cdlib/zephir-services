@@ -5,7 +5,8 @@ from glob import glob
 import argparse
 import logging
 from pathlib import PurePosixPath
-from datetime import datatime
+from datetime import datetime
+import uuid
 
 from pymarc import MARCReader, MARCWriter, XMLWriter, TextWriter
 from pymarc import marcxml
@@ -17,7 +18,7 @@ from lib.utils import db_connect_url
 from lib.utils import get_configs_by_filename
 from cid_minter.cid_minter import CidMinter
 
-def assign_cids(cid_minter, input_file, output_file, err_file):
+def assign_cids(cid_minter, input_file, output_file, err_file, zed_event_data):
     """Process input records and write records to output files based on specifications.
 
     Args:
@@ -26,7 +27,6 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
       output_file: full path of output file
       err_file: full path or error file
     """
-
     writer = XMLWriter(open(output_file,'wb'))
     writer_err = XMLWriter(open(err_file,'wb'))
     no_error = True
@@ -41,7 +41,8 @@ def assign_cids(cid_minter, input_file, output_file, err_file):
             if record:
                 #ids = {"ocns": "80274381,25231018", "contribsys_id": "hvd.000012735,hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
                 ids = get_ids(record)
-                cid = mint_cid(cid_minter, ids)
+                zed_event_data["object"] = ids.get("htid")
+                cid = mint_cid(cid_minter, ids, zed_event_data)
                 if cid:
                     cid_fields = record.get_fields("CID")
                     if not cid_fields:
@@ -170,9 +171,10 @@ def get_ids(record):
     return ids
 
 
-def mint_cid(cid_minter, ids):
+def mint_cid(cid_minter, ids, zed_event_data):
     # call cid_minter to assinge a CID
     try:
+        cid_minter.cid_zed_event.setup_zed_event_data(zed_event_data)
         cid = cid_minter.mint_cid(ids)
         return cid
     except Exception as ex:
@@ -220,8 +222,13 @@ def process_one_file(config, source_dir, target_dir, input_filename, output_file
         print(err_msg)
         return
 
+    zed_event_data = {
+        "subject": input_file,
+        "process_key": config.get("process_key")
+    }
+
     cid_minter = CidMinter(config)
-    assign_cids(cid_minter, input_file, output_file_tmp, err_file_tmp)
+    assign_cids(cid_minter, input_file, output_file_tmp, err_file_tmp, zed_event_data)
 
     if os.path.exists(output_file_tmp):
         convert_to_pretty_xml(output_file_tmp, output_file)
@@ -350,6 +357,7 @@ def main():
     zed_msg_table = cid_minting_config["zed_msg_table"]
 
     pid = os.getpid()
+    process_key = str(uuid.uuid4())
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     zed_log = os.path.join(zed_log_path, f"zed_cid_{timestamp}_{pid}")
 
@@ -360,6 +368,7 @@ def main():
         "leveldb_cluster_path": cluster_db_path,
         "zed_log": zed_log,
         "zed_msg_table": zed_msg_table,
+        "process_key": process_key,
     }
 
     config_logger(logfile, console)
