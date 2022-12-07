@@ -612,7 +612,7 @@ def test_step_2_b_2(caplog, setup_configs):
          "Local minter: No CID found by SYSID",
          "Zephir minter: Found matched CIDs: ['000641789', '009705704'] by contribsys IDs: ['hvd000012735', 'nrlf.b100608668']",
          "Record with local number matches more than one CID",
-         f"htid hvd.hw5jdo changed CID from: {current_cid} to: {expected_cid}",
+         f"Hathi-id (hvd.hw5jdo) changed CID from: {current_cid} to: {expected_cid}",
          "Local minter: Inserted a new record",
          "Updated local minter: contribsys id"
     ]

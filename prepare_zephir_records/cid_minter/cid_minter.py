@@ -98,10 +98,10 @@ class CidMinter:
 
         if self._cid_assigned(assigned_cid) and current_cid and current_cid != assigned_cid:
             msg_code = "pr0059"
-            msg_details = f"WARNING: Hathi-id ({htid}) changed CID from: {current_cid} to: {assigned_cid}"
-            logging.info(f"ZED: {msg_code} - {msg_details}")
+            msg_detail = f"WARNING: Hathi-id ({htid}) changed CID from: {current_cid} to: {assigned_cid}"
+            logging.info(f"ZED: {msg_code} - {msg_detail}")
             event_data = {
-                "msg_detail": msg_details,
+                "msg_detail": msg_detail,
             }
             self.cid_zed_event.merge_zed_event_data(event_data)
             self.cid_zed_event.create_zed_event(msg_code)
@@ -215,11 +215,19 @@ class CidMinter:
                 logging.info(f"Zephir minter: Found matched CID: {cid_list} by OCNs: {ocns}")
 
             if num_of_matched_zephir_clusters > 1:
-                msg_detail = f"Record with OCLCs ({ocns}) matches {num_of_matched_zephir_clusters} CIDs ({cid_list}) used {assigned_cid}"
+                plural = ""
                 if len(ocns) > 1:
-                    logging.warning(f"ZED code: pr0090 - Record with OCLC numbers match more than one CID. - {msg_detail}")
+                    msg_code = "pr0090"
+                    plural = "s"
                 else:
-                    logging.warning(f"ZED code: pr0091 - Record with one OCLC matches more than one CID. - {msg_detail}")
+                    msg_code = "pr0091"
+                msg_detail = f"Record with OCLC{plural} ({ocns}) matches {num_of_matched_zephir_clusters} CIDs ({cid_list}) used {assigned_cid}"
+                logging.warning(f"ZED code: {msg_code} - {msg_detail}")
+                event_data = {
+                        "msg_detail": msg_detail,
+                    }
+                self.cid_zed_event.merge_zed_event_data(event_data)
+                self.cid_zed_event.create_zed_event(msg_code)
 
         return assigned_cid
 
