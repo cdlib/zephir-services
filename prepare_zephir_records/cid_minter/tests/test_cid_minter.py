@@ -21,18 +21,23 @@ from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_li
    CID_Minter_Algorithm_PythonVersion_Spec:
    https://docs.google.com/document/d/1lkqjcN1axw8332kbby4dBg44gdYh5mnXMtlQ5a7_llw/edit#heading=h.gjdgxs
 """
-
-def test_missing_htid_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
-    caplog.set_level(logging.DEBUG)
+@pytest.fixture
+def setup_configs(setup_leveldb, setup_zephir_db, setup_local_minter, setup_zed_log):
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
         "minterdb_conn_str": setup_local_minter["local_minter"],
         "leveldb_primary_path": setup_leveldb["primary_db_path"],
         "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
+        "zed_log": setup_zed_log["zed_log"],
+        "zed_msg_table": setup_zed_log["zed_msg_table"],
     }
+    return config 
 
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    cid_minter = CidMinter(config)
+def test_missing_htid_1(caplog, setup_configs):
+    caplog.set_level(logging.DEBUG)
+    
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
 
     test_ids = {
         "no_htid": {"ocn": "123456789"},
@@ -46,19 +51,13 @@ def test_missing_htid_1(caplog, setup_leveldb, setup_zephir_db, setup_local_mint
             cid = cid_minter.mint_cid(ids)
             assert "ValueError: ID error: missing required htid" in e_info
 
-def test_step_0_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_0_1(caplog, setup_configs):
     """Step 0: find record's current CID if exists 
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    cid_minter = CidMinter(config)
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
 
     input_ids= {"htid": "hvd.hw5jdo"}
 
@@ -73,19 +72,13 @@ def test_step_0_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert "Found current CID: 009705704 by htid: hvd.hw5jdo" in caplog.text
 
-def test_step_0_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_0_2(caplog, setup_configs):
     """Step 0: find record's current CID if exists 
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    cid_minter = CidMinter(config)
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
 
     input_ids= {"htid": "test.1234567890_0b"}
 
@@ -98,23 +91,17 @@ def test_step_0_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     cid = cid_minter.mint_cid(input_ids)
     assert "No CID/item found in Zephir DB by htid" in caplog.text
 
-def test_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_a_1(caplog, setup_configs):
     """Test case 1a: Found matched CID by OCNs in Cid Minting Store.
        Use this CID and do not perform Zephir search.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"ocns": "8727632", "htid": "test.1234567890_1b1"}
 
@@ -131,23 +118,17 @@ def test_step_1_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     assert "Local minter: Found matched CID" in caplog.text
     assert "Find CID in Zephir Database by OCNs" not in caplog.text
 
-def test_step_1_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_a_2(caplog, setup_configs):
     """Test case 1a2: Found more than one matched CID by OCNs in Cid Minting Store.
        Do not use this CID. Search CID in Zephir DB by OCNs in this case.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"ocns": "8727632,87276322", "htid": "test.1234567890_1b1"}
 
@@ -172,23 +153,17 @@ def test_step_1_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_1_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_a_3(caplog, setup_configs):
     """Test case 1a3: No matched CID by OCNs in Cid Minting Store.
        Search CID OCNs in Zephir by OCNs in this case.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"ocns": "1234567890", "htid": "test.1234567890_1b1"}
 
@@ -207,7 +182,7 @@ def test_step_1_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_b_1(caplog, setup_configs):
     """Test case 1b1: Found matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - found current CID
@@ -216,18 +191,12 @@ def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
          - updated local minter
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"], 
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"ocns": "80274381,25231018", "contribsys_ids": "hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
 
@@ -284,7 +253,7 @@ def test_step_1_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     record = local_minter._find_record_by_identifier("sysid", sysid)
     assert [record.type, record.identifier, record.cid] == ["sysid", sysid, expected_cid]
 
-def test_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_b_2(caplog, setup_configs):
     """Test case 1b2: Found matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - No CID/item found in Zephir DB by htid
@@ -295,18 +264,12 @@ def test_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
          - updated Local minter
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"ocns": "100,300", "htid": "test.1234567890_1a2"}
 
@@ -364,7 +327,7 @@ def test_step_1_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     minter_new = results[0].get("cid")
     assert int(minter_new) == int(minter) + 1
 
-def test_step_1_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_b_3(caplog, setup_configs):
     """Test case 1b3: Found matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - found current CID
@@ -373,18 +336,12 @@ def test_step_1_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
          - updated local minter
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"ocns": "80274381,25231018,30461866", "htid": "hvd.hw5jdo"}
 
@@ -421,23 +378,17 @@ def test_step_1_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_1_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_1_b_4(caplog, setup_configs):
     """Test case 1b4: No matched cluster by OCNs in Zephir DB.
        Proceed to search CID by local system numbers.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"ocns": "1234567890123", "contribsys_ids": "test.1b4", "htid": "test.1b4"}
 
@@ -450,23 +401,17 @@ def test_step_1_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_2_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_2_a_1(caplog, setup_configs):
     """Test case 2a1: Found one matched CID by contribsys ID in local minter.
        Use this CID and do not perform Zephir DB search in this case.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "pur215476", "htid": "test.2a1"}
 
@@ -496,23 +441,17 @@ def test_step_2_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     record = local_minter._find_record_by_identifier("sysid", sysid)
     assert [record.type, record.identifier, record.cid] == ["sysid", sysid, expected_cid]
 
-def test_step_2_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_2_a_2(caplog, setup_configs):
     """Test case 2a2: Found more than one matched CID by contribsys ID in local minter.
        Do not use this CID and search CID in Zephir DB in this case.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "pur215476,pur1234567", "htid": "test.2a1"}
     sysids = input_ids.get("contribsys_ids")
@@ -544,23 +483,17 @@ def test_step_2_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
 
-def test_step_2_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_2_a_3(caplog, setup_configs):
     """Test case 2a3: No matched CID by contribsys ID in local minter.
        Search CID in Zephir DB by contribsys ID in this case.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "pur215476", "htid": "test.2a1"}
 
@@ -589,23 +522,17 @@ def test_step_2_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     record = local_minter._find_record_by_identifier("sysid", sysid)
     assert [record.type, record.identifier, record.cid] == ["sysid", sysid, expected_cid]
 
-def test_step_2_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_2_b_1(caplog, setup_configs):
     """Test case 2b1: Found one matched CID by contribsys ID in Zephir.
        Also verifies workflow and error conditions:
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "hvd000012735", "htid": "hvd.hw5jdo"}
 
@@ -634,7 +561,7 @@ def test_step_2_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_2_b_2(caplog, setup_configs):
     """Test case 2b2: Found more than one matched CID by contribsys IDs in Zephir.
          - Report warning matched more than one CID 
          - Choose the lower CID to use
@@ -642,18 +569,12 @@ def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
          - local minter was updated
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "hvd000012735,nrlf.b100608668", "htid": "hvd.hw5jdo"}
 
@@ -691,7 +612,7 @@ def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
          "Local minter: No CID found by SYSID",
          "Zephir minter: Found matched CIDs: ['000641789', '009705704'] by contribsys IDs: ['hvd000012735', 'nrlf.b100608668']",
          "Record with local number matches more than one CID",
-         f"htid hvd.hw5jdo changed CID from: {current_cid} to: {expected_cid}",
+         f"Hathi-id (hvd.hw5jdo) changed CID from: {current_cid} to: {expected_cid}",
          "Local minter: Inserted a new record",
          "Updated local minter: contribsys id"
     ]
@@ -703,24 +624,18 @@ def test_step_2_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
         record = local_minter._find_record_by_identifier("sysid", sysid)
         assert [record.type, record.identifier, record.cid] == ["sysid", sysid, expected_cid]
 
-def test_step_2_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_2_b_3(caplog, setup_configs):
     """Test case 2b3: Found a matched CID by contribsys IDs in Zephir with error condition:
          - matched cluster contains records with different contribsys_id
        Skip this CID and proceed to assign CID by previous local system numbers.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "acme.b2222222", "htid": "test.12345"}
     matched_cid = "102359219"
@@ -735,23 +650,17 @@ def test_step_2_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_2_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_2_b_4(caplog, setup_configs):
     """Test case 2b4: No matched CID found by contribsys IDs in Zephir.
        Proceed to assign CID by record's previous local system numbers.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "test.2b41234", "previous_contribsys_ids": "prev.1234", "htid": "test.2b4"}
 
@@ -764,23 +673,17 @@ def test_step_2_b_4(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_3_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_3_a_1(caplog, setup_configs):
     """Test case 3a1: Found one matched CID by previous contribsys ID in local minter.
        Use this CID and do not perform Zephir DB search.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "pur215476", "htid": "hvd.hw5jdo"}
 
@@ -818,23 +721,17 @@ def test_step_3_a_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     record = local_minter._find_record_by_identifier("sysid", previous_sysid)
     assert [record.type, record.identifier, record.cid] == ["sysid", previous_sysid, expected_cid]
 
-def test_step_3_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_3_a_2(caplog, setup_configs):
     """Test case 3a2: Found more than one matched CID by previous contribsys IDs in local minter.
        Do not use this CID and search CID in Zephir DB by previous contribsys IDs.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "pur215476,pur.215476", "htid": "hvd.hw5jdo"}
 
@@ -872,23 +769,17 @@ def test_step_3_a_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_3_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_3_a_3(caplog, setup_configs):
     """Test case 3a3: Found one matched CID by previous contribsys ID in local minter.
        Use this CID and do not perform Zephir DB search.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "pur215476", "htid": "hvd.hw5jdo"}
 
@@ -919,23 +810,17 @@ def test_step_3_a_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
 
-def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_3_b_1(caplog, setup_configs):
     """Test case 2b1: Found one matched CID by previous contribsys IDs in Zephir.
        Use this CID and do not perform Zephir DB search.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "hvd000012735", "htid": "hvd.hw5jdo"}
 
@@ -980,23 +865,17 @@ def test_step_3_b_1(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
     assert [record.type, record.identifier, record.cid] == ["sysid", previous_sysid, expected_cid] 
 
 
-def test_step_3_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_3_b_2(caplog, setup_configs):
     """Test case 3b2: Found more than one matched CID by previous contribsys ID in Zephir.
        Report Error and reject the incoming record.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "acme.992222222", "htid": "hvd.hw5jdo"}
 
@@ -1026,24 +905,18 @@ def test_step_3_b_2(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
         cid = cid_minter.mint_cid(input_ids)
         assert "ZED code: pr0042 - Record with previous local num matches more than one CID" in e_info
 
-def test_step_3_b_3(caplog, setup_leveldb, setup_zephir_db, setup_local_minter):
+def test_step_3_b_3(caplog, setup_configs):
     """Test case 3b3: Found a matched CID by previous contribsys ID in Zephir with error condition:
          - Zephir cluster contains records from different contrib systems. 
        Skip the matched CID and assign a new CID in this case.
     """
     caplog.set_level(logging.DEBUG)
-    config = {
-        "zephirdb_conn_str": setup_zephir_db["zephirDb"],
-        "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
-    }
 
-    cid_minter = CidMinter(config)
-    zephirDb = ZephirDatabase(setup_zephir_db["zephirDb"])
-    local_minter = CidStore(setup_local_minter["local_minter"])
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
+    cid_minter = CidMinter(setup_configs)
+    local_minter = CidStore(setup_configs["minterdb_conn_str"])
+    primary_db_path = setup_configs["leveldb_primary_path"]
+    cluster_db_path = setup_configs["leveldb_cluster_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "acme.b2222222", "htid": "test.12345"}
 
@@ -1195,6 +1068,15 @@ def setup_local_minter(data_dir, tmpdir, scope="session"):
     os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
 
     return {"local_minter": db_conn_str}
+
+@pytest.fixture
+def setup_zed_log(data_dir, tmpdir, scope="session"):
+    zed_log = os.path.join(data_dir, "zed.log")
+    zed_msg_table = os.path.join(data_dir, "columns_prep.csv")
+    return {
+        "zed_log": zed_log,
+        "zed_msg_table": zed_msg_table
+    }
 
 # HELPERS
 def int_to_bytes(inum):
