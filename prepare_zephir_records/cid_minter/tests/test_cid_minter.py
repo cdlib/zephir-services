@@ -186,7 +186,7 @@ def test_step_1_b_1(caplog, setup_configs):
     """Test case 1b1: Found matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - found current CID
-         - reported warning OCLC Concordance Table does not contain record OCNs
+         - reported warning OCLC Concordance Table does not contain record OCNs - pr0094
          - found CID by OCNs
          - updated local minter
     """
@@ -235,7 +235,7 @@ def test_step_1_b_1(caplog, setup_configs):
     expected_events_sequence = [
         "Found current CID", 
         "Local minter: No CID found by OCN", 
-        "OCLC Concordance Table does not contain record OCNs", 
+        "ZED code: pr0094 - OCLC Concordance Table does not contain record OCNs [80274381, 25231018]", 
         "Zephir minter: Found matched CID", 
         "Local minter: Inserted a new record",
         "Updated local minter: ocn: 80274381", 
@@ -258,7 +258,7 @@ def test_step_1_b_2(caplog, setup_configs):
        Also verifies workflow and error conditions:
          - No CID/item found in Zephir DB by htid
          - Local minter: No CID found by OCN
-         - report warning when OCNs matched to more than one primary OCLC number 
+         - report warning when OCNs matched to more than one primary OCLC number - pr0096
          - Zephir minter: No CID found by OCNs
          - Minted a new CID 
          - updated Local minter
@@ -308,7 +308,7 @@ def test_step_1_b_2(caplog, setup_configs):
         "No CID/item found in Zephir DB by htid",
         "Local minter: No CID found by OCN",
         "Find CID in Zephir Database by OCNs",
-        "match more than one OCLC Concordance clusters",
+        f"ZED code: pr0096 - Record OCNs {incoming_ocns} match more than one OCLC Concordance clusters",
         "Minted a new minter",
         "Local minter: Inserted a new record",
         "Updated local minter: ocn"
@@ -331,7 +331,7 @@ def test_step_1_b_3(caplog, setup_configs):
     """Test case 1b3: Found matched cluster by OCNs in Zephir DB.
        Also verifies workflow and error conditions:
          - found current CID
-         - matched more than one clusters, choose the lower one
+         - matched more than one clusters, choose the lower one: pr0090 (more than one OCN matches more than one cluster)
          - found CID by OCNs
          - updated local minter
     """
@@ -361,8 +361,9 @@ def test_step_1_b_3(caplog, setup_configs):
     for result in results:
         assert result in expected
 
+    ocns = [80274381, 25231018, 30461866]
     # verify in local minter: OCN not in local minter
-    for ocn in ["80274381", "25231018", "30461866"]:
+    for ocn in ocns:
         record = local_minter._find_record_by_identifier("ocn", ocn)
         assert record is None
 
@@ -373,7 +374,8 @@ def test_step_1_b_3(caplog, setup_configs):
 
     expected_events_sequence = [
         "Zephir minter: Found matched CID",
-        "matches 2 CIDs (['009705704', '011323406']) used 009705704",
+        f"ZED code: pr0090 - Record with OCLCs ({ocns}) matches 2 CIDs (['009705704', '011323406']) used 009705704",
+        f"ZED code: pr0213 - Assigned existing CID: 009705704 - assigned by matching OCLC number(s)",
     ]
     verify_events(caplog.text, expected_events_sequence)
     verify_sequenced_events(caplog.text, expected_events_sequence)
@@ -565,7 +567,7 @@ def test_step_2_b_2(caplog, setup_configs):
     """Test case 2b2: Found more than one matched CID by contribsys IDs in Zephir.
          - Report warning matched more than one CID 
          - Choose the lower CID to use
-         - record changed CID
+         - record changed CID - pr0059
          - local minter was updated
     """
     caplog.set_level(logging.DEBUG)
@@ -611,8 +613,8 @@ def test_step_2_b_2(caplog, setup_configs):
          f"Found current CID: {current_cid} by htid: {htid}",
          "Local minter: No CID found by SYSID",
          "Zephir minter: Found matched CIDs: ['000641789', '009705704'] by contribsys IDs: ['hvd000012735', 'nrlf.b100608668']",
-         "Record with local number matches more than one CID",
-         f"Hathi-id (hvd.hw5jdo) changed CID from: {current_cid} to: {expected_cid}",
+         "ZED code: pr0089 - Record with local number matches more than one CID",
+         f"ZED code: pr0059 - WARNING: Hathi-id (hvd.hw5jdo) changed CID from: {current_cid} to: {expected_cid}",
          "Local minter: Inserted a new record",
          "Updated local minter: contribsys id"
     ]
@@ -957,7 +959,7 @@ def test_step_3_b_3(caplog, setup_configs):
     expected_events_sequence = [
         f"Zephir minter: Found matched CIDs: ['{expected_cid}'] by previous contribsys IDs: ['{previous_sysid}']",
         f"Zephir cluster contains records from different contrib systems. Skip this CID ({expected_cid}) assignment",
-        f"Minted a new minter: {cid} - from current minter",
+        f"ZED code: pr0212 - Minted a new minter: {cid} - from current minter",
         "Local minter: Inserted a new record",
         f"Updated local minter: contribsys id: {sysid}",
         f"Updated local minter: previous contribsys id: {previous_sysid}"

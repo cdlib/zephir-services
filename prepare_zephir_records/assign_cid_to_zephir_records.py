@@ -360,7 +360,7 @@ def main():
     pid = os.getpid()
     process_key = str(uuid.uuid4())
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    zed_log = os.path.join(zed_log_path, f"zed_cid_{timestamp}_{pid}")
+    zed_log = os.path.join(zed_log_path, f"zed_cid_{timestamp}_{pid}.log")
 
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,

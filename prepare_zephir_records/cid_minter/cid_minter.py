@@ -99,7 +99,7 @@ class CidMinter:
         if self._cid_assigned(assigned_cid) and current_cid and current_cid != assigned_cid:
             msg_code = "pr0059"
             msg_detail = f"WARNING: Hathi-id ({htid}) changed CID from: {current_cid} to: {assigned_cid}"
-            logging.info(f"ZED: {msg_code} - {msg_detail}")
+            logging.info(f"ZED code: {msg_code} - {msg_detail}")
             event_data = {
                 "msg_detail": msg_detail,
             }
@@ -111,7 +111,7 @@ class CidMinter:
             self._minter_new_cid()
             assigned_cid = self._find_current_minter().get("cid")
             msg_code = "pr0212" # assign new CID
-            logging.info(f"ZED: {msg_code} - Minted a new minter: {assigned_cid} - from current minter: {current_minter}")
+            logging.info(f"ZED code: {msg_code} - Minted a new minter: {assigned_cid} - from current minter: {current_minter}")
             event_data = {
                 "msg_detail": f"Assigned new CID: {assigned_cid}",
                 "report": {"CID": assigned_cid}
@@ -120,8 +120,10 @@ class CidMinter:
             self.cid_zed_event.create_zed_event(msg_code)
         else:
             msg_code = "pr0213" # assigned existing CID 
+            msg_detail = f"Assigned existing CID: {assigned_cid} - assigned by matching {cid_assigned_by}"
+            logging.info(f"ZED code: {msg_code} - {msg_detail}")
             event_data = {
-                "msg_detail": f"Assigned existing CID: {assigned_cid} - assigned by matching {cid_assigned_by}",
+                "msg_detail": msg_detail,
                 "report": {"CID": assigned_cid}
             }
             self.cid_zed_event.merge_zed_event_data(event_data)
@@ -205,9 +207,23 @@ class CidMinter:
 
             if num_of_matched_oclc_clusters:
                 if num_of_matched_oclc_clusters > 1:
-                    logging.info(f"ZED code: pr0096 - Record OCNs {ocns} match more than one OCLC Concordance clusters")
+                    msg_code = "pr0096"
+                    msg_detail = f"Record OCNs {ocns} match more than one OCLC Concordance clusters"
+                    logging.info(f"ZED code: {msg_code} - {msg_detail}")
+                    event_data = {
+                        "msg_detail": msg_detail,
+                    }
+                    self.cid_zed_event.merge_zed_event_data(event_data)
+                    self.cid_zed_event.create_zed_event(msg_code)
             else:
-                logging.error(f"ZED code: XXXX - OCLC Concordance Table does not contain record OCNs {ocns} ")
+                msg_code = "pr0094"
+                msg_detail = f"OCLC Concordance Table does not contain record OCNs {ocns}"
+                logging.error(f"ZED code: {msg_code} - {msg_detail}")
+                event_data = {
+                    "msg_detail": msg_detail,
+                }
+                self.cid_zed_event.merge_zed_event_data(event_data)
+                self.cid_zed_event.create_zed_event(msg_code)
 
             if num_of_matched_zephir_clusters == 0:
                 logging.info(f"Zephir minter: No CID found by OCNs: {ocns}")
@@ -216,11 +232,10 @@ class CidMinter:
 
             if num_of_matched_zephir_clusters > 1:
                 plural = ""
+                msg_code = "pr0091"
                 if len(ocns) > 1:
                     msg_code = "pr0090"
                     plural = "s"
-                else:
-                    msg_code = "pr0091"
                 msg_detail = f"Record with OCLC{plural} ({ocns}) matches {num_of_matched_zephir_clusters} CIDs ({cid_list}) used {assigned_cid}"
                 logging.warning(f"ZED code: {msg_code} - {msg_detail}")
                 event_data = {
@@ -268,8 +283,14 @@ class CidMinter:
             cid_list = list(item.get('cid') for item in results) 
             logging.info(f"Zephir minter: Found matched CIDs: {cid_list} by contribsys IDs: {sysids}")
             if len(results) > 1:
+                msg_code = "pr0089"
                 msg_detail = f"Record with local num ({sysids}) matches {len(results)} CIDs ({cid_list}) used {assigned_cid}";
-                logging.warning(f"ZED code: pr0089 - Record with local number matches more than one CID. - {msg_detail} ")
+                logging.warning(f"ZED code: {msg_code} - Record with local number matches more than one CID. - {msg_detail} ")
+                event_data = {
+                    "msg_detail": msg_detail,
+                }
+                self.cid_zed_event.merge_zed_event_data(event_data)
+                self.cid_zed_event.create_zed_event(msg_code)
 
             if self._cluster_contain_multiple_contribsys(assigned_cid):
                 logging.warning(f"Zephir cluster contains records from different contrib systems. Skip this CID ({assigned_cid}) assignment")
@@ -285,9 +306,15 @@ class CidMinter:
             cid_list = list(item.get('cid') for item in results)
             logging.info(f"Zephir minter: Found matched CIDs: {cid_list} by previous contribsys IDs: {sysids}")
             if len(results) > 1:
+                msg_code = "pr0042"
                 msg_detail = f"Record with previous local num ({sysids}) matches {len(results)} CIDs ({cid_list})";
-                zed_msg = f"ZED code: pr0042 - Record with previous local num matches more than one CID. - {msg_detail}"
+                zed_msg = f"ZED code: {msg_code} - Record with previous local num matches more than one CID. - {msg_detail}"
                 logging.error(zed_msg)
+                event_data = {
+                    "msg_detail": msg_detail,
+                }
+                self.cid_zed_event.merge_zed_event_data(event_data)
+                self.cid_zed_event.create_zed_event(msg_code)
                 raise ValueError(zed_msg)
             else:
                 assigned_cid = results[0].get('cid')
