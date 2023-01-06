@@ -14,6 +14,7 @@ class CidZedEvent(object):
         self.zed_msg_table = self._get_zed_msg_table(zed_msg_table_file)
         self.zed_log_fp = open(zed_event_log, "w")
         self.zed_event_data = event_data
+        self.zed_event = None
 
     """ZED msg table: https://github.com/cdlib/htmm-env/blob/master/zed/msg_tables/columns_prep.csv
     """
@@ -54,7 +55,9 @@ class CidZedEvent(object):
             return dict_1 or dict_2
 
     def create_zed_event(self, status_msg_code):
-        """ZED event specification https://docs.google.com/document/d/1vhMV3JGeMhrkNK1n0j05OFYsXgdQD0N_/edit
+        """Create ZED event using event data. Save event as self.zed_event and save it to zed log.
+
+        ZED event specification https://docs.google.com/document/d/1vhMV3JGeMhrkNK1n0j05OFYsXgdQD0N_/edit
             Data model (6/28/2018)
             ## [R]-Required, [O]-Optional
             {
@@ -104,6 +107,7 @@ class CidZedEvent(object):
             "report": self._merge_dict(self.zed_event_data.get("ids"), self.zed_event_data.get("report"))
         }
 
+        self.zed_event = zed_event
         json.dump(zed_event, self.zed_log_fp)
         self.zed_log_fp.write('\n')
 
