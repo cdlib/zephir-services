@@ -33,7 +33,10 @@ from lib.utils import ConsoleMessenger
 @click.option(
     "-s", "--suffix", "suffix", default="validated", help="for renaming valid files"
 )
-def validate(filepath, quiet, verbose, dry_run, suffix):
+@click.option(
+    "-i", "--invalid-suffix", "invalid_suffix", default="invalid", help="for renaming invalid files"
+)
+def validate(filepath, quiet, verbose, dry_run, suffix, invalid_suffix):
     """validate.py: Validate ZED log file to ensure all the data is JSON and
     conforms to schemas"""
 
@@ -68,19 +71,28 @@ def validate(filepath, quiet, verbose, dry_run, suffix):
 
         # Get the file name, path, and create destination file name, path
         f_path, f_name = os.path.split(file)
-        renamed_file = os.path.join("{0}.{1}".format(file, suffix))
+        renamed_file = f"{file}.{suffix}"
 
+        invalid_file = f"{file}.{invalid_suffix}"
+
+        event_counter = defaultdict(int)
+
+        # Update event counter if renamed file exists
         if os.path.isfile(renamed_file):
-            console.error("Validated file '{0}' already exists.".format(renamed_file))
-            break
-
+            with open(renamed_file, 'r') as renamed_io:
+                for line in renamed_io.readlines():
+                    event = json.loads(line.strip())
+                    event_counter[event["event"]] += 1
+        
         # Open file and validate
         with open(file) as f_io:
-            event_counter = defaultdict(int)
+
             file_valid = True  # Assume valid until line found invalid
             ln_cnt = 0
             console.diagnostic("Validating: {}".format(file))
-            for line in f_io:
+
+            lines = f_io.readlines()
+            for line in lines:
                 ln_cnt += 1
 
                 # JSON VALIDATION BLOCK
@@ -110,9 +122,20 @@ def validate(filepath, quiet, verbose, dry_run, suffix):
             # Report results
             if file_valid is False:
                 console.error("File {0}: invalid.".format(file))
+
+                # Rename file
+                os.rename(file, invalid_file)
             else:
                 if not dry_run:
-                    os.rename(file, renamed_file)
+                    # Check if file already exists
+                    if os.path.isfile(renamed_file):
+                        # Remove file and append contents to renamed file
+                        os.remove(file)
+                        with open(renamed_file, 'a') as renamed_io:
+                            renamed_io.writelines(lines)
+                    else:
+                        # Rename file
+                        os.rename(file, renamed_file)
                 console.report(
                     "File {0}: valid. {1} event(s) validated.".format(file, ln_cnt)
                 )
