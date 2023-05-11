@@ -60,16 +60,23 @@ def test_audit_respects_dry_run(env_setup, td_tmpdir, capsys):
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
 
-def test_audit_will_not_overwrite(env_setup, td_tmpdir, capsys):
+def test_audit_will_append_existing_files(env_setup, td_tmpdir, capsys):
     shutil.copy(
         os.path.join(td_tmpdir, "found_events.log"),
         os.path.join(td_tmpdir, "found_events.log.audited"),
     )
+    with open(os.path.join(td_tmpdir, "found_events.log")) as f:
+        found_events_log = f.readlines()
+        
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(td_tmpdir, "found_events.log")]
         audit()
     out, err = capsys.readouterr()
-    assert "found_events.log: pass" not in err
+    assert "found_events.log: pass" in err
+
+    with open(os.path.join(td_tmpdir, "found_events.log.audited")) as f:
+        assert f.readlines() == found_events_log * 2
+        
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
 
@@ -115,5 +122,8 @@ def test_audit_handles_invalid_json(env_setup, td_tmpdir, capsys):
     assert "fail" in err
     assert not os.path.isfile(
         os.path.join(td_tmpdir, "events_with_invalid_json.log.audited")
+    )
+    assert os.path.isfile(
+        os.path.join(td_tmpdir, "events_with_invalid_json.log.failed")
     )
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]

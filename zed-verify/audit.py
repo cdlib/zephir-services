@@ -36,7 +36,10 @@ import lib.utils as utils
 @click.option(
     "-s", "--suffix", "suffix", default="audited", help="for renaming valid files"
 )
-def audit(filepath, quiet, verbose, dry_run, suffix):
+@click.option(
+    "-f", "--fail-suffix", "fail_suffix", default="failed", help="for renaming failed files"
+)
+def audit(filepath, quiet, verbose, dry_run, suffix, fail_suffix):
     """Audit.py: Audit ZED log file to ensure all the data is represented in
     the database"""
     # Print handler to manage when and how messages should print
@@ -97,11 +100,9 @@ def audit(filepath, quiet, verbose, dry_run, suffix):
 
         # # Get the file name, path, and create destination file name, path
         f_path, f_name = os.path.split(file)
-        renamed_file = os.path.join("{0}.{1}".format(file, suffix))
+        renamed_file = f"{file}.{suffix}"
 
-        if os.path.isfile(renamed_file):
-            console.error("Audit file '{0}' already exists.".format(renamed_file))
-            break
+        failed_file = f"{file}.{fail_suffix}"
 
         log_events = []
         db_events = set()
@@ -110,7 +111,9 @@ def audit(filepath, quiet, verbose, dry_run, suffix):
         with open(file) as f_io:
             ln_cnt = 0
             console.diagnostic("Auditing: " + file)
-            for line in f_io:
+
+            lines = f_io.readlines()
+            for line in lines:
                 ln_cnt += 1
                 try:
                     log_events.append(json.loads(line.strip()))
@@ -159,9 +162,20 @@ def audit(filepath, quiet, verbose, dry_run, suffix):
         # Report results
         if file_pass is False:
             console.error("File {0}: fail.".format(file))
+
+            # Rename file
+            os.rename(file, failed_file)
         else:
             if not dry_run:
-                os.rename(file, renamed_file)
+                # Check if file already exists
+                if os.path.isfile(renamed_file):
+                    # Remove file and append contents to renamed file
+                    os.remove(file)
+                    with open(renamed_file, "a") as renamed_io:
+                        renamed_io.writelines(lines)
+                else:
+                    # Rename file
+                    os.rename(file, renamed_file)
             console.report(
                 "File {0}: pass. {1} event(s) audited.\
             ".format(
