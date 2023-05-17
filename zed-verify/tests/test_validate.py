@@ -47,16 +47,27 @@ def test_validate_respects_dry_run(prep_data, capsys):
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
 
-def test_validate_will_not_overwrite(prep_data, capsys):
+def test_validate_will_append_existing_files(prep_data, capsys):
     shutil.copy(
-        os.path.join(prep_data["dir"], "valid.log"),
+        os.path.join(prep_data["dir"], "valid1.log"),
         os.path.join(prep_data["dir"], "valid.log.validated"),
     )
+    # Get lines from each log file
+    with (open(os.path.join(prep_data["dir"], "valid.log")) as valid_io,
+          open(os.path.join(prep_data["dir"], "valid1.log")) as valid1_io):
+        valid_log = valid_io.readlines()
+        valid1_log = valid1_io.readlines()
+        
     with pytest.raises(SystemExit) as pytest_e:
         sys.argv = ["", os.path.join(prep_data["dir"], "valid.log")]
         validate()
     out, err = capsys.readouterr()
-    assert "valid.log: valid" not in err
+    assert "valid.log: valid" in err
+
+    # Check that the validated file contains the lines from both logs
+    with open (os.path.join(prep_data["dir"], "valid.log.validated")) as f:
+        assert f.readlines() == valid1_log + valid_log
+        
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
 
@@ -67,6 +78,7 @@ def test_validate_fails_invalid_json(prep_data, capsys):
     out, err = capsys.readouterr()
     assert "invalid_json.log: invalid" in err
     assert not os.path.isfile(os.path.join(prep_data["dir"], "invalid.log.validated"))
+    assert os.path.isfile(os.path.join(prep_data["dir"], "invalid_json.log.invalid"))
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
 
@@ -79,6 +91,9 @@ def test_validate_fails_invalid_zed_schema_json(prep_data, capsys):
     assert "invalid_zed_json.log: invalid" in err
     assert not os.path.isfile(
         os.path.join(prep_data["dir"], "invalid_zed_json.log.validated")
+    )
+    assert os.path.isfile(
+        os.path.join(prep_data["dir"], "invalid_zed_json.log.invalid")
     )
     assert [pytest_e.type, pytest_e.value.code] == [SystemExit, 0]
 
