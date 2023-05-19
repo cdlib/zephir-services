@@ -53,9 +53,9 @@ def test_validate_will_append_existing_files(prep_data, capsys):
         os.path.join(prep_data["dir"], "valid.log.validated"),
     )
     # Get lines from each log file
-    with (open(os.path.join(prep_data["dir"], "valid.log")) as valid_io,
-          open(os.path.join(prep_data["dir"], "valid1.log")) as valid1_io):
+    with open(os.path.join(prep_data["dir"], "valid.log")) as valid_io:
         valid_log = valid_io.readlines()
+    with open(os.path.join(prep_data["dir"], "valid1.log")) as valid1_io:
         valid1_log = valid1_io.readlines()
         
     with pytest.raises(SystemExit) as pytest_e:
