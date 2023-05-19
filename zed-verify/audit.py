@@ -23,7 +23,7 @@ import lib.utils as utils
     "--verbose",
     is_flag=True,
     default=True,
-    help="Emit messages dianostic messages about everything",
+    help="Emit messages diagnostic messages about everything",
 )
 @click.option(
     "-d",
@@ -119,7 +119,7 @@ def audit(filepath, quiet, verbose, dry_run, suffix, fail_suffix):
                     log_events.append(json.loads(line.strip()))
                 except json.decoder.JSONDecodeError:
                     file_pass = False
-                    console.error("ERROR: Innvalid JSON on line {0}".format(ln_cnt))
+                    console.error("ERROR: Invalid JSON on line {0}".format(ln_cnt))
                     break  # invalid json, stop successive validation routines
 
         if file_pass and len(log_events) > 0:
@@ -128,11 +128,11 @@ def audit(filepath, quiet, verbose, dry_run, suffix, fail_suffix):
                 "first_timestamp": (
                     iso8601.parse_date(log_events[0]["timestamp"])
                     - datetime.timedelta(seconds=60)
-                ).isoformat("T"),
+                ).isoformat("T").replace('+00:00', 'Z'),
                 "last_timestamp": (
                     iso8601.parse_date(log_events[-1]["timestamp"])
                     + datetime.timedelta(seconds=60)
-                ).isoformat("T"),
+                ).isoformat("T").replace('+00:00', 'Z')
             }
 
             session = Session()
