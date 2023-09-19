@@ -85,7 +85,7 @@ def validate(filepath, quiet, verbose, dry_run, suffix, invalid_suffix):
                     event_counter[event["event"]] += 1
         
         # Open file and validate
-        with open(file) as f_io:
+        with open(file, errors="replace") as f_io:
 
             file_valid = True  # Assume valid until line found invalid
             ln_cnt = 0
