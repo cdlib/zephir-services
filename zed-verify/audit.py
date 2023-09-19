@@ -108,7 +108,7 @@ def audit(filepath, quiet, verbose, dry_run, suffix, fail_suffix):
         db_events = set()
         file_pass = True  # Assume valid until line found invalid
         # Open file and process
-        with open(file) as f_io:
+        with open(file, errors="replace") as f_io:
             ln_cnt = 0
             console.diagnostic("Auditing: " + file)
 
