@@ -16,10 +16,10 @@ def test_example(td_tmpdir, capsys, pytestconfig):
 
     # Output the captured output to the respective streams for debugging if necessary
     print(out, file=sys.stdout)
-    print(err, file=sys.stderr)
+    print(out, file=sys.stderr)
 
     # Assert the expected output and exit code
-    assert test_argument in out, "The CLI should echo the input argument"
+    assert test_argument + '0' in out, "The CLI should echo the input argument"
     assert pytest_e.type == SystemExit, "The CLI should exit gracefully"
     assert pytest_e.value.code == 0, "The CLI should exit with a code of 0 indicating success"
 
