@@ -1,6 +1,6 @@
 import sys
 import pytest
-from example_cli import main  # Ensure main is imported correctly
+from example_cli import main # Ensure main is imported correctly
 
 def test_example(td_tmpdir, capsys, pytestconfig):
     # Prepare the argument list for the CLI
