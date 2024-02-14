@@ -5,9 +5,8 @@ from pymarc import parse_xml_to_array, Field
 from collections import Counter
 
 
-def get_value_from_location(record, loc): # 974$u   record.get("974")    .get("u")
+def get_value_from_location(record, loc):
     split = loc.split("$")
-
     current_value = record
 
     while len(split):
@@ -22,7 +21,6 @@ def get_value_from_location(record, loc): # 974$u   record.get("974")    .get("u
 
 
 def compare_record(record1, record2, idloc1, idloc2):
-
     differences = Counter()
 
     def compare_field(location):
@@ -40,14 +38,12 @@ def compare_record(record1, record2, idloc1, idloc2):
 
     for field in ["260$a", "260$b", "260$c", "264$a", "264$b", "264$c"]:
         compare_field(field)
-
         
     if differences.total() > 0:
         print("HTID:", id1)
-        
-    for k, v in differences.items():
-        print(f"First file: {k} = {get_value_from_location(record1, k)}")
-        print(f"Second file: {k} = {get_value_from_location(record2, k)}")
+        for k, v in differences.items():
+            print(f"First file: {k} = {get_value_from_location(record1, k)}")
+            print(f"Second file: {k} = {get_value_from_location(record2, k)}")
         
     return differences
 
@@ -108,5 +104,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    # x = load_and_print_records(data/first.xml)
