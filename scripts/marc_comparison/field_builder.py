@@ -18,7 +18,7 @@ def parse_pattern(pattern):
     pattern = match.group(2)
 
     inlocs = re.findall(fr"{{({location_pattern})}}", pattern)
-    pattern = re.sub(fr"{location_pattern}", "", pattern)
+    pattern = re.sub(fr"{{{location_pattern}}}", "{}", pattern)
 
     return inlocs, outloc, pattern
 
