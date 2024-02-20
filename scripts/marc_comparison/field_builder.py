@@ -62,7 +62,10 @@ def process_file(input_file, output_file, pattern):
     with open(input_file, 'r') as infile:
         records = pymarc.parse_xml_to_array(infile)
 
+    records_written = 0
     with open(output_file, 'wb') as outfile:
+        writer = pymarc.XMLWriter(outfile)
+        
         for record in records:
             invals = [get_value_from_location(record, loc) for loc in inlocs]
 
@@ -71,8 +74,14 @@ def process_file(input_file, output_file, pattern):
             
             outval = pattern.format(*invals)
             record = update_value_at_location(record, outloc, outval)
-            outfile.write(record.as_marc())
-            
+            writer.write(record)
+
+            records_written += 1
+        writer.close()
+    print(f"Number of records processed: {records_written}")
+    return 0
+
+    
 def main():
     parser = argparse.ArgumentParser(description="Field Builder")
     parser.add_argument("-i", "--input", help="Input File", required=True)
