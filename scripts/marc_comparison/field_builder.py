@@ -6,8 +6,42 @@ import pymarc
 
 from match_up_file import get_value_from_location
 
+def valid_location(location):
+    location_pattern = r"[A-Z0-9]{3}(?:\$[a-z0-9])?"
+    match = re.fullmatch(location_pattern, location)
+    return bool(re.fullmatch(location_pattern, location))
+
+
+def update_value_at_location(record, location, value):
+    if not valid_location(location):
+        raise ValueError("Invalid location")
+
+    split = location.split("$")
+    tag = split[0]
+
+    if len(split) == 1:
+        # No subfield, must be a control field
+        if int(tag) >= 10:
+            raise ValueError("Invalid control field location")
+        if tag not in record:
+            record.add_field(pymarc.Field(tag, data=value))
+        else:
+            record[tag].data = value
+    else:
+        subfield = split[1]
+        if tag not in record:
+            record.add_ordered_field(pymarc.Field(
+                tag=tag,
+                indicators=[" ", " "],
+                subfields=[pymarc.Subfield(code=subfield, value=value)]))
+            return record
+        else:
+            record[tag][subfield] = value
+
+    return record
+
 def parse_pattern(pattern):
-    location_pattern = r"[0-9]{3}(?:\$[a-z])?"
+    location_pattern = r"[A-Z0-9]{3}(?:\$[a-z0-9])?"
     valid_pattern = r"({loc})=((?:{{{loc}}}|[^{{}}])+)".format(loc=location_pattern)
 
     match = re.fullmatch(valid_pattern, pattern)
@@ -36,7 +70,8 @@ def process_file(input_file, output_file, pattern):
                 raise ValueError(f"No value found at {inlocs[invals.index(None)]}")
             
             outval = pattern.format(*invals)
-            
+            record = update_value_at_location(record, outloc, outval)
+            outfile.write(record.as_marc())
             
 def main():
     parser = argparse.ArgumentParser(description="Field Builder")
