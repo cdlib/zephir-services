@@ -153,8 +153,6 @@ def compare_record(record1, record2, idloc1, idloc2):
         
     compare_OCLC()
 
-
-
     if differences.total() > 0:
         print("HTID:", id1)
         for k, v in differences.items():
@@ -169,6 +167,7 @@ def compare_record(record1, record2, idloc1, idloc2):
 
 
 def marc_compare(file1, file2, idloc1, idloc2):    
+
     records1 = load_records(file1)
     records2 = load_records(file2)
 
