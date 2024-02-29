@@ -219,8 +219,6 @@ def marc_compare(file1, file2, idloc1, idloc2):
     print("264$a (place of pub):", differences["264$a"])
     print("264$b (name of pub):", differences["264$b"])
     print("264$c (date of pub):", differences["264$c"])
-
-    print(differences["008"])
     
     return 0
 
