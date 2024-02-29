@@ -134,13 +134,14 @@ def compare_record(record1, record2, idloc1, idloc2):
         r1_value = r1_value[section] if r1_value else r1_value
         r2_value = r2_value[section] if r2_value else r2_value
 
-        if r1_value != r2_value:
-            if section == slice(None):
-                differences[location] = 1
-            else:
-                if location not in differences:
-                    differences[location] = Counter()
+        if section != slice(None):
+            if location not in differences:
+                differences[location] = Counter()
+            if r1_value != r2_value:
                 differences[location][f"{section.start}-{section.stop - 1}"] = 1
+        else:
+            if r1_value != r2_value:
+                differences[location] = 1
     
     id1 = get_value_from_location(record1, idloc1)
     id2 = get_value_from_location(record2, idloc2)
