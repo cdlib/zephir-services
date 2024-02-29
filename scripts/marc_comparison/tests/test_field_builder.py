@@ -68,7 +68,6 @@ def test_cli_output(td_tmpdir, capsys, pytestconfig):
     print(out, file=sys.stdout)
     print(err, file=sys.stderr)
 
-    assert "Number of records processed: 1" in out, ""
     assert pytest_e.type == SystemExit
     assert pytest_e.value.code == 0
 

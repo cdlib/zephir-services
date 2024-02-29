@@ -1,6 +1,7 @@
 import re
 import argparse
 import sys
+from io import StringIO
 
 import pymarc
 
@@ -59,41 +60,51 @@ def parse_pattern(pattern):
 def process_file(input_file, output_file, pattern):
     inlocs, outloc, pattern = parse_pattern(pattern)
 
-    with open(input_file, 'r') as infile:
-        records = pymarc.parse_xml_to_array(infile)
+    if input_file == sys.stdin:
+        records = pymarc.parse_xml_to_array(StringIO(input_file.read()))
+    else:
+        records = pymarc.parse_xml_to_array(input_file)
 
     records_written = 0
-    with open(output_file, 'wb') as outfile:
-        writer = pymarc.XMLWriter(outfile)
+
+    if output_file:
+        outfile = open(output_file, 'wb')
+    else:
+        outfile = open(sys.stdout.fileno(), 'wb', closefd=False)
+    
+    writer = pymarc.XMLWriter(outfile)
+
+    for record in records:
+        invals = [get_value_from_location(record, loc) for loc in inlocs]
+
+        if None in invals:
+            raise ValueError(f"No value found at {inlocs[invals.index(None)]}")
+
+        outval = pattern.format(*invals)
+        record = update_value_at_location(record, outloc, outval)
+        writer.write(record)
+
+        records_written += 1
+    writer.close()
+
+    if output_file:
+        outfile.close()
         
-        for record in records:
-            invals = [get_value_from_location(record, loc) for loc in inlocs]
-
-            if None in invals:
-                raise ValueError(f"No value found at {inlocs[invals.index(None)]}")
-            
-            outval = pattern.format(*invals)
-            record = update_value_at_location(record, outloc, outval)
-            writer.write(record)
-
-            records_written += 1
-        writer.close()
-    print(f"Number of records processed: {records_written}")
     return 0
 
     
 def main():
     parser = argparse.ArgumentParser(description="Field Builder")
-    parser.add_argument("-i", "--input", help="Input File", required=True)
-    parser.add_argument("-o", "--output", help="Output File", required=True)
+    parser.add_argument("-i", "--input", type=argparse.FileType('r'), help="Input File", default=sys.stdin, required=False)
+    parser.add_argument("-o", "--output", help="Output File", required=False)
     parser.add_argument("-p", "--pattern", help="Builder Pattern", required=True)
     args = parser.parse_args()
-
-    try:
-        return_code = process_file(args.input, args.output, args.pattern)
-    except Exception as e:
-        print(e, file=sys.stderr)
-        sys.exit(1)
+    return_code = process_file(args.input, args.output, args.pattern)        
+    # try:
+        
+    # except Exception as e:
+    #     print(e, file=sys.stderr)
+    #     sys.exit(1)
 
     sys.exit(return_code)
 
