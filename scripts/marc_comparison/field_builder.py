@@ -99,12 +99,12 @@ def main():
     parser.add_argument("-o", "--output", help="Output File", required=False)
     parser.add_argument("-p", "--pattern", help="Builder Pattern", required=True)
     args = parser.parse_args()
-    return_code = process_file(args.input, args.output, args.pattern)        
-    # try:
-        
-    # except Exception as e:
-    #     print(e, file=sys.stderr)
-    #     sys.exit(1)
+
+    try: 
+        return_code = process_file(args.input, args.output, args.pattern)       
+    except Exception as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
 
     sys.exit(return_code)
 
