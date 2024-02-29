@@ -22,27 +22,31 @@ def get_value_from_location(record, loc):
 
     return current_value
 
-'''
-from pymarc import MARCReader
 
-def extract_oclc_numbers(marc_file_path):
-    oclc_numbers = []
+def nested_counter_total(counter):
+    total = 0
+    for k, v in counter.items():
+        if isinstance(v, int):
+            total += v
+        elif isinstance(v, Counter):
+            total += nested_counter_total(v)
+        else:
+            raise ValueError(f"Unexpected type: {type(v)}")
+    return total
 
-    with open(marc_file_path, 'rb') as fh:
-        reader = MARCReader(fh)
-        for record in reader:
-            for field in record.get_fields('035'):
-                if field['a'] and '(OCoLC)' in field['a']:
-                    oclc_number = field['a'].replace('(OCoLC)', '').strip()
-                    oclc_numbers.append(oclc_number)
 
-    return oclc_numbers
+def nested_counter_update(counter, other):
+    for k, v in other.items():
+        if isinstance(v, int):
+            counter[k] += v
+        elif isinstance(v, Counter):
+            if k not in counter:
+                counter[k] = Counter()
+            counter[k] = nested_counter_update(counter[k], v)
+        else:
+            raise ValueError(f"Unexpected type: {type(v)}")
+    return counter
 
-# Example usage
-marc_file_path = 'path_to_your_marc_file.mrc'
-oclc_numbers = extract_oclc_numbers(marc_file_path)
-print(oclc_numbers)
-'''
 
 def get_OCLCs(record):
     """Extracts OCLC numbers from a MARC record.
@@ -107,6 +111,7 @@ def get_OCLCs(record):
                 oclcs.append((prefix, num))
     return oclcs
 
+
 def get_primary_OCLC(record):
     oclcs = get_OCLCs(record) 
     return oclcs[0][1] if oclcs else None
@@ -133,7 +138,9 @@ def compare_record(record1, record2, idloc1, idloc2):
             if section == slice(None):
                 differences[location] = 1
             else:
-                differences[f"{location}/{section.start}-{section.stop - 1}"] = 1
+                if location not in differences:
+                    differences[location] = Counter()
+                differences[location][f"{section.start}-{section.stop - 1}"] = 1
     
     id1 = get_value_from_location(record1, idloc1)
     id2 = get_value_from_location(record2, idloc2)
@@ -153,7 +160,7 @@ def compare_record(record1, record2, idloc1, idloc2):
         
     compare_OCLC()
 
-    if differences.total() > 0:
+    if nested_counter_total(differences) > 0:
         print("HTID:", id1)
         for k, v in differences.items():
             if k == "oclc":
@@ -177,26 +184,44 @@ def marc_compare(file1, file2, idloc1, idloc2):
         raise ValueError(f"Number of records in {file1} ({len1}) does not match the number of records in {file2} ({len2}).")
     
     print(f"File 1: {file1}")
-    print(f"File 2: {file2}")
+    print(f"File 2: {file2}\n")
 
     differences = Counter()
     num_records_with_differences = 0
     for i in range(len(records1)):
         new_diffs = compare_record(records1[i], records2[i], idloc1, idloc2)
 
-        if new_diffs.total() > 0:
+        if nested_counter_total(new_diffs) > 0:
             num_records_with_differences += 1
 
-        differences.update(new_diffs)
-    
+        differences = nested_counter_update(differences, new_diffs)
+
+    # Print summary of differences
+    if num_records_with_differences > 0:
+        print("")
+        
     print(f"Number of records compared: {len1}")
-    print(f"Number of records with differences: {num_records_with_differences}")
+    print(f"Number of records with differences: {num_records_with_differences}\n")
     
+    print("Difference Counts:\n")
 
-    for k, v in sorted(differences.items()):
-        print(f"{k}: {v}")
+    print("LDR:", differences["LDR"]["6-7"])
+    print("Bib ID:", differences["HOL$1"])
+    print("008/07-10 (Date 1):", differences["008"]["7-10"])
+    print("008/11-14 (Date 2):", differences["008"]["11-14"])
+    print("008/15-17 (Pub Place):", differences["008"]["15-17"])
+    print("008/28 (govdoc code f):", differences["008"]["28-28"])
+    print("008/17:", differences["008"]["17-17"])
+    print("OCLC:", differences["OCLC"])
+    print("260$a (place of pub):", differences["260$a"])
+    print("260$b (name of pub):", differences["260$b"])
+    print("260$c (date of pub):", differences["260$c"])
+    print("264$a (place of pub):", differences["264$a"])
+    print("264$b (name of pub):", differences["264$b"])
+    print("264$c (date of pub):", differences["264$c"])
 
-
+    print(differences["008"])
+    
     return 0
 
 def load_records(file_path):
