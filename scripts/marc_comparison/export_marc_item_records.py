@@ -126,7 +126,7 @@ def query_marc_records_from_db(session, ids):
         
         # Prepare parameters as a dictionary {placeholder_name: value}
         params = {f'id{i}': chunk[i] for i in range(len(chunk))}
-        
+
         result = session.execute(text(query_str), params).fetchall()
 
         found_ids = set(row[0] for row in result)  # Collect found IDs for comparison
@@ -145,6 +145,11 @@ def query_marc_records_from_db(session, ids):
             f"Warning: IDs not found in the database: {', '.join(missing_ids)}",
             file=sys.stderr,
         )
+
+    # create list of ids minus the missing ids
+    returned_ids = [id for id in ids if id not in missing_ids]
+    # custom sort marc records to match order of the input ids
+    marc_records.sort(key=lambda r: returned_ids.index(r.get_fields("974")[0].get_subfields("u")[0]))
 
     return marc_records
 

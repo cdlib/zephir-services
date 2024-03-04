@@ -9,7 +9,6 @@ pytest = "*"
 sqlalchemy = "*"
 environs = "*"
 "flake8" = "*"
-black = "*"
 "iso8601" = "*"
 pyyaml = "*"
 pymarc = "*"
@@ -21,11 +20,14 @@ freezegun = "*"
 setuptools = "*"
 zed-event = {git = "https://github.com/cdlib/zephir-services.git", subdirectory = "zed-event"}
 msgpack = "*"
-plyvel = "*"
 pandas = "*"
 fuzzywuzzy = "*"
 python-levenshtein = "*"
 numpy = "*"
+pylint = "*"
+install = "*"
+black = {extras = ["jupyter"], version = "*"}
+slack-sdk = "*"
 
 [dev-packages]
 
@@ -33,4 +35,4 @@ numpy = "*"
 python_version = "3"
 
 [pipenv]
-allow_prereleases = true
+allow_prereleases = false
