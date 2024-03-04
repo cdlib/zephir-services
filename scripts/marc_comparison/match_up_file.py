@@ -150,9 +150,10 @@ def compare_record(record1, record2, idloc1, idloc2):
         raise ValueError(f"IDs do not match: {id1} != {id2}")
 
     fields = [
-        ("260$a",), ("260$b",), ("260$c",), ("264$a",), ("264$b",), ("264$c",),
-        ("008", slice(7, 11)), ("008", slice(11, 15)), ("008", slice(15, 18)), ("008", slice(28, 29)), ("008", slice(17, 18)),
         ("LDR", slice(6, 8)),
+        ("008", slice(7, 11)), ("008", slice(11, 15)), ("008", slice(15, 18)), ("008", slice(28, 29)), ("008", slice(17, 18)),
+        ("260$a",), ("260$b",), ("260$c",),
+        ("264$a",), ("264$b",), ("264$c",),
         ("HOL$1",)
     ]
 
