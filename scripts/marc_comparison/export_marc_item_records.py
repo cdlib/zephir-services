@@ -244,10 +244,10 @@ def main():
                             Default: 'db.yml'
                             Example file structure:
                             test: 
-                                drivername: 'sqlite'
+                                type: 'sqlite'
                                 database: 'test_database.sqlite'
                             production:
-                                drivername: 'mysql+mysqlconnector'
+                                type: 'mysql+mysqlconnector'
                                 host: 'localhost'
                                 database: 'htmm'
                                 port: 3306
