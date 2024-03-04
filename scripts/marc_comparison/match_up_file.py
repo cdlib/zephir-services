@@ -164,7 +164,9 @@ def compare_record(record1, record2, idloc1, idloc2):
     if nested_counter_total(differences) > 0:
         print("HTID:", id1)
         for k, v in differences.items():
-            if k == "OCLC":
+            if isinstance(v, Counter) and nested_counter_total(v) == 0:
+                continue
+            elif k == "OCLC":
                 print(f"File 1: OCLC = {get_primary_OCLC(record1)}")
                 print(f"File 2: OCLC = {get_primary_OCLC(record2)}")
             else:
