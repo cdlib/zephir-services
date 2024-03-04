@@ -87,13 +87,13 @@ The script will compare the records and output a summary of the differences, whi
 - 008/15-17 (Pub Place)	
 - 008/28 (govdoc code f)	
 - 008/17 & 28 (for US feddoc)	
-- OCLC number
 - 260$a (place of pub)
 - 260$b (name of pub)
 - 260$c (date of pub)
 - 264$a (place of pub)
 - 264$b (name of pub)
 - 264$c (date of pub)
+- OCLC number
 
 ### Usage
 The match up file script takes two files and two id location fields and matches them up.
