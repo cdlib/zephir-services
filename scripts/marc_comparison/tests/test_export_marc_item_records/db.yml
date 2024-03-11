@@ -1,0 +1,10 @@
+production:
+  type: 'mysql'
+  host: 'localhost'
+  database: 'metadata_db'
+  user: 'your_username'
+  password: 'your_password'
+
+test: 
+  type: 'sqlite'
+  database: 'test_database.sqlite' # For testing with SQLite in-memory database

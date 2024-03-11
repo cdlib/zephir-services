@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<records>
+  <record xmlns="http://www.loc.gov/MARC21/slim">
+    <leader>02729cam a2200565   4500</leader>
+    <controlfield tag="001">mdp.39015018415946</controlfield>
+    <controlfield tag="003">MiAaHDL</controlfield>
+    <controlfield tag="005">20220618000000.0</controlfield>
+    <controlfield tag="006">m        d        </controlfield>
+    <controlfield tag="007">cr bn ---auaua</controlfield>
+    <controlfield tag="008">851107m19699999xo       b    001 0 slo  </controlfield>
+    <datafield tag="010" ind1=" " ind2=" ">
+      <subfield code="a">70518371</subfield>
+    </datafield>
+    <datafield tag="015" ind1=" " ind2=" ">
+      <subfield code="a">CzS69-2476</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">8081281584</subfield>
+      <subfield code="q">(zv. 6)</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">9788081281587</subfield>
+      <subfield code="q">(zv. 6)</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(MiU)990000000010106381</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">sdr-miu.990000000010106381</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="z">(MiU)MIU01000000000000000000001-goog</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(OCoLC)2779601</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(CaOTULAS)159818001</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(RLIN)MIUGMIUGPRIB-B</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="z">(MiU)Aleph000000001</subfield>
+    </datafield>
+    <datafield tag="040" ind1=" " ind2=" ">
+      <subfield code="a">DLC</subfield>
+      <subfield code="b">eng</subfield>
+      <subfield code="c">DLC</subfield>
+      <subfield code="d">EYM</subfield>
+      <subfield code="d">OCLCO</subfield>
+      <subfield code="d">OCLCF</subfield>
+      <subfield code="d">NOC</subfield>
+    </datafield>
+    <datafield tag="041" ind1="0" ind2=" ">
+      <subfield code="a">slo</subfield>
+      <subfield code="a">ger</subfield>
+      <subfield code="a">hun</subfield>
+      <subfield code="b">eng</subfield>
+      <subfield code="b">fre</subfield>
+      <subfield code="b">ger</subfield>
+      <subfield code="b">spa</subfield>
+    </datafield>
+    <datafield tag="043" ind1=" " ind2=" ">
+      <subfield code="a">e-cs---</subfield>
+      <subfield code="a">e-hu---</subfield>
+    </datafield>
+    <datafield tag="050" ind1="0" ind2="0">
+      <subfield code="a">DB2743</subfield>
+      <subfield code="b">.B54 1969</subfield>
+    </datafield>
+    <datafield tag="100" ind1="1" ind2=" ">
+      <subfield code="a">Bielik, František,</subfield>
+      <subfield code="e">compiler.</subfield>
+      <subfield code="0">http://id.loc.gov/authorities/names/n81015851</subfield>
+    </datafield>
+    <datafield tag="245" ind1="1" ind2="0">
+      <subfield code="a">Slovenské vyst̕ahovalectvo /</subfield>
+      <subfield code="c">Zost. František Bielik a Elo Rákoš.</subfield>
+    </datafield>
+    <datafield tag="250" ind1=" " ind2=" ">
+      <subfield code="a">1. vyd.</subfield>
+    </datafield>
+    <datafield tag="264" ind1="3" ind2="1">
+      <subfield code="3">v. 2, 1975-&lt;2016&gt;:</subfield>
+      <subfield code="a">Martin :</subfield>
+      <subfield code="b">Matica Slovenská</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="a">Bratislava :</subfield>
+      <subfield code="b">SAV, t. Svornost̕,</subfield>
+      <subfield code="c">1969-</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">volumes 1-&lt;6&gt; ;</subfield>
+      <subfield code="c">25 cm</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="a">text</subfield>
+      <subfield code="b">txt</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="337" ind1=" " ind2=" ">
+      <subfield code="a">unmediated</subfield>
+      <subfield code="b">n</subfield>
+      <subfield code="2">rdamedia</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="a">volume</subfield>
+      <subfield code="b">nc</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    <datafield tag="500" ind1=" " ind2=" ">
+      <subfield code="a">Compiler: Claude Baláž, volume 5 (1990)-</subfield>
+    </datafield>
+    <datafield tag="500" ind1=" " ind2=" ">
+      <subfield code="a">Summary in English, French, Spanish, and German.</subfield>
+    </datafield>
+    <datafield tag="500" ind1=" " ind2=" ">
+      <subfield code="a">Documents in Slovak, Hungarian, or German.</subfield>
+    </datafield>
+    <datafield tag="504" ind1=" " ind2=" ">
+      <subfield code="a">Includes bibliographical references and indexes.</subfield>
+    </datafield>
+    <datafield tag="505" ind1="1" ind2=" ">
+      <subfield code="a">Dokumenty 1. Do roku 1918 -- Dokumenty 2. 1919-1939 -- Dokumenty 3. Korešpondencia zrokov 1893-1939 -- Dokumenty 4. Korešpondencia z rokov 1880-1939 -- Dokumenty 5. Pramene k dejinám slovenského vys̕tahovalectva do Francúzska a Belgicka v rokoch 1920-1945 -- Dokumenty 6. Pramene k dejinám vzt̕ahov a stykov Matice slovenskej s krajanmi v zahraniči v rokoch 1919-1947.</subfield>
+    </datafield>
+    <datafield tag="538" ind1=" " ind2=" ">
+      <subfield code="a">Mode of access: Internet.</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="a">Emigration and immigration.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst00908690</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="0">
+      <subfield code="a">Slovaks</subfield>
+      <subfield code="z">Foreign countries</subfield>
+      <subfield code="x">History</subfield>
+      <subfield code="v">Sources.</subfield>
+    </datafield>
+    <datafield tag="651" ind1=" " ind2="7">
+      <subfield code="a">Slovakia.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst01203007</subfield>
+    </datafield>
+    <datafield tag="651" ind1=" " ind2="7">
+      <subfield code="a">Hungary.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst01205132</subfield>
+    </datafield>
+    <datafield tag="651" ind1=" " ind2="0">
+      <subfield code="a">Hungary</subfield>
+      <subfield code="x">Emigration and immigration.</subfield>
+    </datafield>
+    <datafield tag="651" ind1=" " ind2="0">
+      <subfield code="a">Slovakia</subfield>
+      <subfield code="x">Emigration and immigration.</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="a">Sources.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst01423900</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="a">History.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst01411628</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="a">Baláž, Claude,</subfield>
+      <subfield code="e">compiler.</subfield>
+      <subfield code="0">http://id.loc.gov/authorities/names/n82210958</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="a">Rákoš, Elo,</subfield>
+      <subfield code="e">compiler.</subfield>
+      <subfield code="0">http://id.loc.gov/authorities/names/n85178315</subfield>
+    </datafield>
+    <datafield tag="776" ind1="0" ind2="8">
+      <subfield code="i">Online version:</subfield>
+      <subfield code="a">Bielik, František.</subfield>
+      <subfield code="t">Slovenské vyst̕ahovalectvo.</subfield>
+      <subfield code="b">1. vyd.</subfield>
+      <subfield code="d">Bratislava, SAV, t. Svornost̕, 1969-&lt;1985&gt;</subfield>
+      <subfield code="w">(OCoLC)607840762</subfield>
+    </datafield>
+    <datafield tag="899" ind1=" " ind2=" ">
+      <subfield code="a">39015018415946</subfield>
+      <subfield code="b">Buhr A 1152339</subfield>
+      <subfield code="c">v.5</subfield>
+    </datafield>
+    <datafield tag="CID" ind1=" " ind2=" ">
+      <subfield code="a">000000001</subfield>
+    </datafield>
+    <datafield tag="DAT" ind1="0" ind2=" ">
+      <subfield code="a">20191009141341.0</subfield>
+      <subfield code="b">20220618000000.0</subfield>
+    </datafield>
+    <datafield tag="DAT" ind1="1" ind2=" ">
+      <subfield code="a">20220619060753.0</subfield>
+      <subfield code="b">2022-09-04T17:33:39Z</subfield>
+    </datafield>
+    <datafield tag="CAT" ind1=" " ind2=" ">
+      <subfield code="a">SDR-MIU</subfield>
+      <subfield code="d">ALMA</subfield>
+      <subfield code="l">prepare.pl-004-008</subfield>
+    </datafield>
+    <datafield tag="FMT" ind1=" " ind2=" ">
+      <subfield code="a">BK</subfield>
+    </datafield>
+    <datafield tag="HOL" ind1=" " ind2=" ">
+      <subfield code="0">sdr-miu.990000000010106381</subfield>
+      <subfield code="a">MiU</subfield>
+      <subfield code="b">SDR</subfield>
+      <subfield code="c">MIU</subfield>
+      <subfield code="p">mdp.39015018415946</subfield>
+      <subfield code="s">MIU</subfield>
+      <subfield code="z">v.5</subfield>
+      <subfield code="1">990000000010106381</subfield>
+    </datafield>
+    <datafield tag="974" ind1=" " ind2=" ">
+      <subfield code="d">20220904</subfield>
+      <subfield code="s">google</subfield>
+      <subfield code="u">mdp.39015018415946</subfield>
+      <subfield code="z">v.5</subfield>
+    </datafield>
+  </record>
+  <record xmlns="http://www.loc.gov/MARC21/slim">
+    <leader>02729cam a2200565   4500</leader>
+    <controlfield tag="001">mdp.39015018415946</controlfield>
+    <controlfield tag="003">MiAaHDL</controlfield>
+    <controlfield tag="005">20220618000000.0</controlfield>
+    <controlfield tag="006">m        d        </controlfield>
+    <controlfield tag="007">cr bn ---auaua</controlfield>
+    <controlfield tag="008">851107m19699999xo       b    001 0 slo  </controlfield>
+    <datafield tag="010" ind1=" " ind2=" ">
+      <subfield code="a">70518371</subfield>
+    </datafield>
+    <datafield tag="015" ind1=" " ind2=" ">
+      <subfield code="a">CzS69-2476</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">8081281584</subfield>
+      <subfield code="q">(zv. 6)</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">9788081281587</subfield>
+      <subfield code="q">(zv. 6)</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(MiU)990000000010106381</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">sdr-miu.990000000010106381</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="z">(MiU)MIU01000000000000000000001-goog</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(OCoLC)2779601</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(CaOTULAS)159818001</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="a">(RLIN)MIUGMIUGPRIB-B</subfield>
+    </datafield>
+    <datafield tag="035" ind1=" " ind2=" ">
+      <subfield code="z">(MiU)Aleph000000001</subfield>
+    </datafield>
+    <datafield tag="040" ind1=" " ind2=" ">
+      <subfield code="a">DLC</subfield>
+      <subfield code="b">eng</subfield>
+      <subfield code="c">DLC</subfield>
+      <subfield code="d">EYM</subfield>
+      <subfield code="d">OCLCO</subfield>
+      <subfield code="d">OCLCF</subfield>
+      <subfield code="d">NOC</subfield>
+    </datafield>
+    <datafield tag="041" ind1="0" ind2=" ">
+      <subfield code="a">slo</subfield>
+      <subfield code="a">ger</subfield>
+      <subfield code="a">hun</subfield>
+      <subfield code="b">eng</subfield>
+      <subfield code="b">fre</subfield>
+      <subfield code="b">ger</subfield>
+      <subfield code="b">spa</subfield>
+    </datafield>
+    <datafield tag="043" ind1=" " ind2=" ">
+      <subfield code="a">e-cs---</subfield>
+      <subfield code="a">e-hu---</subfield>
+    </datafield>
+    <datafield tag="050" ind1="0" ind2="0">
+      <subfield code="a">DB2743</subfield>
+      <subfield code="b">.B54 1969</subfield>
+    </datafield>
+    <datafield tag="100" ind1="1" ind2=" ">
+      <subfield code="a">Bielik, František,</subfield>
+      <subfield code="e">compiler.</subfield>
+      <subfield code="0">http://id.loc.gov/authorities/names/n81015851</subfield>
+    </datafield>
+    <datafield tag="245" ind1="1" ind2="0">
+      <subfield code="a">Slovenské vyst̕ahovalectvo /</subfield>
+      <subfield code="c">Zost. František Bielik a Elo Rákoš.</subfield>
+    </datafield>
+    <datafield tag="250" ind1=" " ind2=" ">
+      <subfield code="a">1. vyd.</subfield>
+    </datafield>
+    <datafield tag="264" ind1="3" ind2="1">
+      <subfield code="3">v. 2, 1975-&lt;2016&gt;:</subfield>
+      <subfield code="a">Martin :</subfield>
+      <subfield code="b">Matica Slovenská</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="a">Bratislava :</subfield>
+      <subfield code="b">SAV, t. Svornost̕,</subfield>
+      <subfield code="c">1969-</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">volumes 1-&lt;6&gt; ;</subfield>
+      <subfield code="c">25 cm</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="a">text</subfield>
+      <subfield code="b">txt</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="337" ind1=" " ind2=" ">
+      <subfield code="a">unmediated</subfield>
+      <subfield code="b">n</subfield>
+      <subfield code="2">rdamedia</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="a">volume</subfield>
+      <subfield code="b">nc</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    <datafield tag="500" ind1=" " ind2=" ">
+      <subfield code="a">Compiler: Claude Baláž, volume 5 (1990)-</subfield>
+    </datafield>
+    <datafield tag="500" ind1=" " ind2=" ">
+      <subfield code="a">Summary in English, French, Spanish, and German.</subfield>
+    </datafield>
+    <datafield tag="500" ind1=" " ind2=" ">
+      <subfield code="a">Documents in Slovak, Hungarian, or German.</subfield>
+    </datafield>
+    <datafield tag="504" ind1=" " ind2=" ">
+      <subfield code="a">Includes bibliographical references and indexes.</subfield>
+    </datafield>
+    <datafield tag="505" ind1="1" ind2=" ">
+      <subfield code="a">Dokumenty 1. Do roku 1918 -- Dokumenty 2. 1919-1939 -- Dokumenty 3. Korešpondencia zrokov 1893-1939 -- Dokumenty 4. Korešpondencia z rokov 1880-1939 -- Dokumenty 5. Pramene k dejinám slovenského vys̕tahovalectva do Francúzska a Belgicka v rokoch 1920-1945 -- Dokumenty 6. Pramene k dejinám vzt̕ahov a stykov Matice slovenskej s krajanmi v zahraniči v rokoch 1919-1947.</subfield>
+    </datafield>
+    <datafield tag="538" ind1=" " ind2=" ">
+      <subfield code="a">Mode of access: Internet.</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="7">
+      <subfield code="a">Emigration and immigration.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst00908690</subfield>
+    </datafield>
+    <datafield tag="650" ind1=" " ind2="0">
+      <subfield code="a">Slovaks</subfield>
+      <subfield code="z">Foreign countries</subfield>
+      <subfield code="x">History</subfield>
+      <subfield code="v">Sources.</subfield>
+    </datafield>
+    <datafield tag="651" ind1=" " ind2="7">
+      <subfield code="a">Slovakia.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst01203007</subfield>
+    </datafield>
+    <datafield tag="651" ind1=" " ind2="7">
+      <subfield code="a">Hungary.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst01205132</subfield>
+    </datafield>
+    <datafield tag="651" ind1=" " ind2="0">
+      <subfield code="a">Hungary</subfield>
+      <subfield code="x">Emigration and immigration.</subfield>
+    </datafield>
+    <datafield tag="651" ind1=" " ind2="0">
+      <subfield code="a">Slovakia</subfield>
+      <subfield code="x">Emigration and immigration.</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="a">Sources.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst01423900</subfield>
+    </datafield>
+    <datafield tag="655" ind1=" " ind2="7">
+      <subfield code="a">History.</subfield>
+      <subfield code="2">fast</subfield>
+      <subfield code="0">(OCoLC)fst01411628</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="a">Baláž, Claude,</subfield>
+      <subfield code="e">compiler.</subfield>
+      <subfield code="0">http://id.loc.gov/authorities/names/n82210958</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="a">Rákoš, Elo,</subfield>
+      <subfield code="e">compiler.</subfield>
+      <subfield code="0">http://id.loc.gov/authorities/names/n85178315</subfield>
+    </datafield>
+    <datafield tag="776" ind1="0" ind2="8">
+      <subfield code="i">Online version:</subfield>
+      <subfield code="a">Bielik, František.</subfield>
+      <subfield code="t">Slovenské vyst̕ahovalectvo.</subfield>
+      <subfield code="b">1. vyd.</subfield>
+      <subfield code="d">Bratislava, SAV, t. Svornost̕, 1969-&lt;1985&gt;</subfield>
+      <subfield code="w">(OCoLC)607840762</subfield>
+    </datafield>
+    <datafield tag="899" ind1=" " ind2=" ">
+      <subfield code="a">39015018415946</subfield>
+      <subfield code="b">Buhr A 1152339</subfield>
+      <subfield code="c">v.5</subfield>
+    </datafield>
+    <datafield tag="CID" ind1=" " ind2=" ">
+      <subfield code="a">000000001</subfield>
+    </datafield>
+    <datafield tag="DAT" ind1="0" ind2=" ">
+      <subfield code="a">20191009141341.0</subfield>
+      <subfield code="b">20220618000000.0</subfield>
+    </datafield>
+    <datafield tag="DAT" ind1="1" ind2=" ">
+      <subfield code="a">20220619060753.0</subfield>
+      <subfield code="b">2022-09-04T17:33:39Z</subfield>
+    </datafield>
+    <datafield tag="CAT" ind1=" " ind2=" ">
+      <subfield code="a">SDR-MIU</subfield>
+      <subfield code="d">ALMA</subfield>
+      <subfield code="l">prepare.pl-004-008</subfield>
+    </datafield>
+    <datafield tag="FMT" ind1=" " ind2=" ">
+      <subfield code="a">BK</subfield>
+    </datafield>
+    <datafield tag="HOL" ind1=" " ind2=" ">
+      <subfield code="0">sdr-miu.990000000010106381</subfield>
+      <subfield code="a">MiU</subfield>
+      <subfield code="b">SDR</subfield>
+      <subfield code="c">MIU</subfield>
+      <subfield code="p">mdp.39015018415946</subfield>
+      <subfield code="s">MIU</subfield>
+      <subfield code="z">v.5</subfield>
+      <subfield code="1">990000000010106381</subfield>
+    </datafield>
+    <datafield tag="974" ind1=" " ind2=" ">
+      <subfield code="d">20220904</subfield>
+      <subfield code="s">google</subfield>
+      <subfield code="u">mdp.39015018415946</subfield>
+      <subfield code="z">v.5</subfield>
+    </datafield>
+  </record>
+</records>

@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[requires]
+python_version = "3.11"
+
+[packages]
+pytest = "*"
+pymarc = "*"
+pytest-mock = "*"
+mysql-connector-python = "*"
+pyyaml = "*"
+pyarrow = "*"
+pytest-mysql = "*"
+sqlalchemy = "*"
+black = "*"
+bandit = "*"
+isort = "*"
+ruff = "*"
+pytest-cov = "*"
+coverage = "*"
