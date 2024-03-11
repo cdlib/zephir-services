@@ -1,38 +1,48 @@
 [[source]]
+name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
-name = "pypi"
-
-[packages]
-mysql-connector = "*"
-pytest = "*"
-sqlalchemy = "*"
-environs = "*"
-"flake8" = "*"
-"iso8601" = "*"
-pyyaml = "*"
-pymarc = "*"
-pytest-cov = "*"
-codecov = "*"
-jsonschema = "*"
-selenium = "*"
-freezegun = "*"
-setuptools = "*"
-zed-event = {git = "https://github.com/cdlib/zephir-services.git", subdirectory = "zed-event"}
-msgpack = "*"
-pandas = "*"
-fuzzywuzzy = "*"
-python-levenshtein = "*"
-numpy = "*"
-pylint = "*"
-install = "*"
-black = {extras = ["jupyter"], version = "*"}
-slack-sdk = "*"
 
 [dev-packages]
 
-[requires]
-python_version = "3"
+[packages]
+appdirs = "==1.4.4"
+chardet = "==3.0.4"
+click = "==7.1.2"
+environs = "==8.0.0"
+flake8 = "==3.8.3"
+freezegun = "==0.3.15"
+idna = "==2.10"
+iso8601 = "==0.1.12"
+jsonschema = "==3.2.0"
+mccabe = "==0.6.1"
+more-itertools = "==8.4.0"
+msgpack = "==1.0.0"
+pandas = "==1.0.5"
+pathspec = "==0.8.0"
+pluggy = "==0.13.1"
+plyvel = "==1.2.0"
+py = "==1.9.0"
+pycodestyle = "==2.6.0"
+pyflakes = "==2.2.0"
+pymarc = "==4.2.2"
+pyparsing = "==3.0.0a2"
+pyrsistent = "==0.16.0"
+pytest = "==5.4.3"
+pytest-cov = "==2.10.0"
+python-dotenv = "==0.14.0"
+pytz = "==2020.1"
+regex = "==2020.6.8"
+requests = "==2.24.0"
+selenium = "==4.0.0a6.post2"
+sqlalchemy = "==1.3.18"
+toml = "==0.10.1"
+typed-ast = "==1.4.1"
+wcwidth = "==0.2.5"
+zed-event = {git = "https://github.com/cdlib/zephir-services.git",subdirectory = "zed-event"}
+pyyaml = "*"
+pyopenssl = "*"
+mysql-connector-python = "*"
 
-[pipenv]
-allow_prereleases = false
+[requires]
+python_version = "3.7"
