@@ -126,11 +126,13 @@ def query_record_information_from_db(session, ids):
         
         # Construct the query with dynamic placeholders
         query_str = f"""
-            SELECT zr.id, zr.cid, rc.attr, rc.reason, rc.source, rc.access_profile, zr.identifiers_json
-            FROM zephir_records as zr INNER JOIN rights_current as rc ON zr.id = rc.volume_identifier
-            WHERE zr.id IN ({placeholders})
+        SELECT zr.id as htid, zr.cid, zr.namespace, zr.source_record_number, attr.name as attr_name, attr.dscr as attr_description, reasons.name as reason_name, reasons.dscr as reason_description, zr.identifiers_json
+        FROM zephir_records as zr LEFT JOIN rights_current as rc ON zr.id = rc.volume_identifier
+        LEFT JOIN attributes as attr ON rc.attr = attr.id
+        LEFT JOIN reasons ON rc.reason = reasons.id
+        WHERE zr.id IN ({placeholders})
         """
-        
+
         # Prepare parameters as a dictionary {placeholder_name: value}
         params = {f'id{i}': chunk[i] for i in range(len(chunk))}
 
@@ -139,17 +141,19 @@ def query_record_information_from_db(session, ids):
         found_ids = set(row[0] for row in result)  # Collect found IDs for comparison
         if result:
             for row in result:
-                id, cid, attr, reason, source, access_profile, identifiers_json = row
+                id, cid, namespace, source_record_number, attr_name, attr_dscr, reason_name, reason_dscr, identifiers_json = row
                 oclcs = get_oclcs_from_json(identifiers_json)
 
                 ordered_dict = OrderedDict()
                 ordered_dict["id"] = id
                 ordered_dict["cid"] = cid
                 ordered_dict["oclcs"] = ",".join(oclcs)
-                ordered_dict["attr"] = attr
-                ordered_dict["reason"] = reason
-                ordered_dict["source"] = source
-                ordered_dict["access_profile"] = access_profile
+                ordered_dict["namespace"] = namespace
+                ordered_dict["source_record_number"] = source_record_number
+                ordered_dict["attr_name"] = attr_name
+                ordered_dict["attr_description"] = attr_dscr
+                ordered_dict["reason_name"] = reason_name
+                ordered_dict["reason_description"] = reason_dscr
                 ordered_dict["identifiers_json"] = identifiers_json
 
                 zephir_records.append(ordered_dict)
