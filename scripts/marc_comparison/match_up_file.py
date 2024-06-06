@@ -173,6 +173,7 @@ def compare_record(record1, record2, idloc1, idloc2):
             else:
                 print(f"File 1: {k} = {get_value_from_location(record1, k)}")
                 print(f"File 2: {k} = {get_value_from_location(record2, k)}")
+        print()
 
     return differences
 
@@ -199,10 +200,6 @@ def marc_compare(file1, file2, idloc1, idloc2):
             num_records_with_differences += 1
 
         differences = nested_counter_update(differences, new_diffs)
-
-    # Print summary of differences
-    if num_records_with_differences > 0:
-        print("")
         
     print(f"Number of records compared: {len1}")
     print(f"Number of records with differences: {num_records_with_differences}\n")
