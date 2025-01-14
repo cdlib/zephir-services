@@ -42,7 +42,7 @@ wcwidth = "==0.2.5"
 zed-event = {git = "https://github.com/cdlib/zephir-services.git",subdirectory = "zed-event"}
 pyyaml = "*"
 pyopenssl = "*"
-mysql-connector-python = "*"
+mysql-connector-python = "==8.0.20"
 
 [requires]
 python_version = "3.7"
