@@ -2,6 +2,20 @@
 
 This is a collection of scripts used for processing and comparing MARC records.
 
+## Workflow
+
+1. **Prepare input files**: You should have a text file containing IDs and an XML MARC file containing records. Put them in the `data/` folder for organization. They should be in agreement on the number of IDs/records.
+
+2. **Extract IDs from MARC XML**: Use the `id_printout.py` script to print all the IDs from the MARC XML file as a text file. These IDs should be the source of truth in case of a mismatch between the two files.
+
+3. **Build required fields**: Use the field builder with the following patterns:
+   - `--pattern HOL\$1={001}`
+   - `--pattern 974\$u=<prefix from ids file before the "ark" section>.{955\$b}`
+
+4. **Export database records**: Use `export_marc_item_records.py` to get the records as they are for the IDs in the database. You will compare this against the input MARC XML.
+
+5. **Run comparison**: Use `match_up_file.py` and dump output to a file for analysis.
+
 ## Field builder (field_builder.py)
 The field builder script allows quick modification of a MARC file by supplying it with a field building pattern.
 
