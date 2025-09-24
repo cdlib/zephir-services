@@ -29,6 +29,20 @@ def prompt_for_mysql_details():
         'port': input("Enter MySQL port (default 3306): ") or 3306,
         'database': input("Enter MySQL database name: "),
     }
+
+    # Ask if user wants to save config for future use
+    save_config = input("Save these credentials to db.yml for future use? (y/n): ").lower().strip()
+    if save_config in ['y', 'yes']:
+        config_data = {
+            DEFAULT_DB_ENV: db_config
+        }
+        try:
+            with open(DEFAULT_DB_CONFIG_FILE, 'w') as f:
+                yaml.dump(config_data, f, default_flow_style=False)
+            print(f"Configuration saved to {DEFAULT_DB_CONFIG_FILE}")
+        except Exception as e:
+            print(f"Warning: Could not save configuration file: {e}")
+
     return db_config
 
 def initialize_database_session(db_config_path, db_env=DEFAULT_DB_ENV):
@@ -37,7 +51,6 @@ def initialize_database_session(db_config_path, db_env=DEFAULT_DB_ENV):
     # If no config, look for default config. If not, prompt for MySQL details
     if not db_config_path and not os.path.exists(DEFAULT_DB_CONFIG_FILE):
             db_config = prompt_for_mysql_details()
-            return db_config
     else:
         db_config_path = db_config_path or DEFAULT_DB_CONFIG_FILE
 

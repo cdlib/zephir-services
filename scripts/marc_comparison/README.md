@@ -13,7 +13,7 @@ The pattern must always follow the format LOCATION=EXPRESSION where the LOCATION
 For example, if you want to construct a 974$u out of a 001 and the prefix hvd, you would supply the script with 974$u=hvd.{001} to change (or create) a 974$u containing the 001 field prefixed with hvd. This is how this would be run on the command line:
 
 ```
-pipenv run python field_builder.py --input input_file.xml --output output_file.xml --pattern 974\$u=hvd.{001}
+uv run python field_builder.py --input input_file.xml --output output_file.xml --pattern 974\$u=hvd.{001}
 ```
 
 ## Printout Script (id_printout.py)
@@ -23,7 +23,7 @@ The printout script allows for the extraction of a specific field from a MARC fi
 The printout script takes an input file and a field to extract from the input file, and prints out the values of that field for each record in the file.
 
 ```
-pipenv run python id_printout.py --file input_file.xml --idloc 974\$u
+uv run python id_printout.py --file input_file.xml --idloc 974\$u
 ```
 
 ## Export MARC Item Records (export_marc_item_records.py)
@@ -32,7 +32,7 @@ This script reads identifiers from a file, queries the database for correspondin
 ## Usage
 
 ```bash
-python export_marc_item_records.py -f <input_file> -o <output_file> [--db_config_path <db_config.yml>] [--db_env <environment>]
+uv run python export_marc_item_records.py -f <input_file> -o <output_file> [--db_config_path <db_config.yml>] [--db_env <environment>]
 ```
 
 ### Options
@@ -50,7 +50,7 @@ Configuration File Format
 Running the script with an input file ids.txt and outputting the MARCXML records to records.xml:
 
 ```bash
-python export_marc_item_records.py -f ids.txt -o records.xml
+uv run python export_marc_item_records.py -f ids.txt -o records.xml
 ```
 
 ### Database Configuration File
@@ -99,7 +99,7 @@ The script will compare the records and output a summary of the differences, whi
 The match up file script takes two files and two id location fields and matches them up.
 
 ```
-pipenv run python match_up_file.py --file1 file1.xml --file2 file2.xml --idloc1 974\$u --idloc2 974\$u
+uv run python match_up_file.py --file1 file1.xml --file2 file2.xml --idloc1 974\$u --idloc2 974\$u
 ```
 
 **Note**: $ will need to be escaped on the command line, for example "974\$u".

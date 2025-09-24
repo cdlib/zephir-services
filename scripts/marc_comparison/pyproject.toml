@@ -1,0 +1,23 @@
+[project]
+name = "marc-comparison"
+version = "0.1.0"
+description = "MARC record comparison and export tools"
+requires-python = ">=3.11"
+dependencies = [
+    "pytest",
+    "pymarc",
+    "pytest-mock",
+    "mysql-connector-python",
+    "pyyaml",
+    "pyarrow",
+    "pytest-mysql",
+    "sqlalchemy",
+    "black",
+    "bandit",
+    "isort",
+    "ruff",
+    "pytest-cov",
+    "coverage",
+    "pandas",
+    "python-dotenv",
+]
