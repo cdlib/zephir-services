@@ -11,8 +11,8 @@ more information.
 ## Find records by barcode
 
 `scripts/find_records_with_barcodes.py` extracts the MARC records whose 955$b
-barcodes appear in a text file containing one barcode per line. Pass the MARC
-XML files in the order they should be searched. If a barcode occurs more than
+barcodes appear in a text file containing one barcode per line. Provide the MARC
+ XML file paths in the order they should be searched. If a barcode occurs more than
 once, the record in the last supplied file containing it is written to the
 output.
 
