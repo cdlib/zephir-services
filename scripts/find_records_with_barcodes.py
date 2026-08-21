@@ -40,7 +40,7 @@ def find_records(xml_files, barcodes_file):
                 try:
                     barcode = get_barcode(record)
                 except Exception as e:
-                    logger.error(f"ERROR: Could not read barcode for record {i} in {xml_file_path}: {e}")
+                    logger.error(f"Could not read barcode for record {i} in {xml_file_path}: {e}")
                     continue
 
                 if barcode in barcodes:
