@@ -52,8 +52,7 @@ def main():
     db_connect_str = str(db_connect_url(zephir_db_config[env]))
 
     cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
-    primary_db_path = cid_minting_config["primary_db_path"]
-    cluster_db_path = cid_minting_config["cluster_db_path"]
+    concordance_db_path = cid_minting_config["concordance_db_path"]
     logfile = cid_minting_config['logpath']
 
     logging.basicConfig(
@@ -69,7 +68,7 @@ def main():
     if (len(sys.argv) == 3):
         ocns_list = convert_comma_separated_str_to_int_list(sys.argv[2])
 
-        results = cid_inquiry_by_ocns(ocns_list, zephirDb, primary_db_path, cluster_db_path)
+        results = cid_inquiry_by_ocns(ocns_list, zephirDb, concordance_db_path)
         print(json.dumps(results))
 
         exit(0)
