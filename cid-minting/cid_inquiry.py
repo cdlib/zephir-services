@@ -102,8 +102,10 @@ def main():
         usage(sys.argv[0])
         exit(1)
 
-    zephir_db_config = get_configs_by_filename("config", "zephir_db")
-    db_connect_url = str(utils.db_connect_url(zephir_db_config[env]))
+    db_connect_str = os.environ.get("OVERRIDE_DB_CONNECT_STR")
+    if not db_connect_str:
+        zephir_db_config = get_configs_by_filename("config", "zephir_db")
+        db_connect_str = str(utils.db_connect_url(zephir_db_config[env]))
 
     cid_minting_config = get_configs_by_filename("config", "cid_minting")
     concordance_db_path = cid_minting_config["concordance_db_path"]
@@ -119,7 +121,7 @@ def main():
     logging.info("Start " + os.path.basename(__file__))
     logging.info("Env: {}".format(env))
 
-    DB_CONNECT_STR = os.environ.get("OVERRIDE_DB_CONNECT_STR") or db_connect_url
+    DB_CONNECT_STR = db_connect_str
     CONCORDANCE_DB_PATH = os.environ.get("OVERRIDE_CONCORDANCE_DB_PATH") or concordance_db_path
 
     if (len(sys.argv) == 3):

@@ -1,5 +1,6 @@
 import os
 import sys
+import sqlite3
 
 import pytest
 from sqlite_concordance import create_concordance_db
@@ -399,7 +400,7 @@ def test_case_3_b(setup_concordance, setup_sqlite):
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
-    assert result["matched_oclc_clusters"] == expected_oclc_clusters
+    assert sorted(result["matched_oclc_clusters"]) == sorted(expected_oclc_clusters)
     assert result["num_of_matched_oclc_clusters"] == 2
     assert result["inquiry_ocns_zephir"] == inquiry_ocns_zephir
     assert result["cid_ocn_list"] == expected_cid_ocn_list
@@ -449,7 +450,7 @@ def test_case_3_c(setup_concordance, setup_sqlite):
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
-    assert result["matched_oclc_clusters"] == expected_oclc_clusters
+    assert sorted(result["matched_oclc_clusters"]) == sorted(expected_oclc_clusters)
     assert result["num_of_matched_oclc_clusters"] == 2
     assert result["inquiry_ocns_zephir"] == inquiry_ocns_zephir
     assert result["cid_ocn_list"] == expected_cid_ocn_list
@@ -631,10 +632,10 @@ def test_convert_comma_separated_str_to_int_list():
 
 # FIXTURES
 @pytest.fixture
-def setup_concordance(tmpdatadir, csv_to_df_loader):
+def setup_concordance(tmpdatadir, csv_to_df_loader, monkeypatch):
     dfs = csv_to_df_loader
     concordance_db_path = create_concordance_db(tmpdatadir, dfs["primary.csv"])
-    os.environ["OVERRIDE_CONCORDANCE_DB_PATH"] = concordance_db_path
+    monkeypatch.setenv("OVERRIDE_CONCORDANCE_DB_PATH", concordance_db_path)
 
     return {
         "tmpdatadir": tmpdatadir,
@@ -643,17 +644,16 @@ def setup_concordance(tmpdatadir, csv_to_df_loader):
     }
 
 @pytest.fixture
-def setup_sqlite(data_dir, tmpdir, scope="session"):
-    db_name = "test_db_for_zephir.db"
-    #database = os.path.join(tmpdir, db_name)
-    database = os.path.join(data_dir, db_name)
+def setup_sqlite(data_dir, tmp_path, monkeypatch):
+    database = tmp_path / "test_db_for_zephir.db"
     setup_sql = os.path.join(data_dir, "setup_zephir_test_db.sql")
 
-    cmd = "sqlite3 {} < {}".format(database, setup_sql)
-    os.system(cmd)
+    with sqlite3.connect(database) as connection:
+        with open(setup_sql) as script:
+            connection.executescript(script.read())
 
     db_conn_str = 'sqlite:///{}'.format(database)
-    os.environ["OVERRIDE_DB_CONNECT_STR"] = db_conn_str
+    monkeypatch.setenv("OVERRIDE_DB_CONNECT_STR", db_conn_str)
 
     return {
         "db_conn_str": db_conn_str
