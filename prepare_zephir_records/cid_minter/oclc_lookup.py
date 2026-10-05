@@ -26,6 +26,7 @@ def get_primary_ocn(ocn, db_path, db=None):
     """Return the canonical OCN, or None when the OCN is absent."""
     if not ocn:
         return None
+    ocn = int(ocn)
     if db is None:
         with open_concordance(db_path) as connection:
             return get_primary_ocn(ocn, db_path, connection)
@@ -37,6 +38,7 @@ def get_ocns_cluster_by_primary_ocn(primary_ocn, db_path, db=None):
     """Return variants without the canonical OCN, or None for no variants."""
     if not primary_ocn:
         return None
+    primary_ocn = int(primary_ocn)
     if db is None:
         with open_concordance(db_path) as connection:
             return get_ocns_cluster_by_primary_ocn(primary_ocn, db_path, connection)
