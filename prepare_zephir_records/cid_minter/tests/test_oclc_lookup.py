@@ -1,8 +1,7 @@
 import os
 
-import msgpack
 import pytest
-import plyvel
+from sqlite_concordance import create_concordance_db
 from click.testing import CliRunner
 
 from cid_minter.oclc_lookup import get_primary_ocn
@@ -14,57 +13,51 @@ from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 
 # TESTS
 def test_get_primary_ocn(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     input = list(setup["dfs"]["primary.csv"]["ocn"])
     expect = list(setup["dfs"]["primary.csv"]["primary"])
     result = [
-        get_primary_ocn(ocn, primary_db_path)
+        get_primary_ocn(ocn, concordance_db_path)
         for ocn in input
     ]
     assert sorted(expect) == sorted(result)
 
 def test_get_primary_ocn_with_null_cases(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     # case: ocn passed is None
-    result = get_primary_ocn(None, primary_db_path)
+    result = get_primary_ocn(None, concordance_db_path)
     assert result == None
     # case: ocn not in the database
-    result = get_primary_ocn(0, primary_db_path)
+    result = get_primary_ocn(0, concordance_db_path)
     assert result == None
 
 def test_get_ocns_cluster_by_primary_ocn(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     primary_ocn = 1
     cluster = [9987701, 53095235, 433981287, 6567842]
-    result = get_ocns_cluster_by_primary_ocn(primary_ocn, cluster_db_path)
+    result = get_ocns_cluster_by_primary_ocn(primary_ocn, concordance_db_path)
     assert sorted(cluster) == sorted(result)
 
 def test_get_cluster_missing_primary(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     primary_ocn = 1
-    result = get_ocns_cluster_by_primary_ocn(primary_ocn, cluster_db_path)
+    result = get_ocns_cluster_by_primary_ocn(primary_ocn, concordance_db_path)
     assert primary_ocn not in result
 
 def test_get_ocns_cluster_by_primary_ocn_2(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     primary_ocn = 17216714 
     cluster = [535434196]
-    result = get_ocns_cluster_by_primary_ocn(primary_ocn, cluster_db_path)
+    result = get_ocns_cluster_by_primary_ocn(primary_ocn, concordance_db_path)
     assert sorted(cluster) == sorted(result)
 
 def test_get_cluster_ocn_with_null_cases(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     null_cases = {
         "cluster_of_one_ocn": 1000000000,
@@ -73,11 +66,10 @@ def test_get_cluster_ocn_with_null_cases(setup):
         "none_ocn": None,
     }
     for k,v in null_cases.items():
-        assert None == get_ocns_cluster_by_primary_ocn(v, cluster_db_path)
+        assert None == get_ocns_cluster_by_primary_ocn(v, concordance_db_path)
         
 def test_get_ocns_cluster_by_ocn(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     clusters = {
         # ocn: list of all ocns of the cluster
@@ -87,23 +79,21 @@ def test_get_ocns_cluster_by_ocn(setup):
         17216714: [17216714, 535434196],                        # cluster_of_2_ocns_by_primary_ocn, 
     }
     for ocn, cluster in clusters.items():
-        result = get_ocns_cluster_by_ocn(ocn, primary_db_path, cluster_db_path)
+        result = get_ocns_cluster_by_ocn(ocn, concordance_db_path)
         assert sorted(cluster) == sorted(result)
 
 def test_get_ocns_cluster_by_ocn_with_null_cases(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     null_cases = {
         "invalid_ocn": 1234567890,
         "none_ocn": None,
     }
     for k, v in null_cases.items():
-        assert None == get_ocns_cluster_by_ocn(v, primary_db_path, cluster_db_path)
+        assert None == get_ocns_cluster_by_ocn(v, concordance_db_path)
 
 def test_get_ocns_cluster_by_ocns(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     clusters = {
         # primary_ocn, list of all ocns of the cluster 
@@ -132,14 +122,13 @@ def test_get_ocns_cluster_by_ocns(setup):
     }
     
     for k, ocns in input_ocns_list.items():
-        result = get_clusters_by_ocns(ocns, primary_db_path, cluster_db_path)
+        result = get_clusters_by_ocns(ocns, concordance_db_path)
         print(result)
         assert result != None
         assert result == expected_set[k] 
 
 def test_get_ocns_cluster_by_ocns_wthnull_cases(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     input_ocns_list = {
         "one_invalid_ocn": [1234567890],
@@ -147,7 +136,7 @@ def test_get_ocns_cluster_by_ocns_wthnull_cases(setup):
         "no_ocns": [],
     }
     for k, ocns in input_ocns_list.items():
-        result = get_clusters_by_ocns(ocns, primary_db_path, cluster_db_path)
+        result = get_clusters_by_ocns(ocns, concordance_db_path)
         assert result == set()
 
 def test_convert_set_to_list():
@@ -168,8 +157,7 @@ def test_convert_set_to_list():
 
 
 def test_lookup_ocns_from_oclc(setup):
-    primary_db_path = setup["primary_db_path"]
-    cluster_db_path = setup["cluster_db_path"]
+    concordance_db_path = setup["concordance_db_path"]
 
     input_ocns = {
         "one_ocn_primary_single_cluster": [1000000000],
@@ -214,7 +202,7 @@ def test_lookup_ocns_from_oclc(setup):
     }
 
     for k, ocns in input_ocns.items():
-        result = lookup_ocns_from_oclc(ocns, primary_db_path, cluster_db_path)
+        result = lookup_ocns_from_oclc(ocns, concordance_db_path)
         assert result["inquiry_ocns"] == ocns
         assert result["matched_oclc_clusters"] == expected[k]["matched_oclc_clusters"]
         assert result["num_of_matched_oclc_clusters"] == expected[k]["num_of_matched_oclc_clusters"]
@@ -223,91 +211,11 @@ def test_lookup_ocns_from_oclc(setup):
 @pytest.fixture
 def setup(tmpdatadir, csv_to_df_loader):
     dfs = csv_to_df_loader
-    primary_db_path = create_primary_db(tmpdatadir, dfs["primary.csv"])
-    cluster_db_path = create_cluster_db(tmpdatadir, dfs["primary.csv"])
-    os.environ["OVERRIDE_PRIMARY_DB_PATH"] = primary_db_path
-    os.environ["OVERRIDE_CLUSTER_DB_PATH"] = cluster_db_path
+    concordance_db_path = create_concordance_db(tmpdatadir, dfs["primary.csv"])
+    os.environ["OVERRIDE_CONCORDANCE_DB_PATH"] = concordance_db_path
 
     return {
         "tmpdatadir": tmpdatadir,
         "dfs": dfs,
-        "primary_db_path": primary_db_path,
-        "cluster_db_path": cluster_db_path
+        "concordance_db_path": concordance_db_path
     }
-
-
-# HELPERS
-def int_to_bytes(inum):
-    return inum.to_bytes((inum.bit_length() + 7) // 8, "big")
-
-
-def int_from_bytes(bnum):
-    return int.from_bytes(bnum, "big")
-
-
-def create_primary_db(path, df):
-    """Create a primary ocn lookup LevelDB database based with test data
-
-    Note:
-        1) Expects a dataframe: [ocn, primary]
-
-    Args:
-        Path: Database path
-        df: Pandas dataframe of test data [ocn, primary]
-
-    Returns:
-        Path to the LevelDB database
-
-    """
-    db_path = os.path.join(path, "primary/")
-    db = plyvel.DB(db_path, create_if_missing=True)
-
-    df = df.sort_values(by=["ocn"])
-    ocn_pos = df.columns.get_loc("ocn") + 1
-    primary_pos = df.columns.get_loc("primary") + 1
-
-    for row in df.itertuples():
-        db.put(int_to_bytes(row[ocn_pos]), int_to_bytes(row[primary_pos]))
-    db.close()
-    return db_path
-
-def create_cluster_db(path, df):
-    """Create a cluster ocns lookup LevelDB database based with test data
-
-    Note:
-        1) Expects a dataframe: [ocn, primary]
-        2) Produces a LevelDB with key(primary) and value([ocns,...])
-        3) Primary-only clusters are excluded
-
-    Args:
-        Path: Database path
-        df: Pandas dataframe of test data [ocn, primary]
-
-    Returns:
-        Path to the LevelDB database
-
-    """
-    db_path = os.path.join(path, "cluster/")
-    db = plyvel.DB(db_path, create_if_missing=True)
-
-    packer = msgpack.Packer()
-
-    df = df.sort_values(by=["primary","ocn"])
-    ocn_pos = df.columns.get_loc("ocn") + 1
-    primary_pos = df.columns.get_loc("primary") + 1
-
-    current_primary = 0
-    cluster = []
-    for row in df.itertuples():
-        if row[primary_pos] != current_primary:
-            if current_primary != 0:
-                if len(cluster) > 0:
-                    db.put(int_to_bytes(current_primary), packer.pack(cluster))
-            current_primary = row[primary_pos]
-            cluster = []
-        if current_primary != row[ocn_pos]:
-            cluster.append(row[ocn_pos])
-    if len(cluster) > 0:
-        db.put(int_to_bytes(current_primary), packer.pack(cluster))
-    db.close()
-    return db_path

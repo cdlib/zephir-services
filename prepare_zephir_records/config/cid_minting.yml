@@ -1,5 +1,4 @@
-primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
-cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
+concordance_db_path: /apps/htmm/concordance/concordance.sqlite
 
 logfile: /apps/htmm/log/cid_minting/cid_minting.log
 

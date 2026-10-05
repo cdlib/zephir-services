@@ -350,8 +350,7 @@ def main():
 
     cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
 
-    primary_db_path = cid_minting_config["primary_db_path"]
-    cluster_db_path = cid_minting_config["cluster_db_path"]
+    concordance_db_path = cid_minting_config["concordance_db_path"]
     logfile = cid_minting_config["logfile"]
     zephir_files_dir = cid_minting_config["zephir_files_dir"]
     zed_log_path = cid_minting_config["zed_log_path"]
@@ -365,8 +364,7 @@ def main():
     config = {
         "zephirdb_conn_str": zephirdb_conn_str,
         "minterdb_conn_str": minterdb_conn_str,
-        "leveldb_primary_path": primary_db_path,
-        "leveldb_cluster_path": cluster_db_path,
+        "concordance_db_path": concordance_db_path,
         "zed_log": zed_log,
         "zed_msg_table": zed_msg_table,
         "process_key": process_key,

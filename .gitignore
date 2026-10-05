@@ -2,3 +2,5 @@
 *.pyc
 *.DS_Store
 db.yml
+/.agent-shell/
+*.egg-info/
