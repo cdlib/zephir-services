@@ -25,14 +25,11 @@ def arguments():
     parser.add_argument("--max-ocn", type=int, default=1200000000)
     parser.add_argument("--seed", type=int, default=20261019)
     parser.add_argument("--queries", help="Optional file, one comma-separated OCN query per line")
-    parser.add_argument("--sysids", help="Optional file with one representative system ID per line")
     parser.add_argument("--report", required=True, help="Output JSON report path")
     parser.add_argument("--compare", help="Compare this report with an earlier branch's report")
     parser.add_argument("--python", default=sys.executable, help="Python interpreter to run cid_inquiry.py")
     parser.add_argument("--inquiry", default=os.path.join(os.path.dirname(__file__), "cid_inquiry.py"),
                         help="Path to cid_inquiry.py")
-    parser.add_argument("--local-minter", default=os.path.join(os.path.dirname(__file__), "local_cid_minter.py"),
-                        help="Path to local_cid_minter.py")
     parser.add_argument("--warmups", type=int, default=1, help="Warmup inquiries excluded from measurements")
     return parser.parse_args()
 
@@ -73,52 +70,24 @@ def run_query(command):
 
 
 def make_workloads(args, queries):
-    workloads = {
-        "cid_inquiry_by_ocns": [
-            [args.python, args.inquiry, args.env, ",".join(map(str, query))]
-            for query in queries
-        ],
-        "minter_store_by_ocns": [
-            [args.python, args.local_minter, args.env, "read", "ocn", ",".join(map(str, query))]
-            for query in queries
-        ],
-    }
-    if args.sysids:
-        with open(args.sysids, encoding="utf-8") as file:
-            sysids = [line.strip() for line in file if line.strip()]
-        if not sysids:
-            raise ValueError("system ID file contains no values")
-    else:
-        sysids = ["benchmark-sysid-{}".format(index) for index in range(len(queries))]
-    workloads["minter_store_by_sysid"] = [
-        [args.python, args.local_minter, args.env, "read", "sysid", sysid]
-        for sysid in sysids
-    ]
-    return workloads
+    return [[args.python, args.inquiry, args.env, ",".join(map(str, query))]
+            for query in queries]
 
 
 def main():
     args = arguments()
     try:
         queries = load_queries(args)
-        lookup_workloads = make_workloads(args, queries)
-        all_results = {}
-        for lookup_type, commands in lookup_workloads.items():
-            for _ in range(args.warmups):
-                run_query(commands[0])
-            entries = []
-            total = 0.0
-            for index, command in enumerate(commands):
-                result, seconds = run_query(command)
-                total += seconds
-                entries.append({"index": index, "input": command[-1],
-                                "seconds": seconds, "result": result})
-            all_results[lookup_type] = {
-                "query_count": len(entries),
-                "total_seconds": total,
-                "queries_per_second": len(entries) / total if total else None,
-                "queries": entries,
-            }
+        commands = make_workloads(args, queries)
+        for _ in range(args.warmups):
+            run_query(commands[0])
+        entries = []
+        total = 0.0
+        for index, (query, command) in enumerate(zip(queries, commands)):
+            result, seconds = run_query(command)
+            total += seconds
+            entries.append({"index": index, "ocns": query,
+                            "seconds": seconds, "result": result})
     except (OSError, ValueError, RuntimeError) as error:
         print("benchmark failed: {}".format(error), file=sys.stderr)
         return 2
@@ -131,7 +100,10 @@ def main():
         "commit": subprocess.run(["git", "rev-parse", "HEAD"], text=True,
                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.strip(),
         "env": args.env,
-        "lookup_types": all_results,
+        "query_count": len(entries),
+        "total_seconds": total,
+        "queries_per_second": len(entries) / total if total else None,
+        "queries": entries,
         "seed": args.seed if not args.queries else None,
         "query_file_sha256": None,
         "batch_size": args.batch_size if not args.queries else None,
@@ -143,11 +115,9 @@ def main():
     with open(args.report, "w", encoding="utf-8") as file:
         json.dump(report, file, indent=2, sort_keys=True)
         file.write("\n")
-    print("Wrote {} lookup types to {}".format(len(all_results), args.report))
-    for lookup_type, values in all_results.items():
-        print("{}: {} queries, {:.3f}s, {:.2f} queries/s".format(
-            lookup_type, values["query_count"], values["total_seconds"],
-            values["queries_per_second"] or 0.0))
+    print("Wrote {} OCN inquiry queries to {}".format(len(entries), args.report))
+    print("Total: {:.3f}s; {:.2f} queries/s".format(
+        total, report["queries_per_second"] or 0.0))
     if args.compare:
         try:
             with open(args.compare, encoding="utf-8") as file:
@@ -155,29 +125,22 @@ def main():
         except (OSError, json.JSONDecodeError) as error:
             print("could not read comparison report: {}".format(error), file=sys.stderr)
             return 2
-        if set(previous.get("lookup_types", {})) != set(all_results):
-            print("reports contain different lookup types", file=sys.stderr)
+        if len(previous.get("queries", [])) != len(entries):
+            print("reports contain different query counts", file=sys.stderr)
             return 1
         print("Compared with {} ({}):".format(args.compare, previous.get("branch", "unknown branch")))
-        any_mismatch = False
-        for lookup_type, after_values in all_results.items():
-            before_values = previous["lookup_types"][lookup_type]
-            if len(before_values["queries"]) != len(after_values["queries"]):
-                print("  {}: query count differs".format(lookup_type), file=sys.stderr)
-                any_mismatch = True
-                continue
-            mismatches = [index for index, (before, after) in enumerate(
-                zip(before_values["queries"], after_values["queries"]))
-                if before.get("input") != after["input"] or before.get("result") != after["result"]]
-            old_total = before_values["total_seconds"]
-            print("  {}: {} result mismatches, elapsed change {:+.2f}%".format(
-                lookup_type, len(mismatches),
-                (after_values["total_seconds"] / old_total - 1) * 100 if old_total else 0))
-            if mismatches:
-                any_mismatch = True
-                print("    differing query indexes: {}".format(
-                    ", ".join(str(index + 1) for index in mismatches[:10])), file=sys.stderr)
-        if any_mismatch:
+        mismatches = [index for index, (before, after) in enumerate(
+            zip(previous["queries"], entries))
+            if before.get("ocns") != after["ocns"] or before.get("result") != after["result"]]
+        old_total = previous.get("total_seconds")
+        if not old_total:
+            print("comparison report has no usable total_seconds", file=sys.stderr)
+            return 2
+        print("  result mismatches: {}".format(len(mismatches)))
+        print("  elapsed change: {:+.2f}%".format((total / old_total - 1) * 100))
+        if mismatches:
+            print("  differing query indexes: {}".format(
+                ", ".join(str(index + 1) for index in mismatches[:10])), file=sys.stderr)
             return 1
     return 0
 
