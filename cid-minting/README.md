@@ -77,7 +77,7 @@ Command line arguments:
     1. find OCNs from the next input file;
     2. retrieve Zephir clusters by given OCNs;
     3. write Zephir clusters in JSON string to output file;
-    4. repeat 1-3 indefinitely or after 10 min when there is no input data file. 
+    4. repeat 1-3 indefinitely, pausing briefly when no request files exist.
 
 ```
 pipenv run python cid_inquiry.py dev 1,6567842,6758168,8727632
@@ -87,6 +87,55 @@ Or
 pipenv run python cid_inquiry.py dev 
 ```
 The script returns a dict combining both OCLC lookup and Zephir lookup results listed in the `cid_inquiry` function section. 
+
+#### Persistent inquiry and performance
+
+The file worker reuses one read-only concordance connection and one SQLAlchemy
+engine with a MySQL connection pool. Each distinct canonical cluster is expanded
+once per inquiry. Concordance lookups cache up to 8,192 OCN resolutions (including
+misses) and 1,024 clusters per worker. CID results are queried from Zephir on every
+inquiry, so updates to Zephir remain visible.
+
+Treat the concordance as a fixed snapshot for a worker's lifetime. Restart workers
+after replacing or updating it so both the open connection and caches are refreshed.
+Python callers can reuse `ConcordanceLookup` as a context manager and pass it as
+`lookup` to `cid_inquiry`; pass a worker-owned `ZephirDatabase` as `zephir_db` too.
+Close both resources when finished.
+
+A blocking stdin mode accepts one comma-separated OCN inquiry per line and emits
+one JSON object per line, flushing each response. Responses contain `result`
+(the usual inquiry object) and `timings` (seconds for concordance opening and
+validation, canonical resolution, cluster expansion, each executed Zephir query,
+and the total inquiry). EOF closes the worker. A failed request terminates the
+worker with a nonzero exit status; clients should treat EOF as failure.
+
+```sh
+pipenv run python cid_inquiry.py dev --stdin < queries.txt
+```
+
+The existing file protocol remains available for `htprep-prepare`; switching that
+caller to blocking communication requires a change in its repository.
+
+Run the benchmark from this directory using a query file with one comma-separated
+OCN list per line. Prefer OCNs from the actual import to random numbers, which can
+mostly measure misses:
+
+```sh
+pipenv run python benchmark_cid_inquiry.py --env dev --queries queries.txt --report after.json
+```
+
+The default `--mode persistent` measures a single stdin worker, including pipe
+request/response latency and stage timings. It excludes startup through one warmup
+inquiry by default. Set `--warmups 0` to include startup in the first request.
+It does not measure the legacy file transport or Perl processing.
+
+Use `--mode cli` on both versions when comparing a branch without stdin support.
+This starts Python for every inquiry and includes startup overhead. Reports from
+different modes cannot be compared. Pass `--compare before.json` to compare
+results and elapsed time with a previous report from the same mode and workload.
+Stage totals overlap: the overall concordance and inquiry totals include their
+component stages. Cached stages can approach zero; an unexecuted CID query has no
+stage entry.
 
 #### Shell Wrapper
 

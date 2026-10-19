@@ -1,8 +1,10 @@
 """Resolve OCLC numbers using the concordance SQLite mapping table."""
 
 import sqlite3
+import time
 from contextlib import contextmanager
 from pathlib import Path
+from functools import lru_cache
 
 SQLITE_INTEGER_MAX = (1 << 63) - 1
 
@@ -73,26 +75,79 @@ def get_ocns_cluster_by_ocn(ocn, db_path, db=None):
     return (variants or []) + [primary]
 
 
-def get_clusters_by_ocns(ocns, db_path):
-    """Return deduplicated clusters as sets of sorted OCN tuples."""
+class ConcordanceLookup:
+    """Worker-owned read connection and bounded caches for a fixed concordance.
+
+    Restart the owner after replacing or updating the concordance database.
+    Zephir CID results are deliberately never cached.
+    """
+
+    def __init__(self, db_path):
+        self.db_path = db_path
+        self._context = None
+        self._db = None
+        self._primary = lru_cache(maxsize=8192)(self._get_primary)
+        self._cluster = lru_cache(maxsize=1024)(self._get_cluster)
+
+    def _connection(self):
+        if self._db is None:
+            context = open_concordance(self.db_path)
+            self._db = context.__enter__()
+            self._context = context
+        return self._db
+
+    def _get_primary(self, ocn):
+        return get_primary_ocn(ocn, self.db_path, self._connection())
+
+    def _get_cluster(self, primary):
+        variants = get_ocns_cluster_by_primary_ocn(primary, self.db_path, self._connection())
+        return tuple(sorted((variants or []) + [primary]))
+
+    def get_clusters(self, ocns, timings=None):
+        started = time.perf_counter()
+        self._connection()
+        opened = time.perf_counter()
+        primaries = {self._primary(ocn) for ocn in set(ocns)}
+        resolved = time.perf_counter()
+        clusters = {self._cluster(primary) for primary in primaries if primary is not None}
+        if timings is not None:
+            timings["concordance_open_seconds"] = opened - started
+            timings["concordance_primary_seconds"] = resolved - opened
+            timings["concordance_clusters_seconds"] = time.perf_counter() - resolved
+        return clusters
+
+    def close(self):
+        self._primary.cache_clear()
+        self._cluster.cache_clear()
+        if self._context is not None:
+            self._context.__exit__(None, None, None)
+            self._context = None
+            self._db = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
+
+def get_clusters_by_ocns(ocns, db_path, lookup=None, timings=None):
+    """Fetch each distinct canonical cluster once, optionally reusing a worker."""
     if not ocns:
         return set()
-    with open_concordance(db_path) as db:
-        clusters = set()
-        for ocn in ocns:
-            cluster = get_ocns_cluster_by_ocn(ocn, db_path, db)
-            if cluster:
-                clusters.add(tuple(sorted(cluster)))
-        return clusters
+    if lookup is not None:
+        return lookup.get_clusters(ocns, timings)
+    with ConcordanceLookup(db_path) as lookup:
+        return lookup.get_clusters(ocns, timings)
 
 
 def convert_set_to_list(set_of_tuples):
     return [list(cluster) for cluster in set_of_tuples]
 
 
-def lookup_ocns_from_oclc(ocns, concordance_db_path):
+def lookup_ocns_from_oclc(ocns, concordance_db_path, lookup=None, timings=None):
     """Return the OCLC cluster result expected by CID inquiry callers."""
-    clusters = convert_set_to_list(get_clusters_by_ocns(ocns, concordance_db_path))
+    clusters = convert_set_to_list(get_clusters_by_ocns(ocns, concordance_db_path, lookup, timings))
     return {
         "inquiry_ocns": ocns,
         "matched_oclc_clusters": clusters,

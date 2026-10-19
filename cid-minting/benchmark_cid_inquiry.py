@@ -2,7 +2,8 @@
 """Benchmark this checkout's CID inquiry CLI using only the standard library.
 
 Generate the same query workload on each branch by keeping --seed and other
-workload options unchanged. Reports contain every query, result, and duration.
+workload options unchanged. Reports contain every query, result, duration, and (in persistent mode) stage
+timings. Use --mode cli for branches that do not support the stdin protocol.
 """
 
 import argparse
@@ -15,10 +16,16 @@ import pathlib
 import subprocess
 import sys
 import time
+import select
+import tempfile
+from contextlib import contextmanager
 
 
 def arguments():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--mode", choices=("persistent", "cli"), default="persistent",
+                        help="Persistent stdin worker (default) or a new process per query")
+    parser.add_argument("--timeout", type=float, default=60, help="Seconds allowed per query")
     parser.add_argument("--env", default="dev", choices=("test", "dev", "stg", "prd"))
     parser.add_argument("--count", type=int, default=1000, help="Number of queries (default: 1000)")
     parser.add_argument("--batch-size", type=int, default=8, help="OCNs per query (default: 8)")
@@ -36,6 +43,8 @@ def arguments():
 
 
 def load_queries(args):
+    if args.warmups < 0 or args.timeout <= 0:
+        raise ValueError("warmups cannot be negative; timeout must be positive")
     if args.queries:
         queries = []
         with open(args.queries, encoding="utf-8") as file:
@@ -55,10 +64,10 @@ def load_queries(args):
             for _ in range(args.count)]
 
 
-def run_query(command):
+def run_query(command, timeout=60):
     started = time.perf_counter()
     completed = subprocess.run(command, text=True, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, check=False)
+                               stderr=subprocess.PIPE, check=False, timeout=timeout)
     duration = time.perf_counter() - started
     if completed.returncode:
         raise RuntimeError("lookup failed (exit {}): {}\n{}".format(
@@ -70,9 +79,50 @@ def run_query(command):
     return result, duration
 
 
-def make_workloads(args, queries):
-    return [[args.python, args.inquiry, args.env, ",".join(map(str, query))]
-            for query in queries]
+@contextmanager
+def query_runner(args):
+    if args.mode == "cli":
+        def run_cli(query):
+            result, seconds = run_query(
+                [args.python, args.inquiry, args.env, ",".join(map(str, query))], args.timeout)
+            return result, seconds, {}
+        yield run_cli
+        return
+
+    # Keep stderr out of a pipe so verbose logging cannot block the worker.
+    with tempfile.TemporaryFile(mode="w+") as errors:
+        process = subprocess.Popen(
+            [args.python, args.inquiry, args.env, "--stdin"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors, text=True)
+        try:
+            def run_persistent(query):
+                started = time.perf_counter()
+                try:
+                    process.stdin.write(",".join(map(str, query)) + "\n")
+                    process.stdin.flush()
+                except BrokenPipeError as error:
+                    raise RuntimeError("persistent inquiry worker exited") from error
+                if not select.select([process.stdout], [], [], args.timeout)[0]:
+                    raise RuntimeError("persistent inquiry timed out")
+                line = process.stdout.readline()
+                if not line:
+                    errors.seek(0)
+                    raise RuntimeError("persistent inquiry worker exited: " + errors.read())
+                response = json.loads(line)
+                return response["result"], time.perf_counter() - started, response["timings"]
+            yield run_persistent
+        finally:
+            process.stdin.close()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+            process.stdout.close()
 
 
 def main():
@@ -83,17 +133,17 @@ def main():
         return 2
     try:
         queries = load_queries(args)
-        commands = make_workloads(args, queries)
-        for _ in range(args.warmups):
-            run_query(commands[0])
-        entries = []
-        total = 0.0
-        for index, (query, command) in enumerate(zip(queries, commands)):
-            result, seconds = run_query(command)
-            total += seconds
-            entries.append({"index": index, "ocns": query,
-                            "seconds": seconds, "result": result})
-    except (OSError, ValueError, RuntimeError) as error:
+        with query_runner(args) as run:
+            for _ in range(args.warmups):
+                run(queries[0])
+            entries = []
+            total = 0.0
+            for index, query in enumerate(queries):
+                result, seconds, timings = run(query)
+                total += seconds
+                entries.append({"index": index, "ocns": query,
+                                "seconds": seconds, "result": result, "timings": timings})
+    except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
         print("benchmark failed: {}".format(error), file=sys.stderr)
         return 2
 
@@ -105,6 +155,7 @@ def main():
         "commit": subprocess.run(["git", "rev-parse", "HEAD"], text=True,
                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.strip(),
         "env": args.env,
+        "mode": args.mode,
         "query_count": len(entries),
         "total_seconds": total,
         "queries_per_second": len(entries) / total if total else None,
@@ -123,6 +174,10 @@ def main():
     print("Wrote {} OCN inquiry queries to {}".format(len(entries), args.report))
     print("Total: {:.3f}s; {:.2f} queries/s".format(
         total, report["queries_per_second"] or 0.0))
+    stages = sorted({stage for entry in entries for stage in entry["timings"]})
+    for stage in stages:
+        print("  {}: {:.3f}s".format(
+            stage, sum(entry["timings"].get(stage, 0.0) for entry in entries)))
     if args.compare:
         try:
             with open(args.compare, encoding="utf-8") as file:
@@ -133,6 +188,9 @@ def main():
         if len(previous.get("queries", [])) != len(entries):
             print("reports contain different query counts", file=sys.stderr)
             return 1
+        if previous.get("mode", "cli") != args.mode:
+            print("reports use different benchmark modes", file=sys.stderr)
+            return 2
         print("Compared with {} ({}):".format(args.compare, previous.get("branch", "unknown branch")))
         mismatches = [index for index, (before, after) in enumerate(
             zip(previous["queries"], entries))

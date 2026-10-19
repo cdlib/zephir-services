@@ -31,6 +31,10 @@ logpath: /apps/htmm/log/cid_minting/cid_minting.log
    Copy a completed, closed SQLite database from `zephir-concordance`; switch the
    configured path only after the copy is complete. The SQLite runtime must be at
    least 3.37 to read the `STRICT` table created by that pipeline.
+   CID minters keep a read-only connection and bounded concordance caches for
+   their lifetime. Restart running minters after changing the concordance file.
+   Call `CidMinter.close()` when finished to release the concordance connection
+   and Zephir engine. Zephir CID results are not cached.
 
 5. Verify the log `/apps/htmm/log/cid_minting/cid_minting.log` exists. If not create a new one.
 

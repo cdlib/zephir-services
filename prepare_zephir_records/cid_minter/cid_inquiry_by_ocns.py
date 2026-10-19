@@ -10,7 +10,7 @@ import time
 from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 from cid_minter.zephir_cluster_lookup import ZephirDatabase
 
-def cid_inquiry_by_ocns(ocns, zephirDb, concordance_db_path):
+def cid_inquiry_by_ocns(ocns, zephirDb, concordance_db_path, lookup=None):
     """Find Zephir clusters by given OCNs and their associated OCLC OCNs.
        1. Find associated OCLC OCNs
        2. Combine incoming OCNs and OCLC OCNs, remove duplicates  
@@ -31,7 +31,7 @@ def cid_inquiry_by_ocns(ocns, zephirDb, concordance_db_path):
     """
 
     # Lookups OCN clusters by a list of OCNs in integer
-    oclc_lookup_result = lookup_ocns_from_oclc(ocns, concordance_db_path)
+    oclc_lookup_result = lookup_ocns_from_oclc(ocns, concordance_db_path, lookup)
 
     # combine incoming OCNs with and matched OCLC ocns, and dedup
     oclc_ocns_list = oclc_lookup_result["matched_oclc_clusters"]
@@ -43,12 +43,7 @@ def cid_inquiry_by_ocns(ocns, zephirDb, concordance_db_path):
     return {**oclc_lookup_result, **zephir_clusters_result}
 
 def flat_and_dedup_sort_list(list_of_lists):
-    new_list = []
-    for a_list in list_of_lists:
-        for item in a_list:
-            if item not in new_list:
-                new_list.append(item)
-    return sorted(new_list)
+    return sorted({item for values in list_of_lists for item in values})
 
 def convert_comma_separated_str_to_int_list(ocn_str):
     if not ocn_str or not ocn_str.strip():
