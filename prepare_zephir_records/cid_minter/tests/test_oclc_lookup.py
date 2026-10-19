@@ -11,6 +11,14 @@ from cid_minter.oclc_lookup import get_clusters_by_ocns
 from cid_minter.oclc_lookup import convert_set_to_list
 from cid_minter.oclc_lookup import lookup_ocns_from_oclc
 
+
+def test_oversized_direct_ocn_lookups_return_none(setup):
+    concordance_db_path = setup["concordance_db_path"]
+    oversized_ocn = 9223372036854775808
+
+    assert get_primary_ocn(oversized_ocn, concordance_db_path) is None
+    assert get_ocns_cluster_by_primary_ocn(oversized_ocn, concordance_db_path) is None
+
 # TESTS
 def test_get_primary_ocn(setup):
     concordance_db_path = setup["concordance_db_path"]
@@ -112,6 +120,7 @@ def test_get_ocns_cluster_by_ocns(setup):
         "3_two_primary_ocns_dups": [1000000000, 1000000000],
         "4_two_primary_ocns": [1, 1000000000],
         "5_ocns_with_primary_secondary_dups_invalid": [1, 1, 6567842, 17216714, 535434196, 12345678901, 1000000000],
+        "6_valid_and_oversized": [1, 9223372036854775808, 1000000000],
     }
     expected_set = {
         "1_one_primary_ocn_cluster_of_one": sets[1000000000],
@@ -119,6 +128,7 @@ def test_get_ocns_cluster_by_ocns(setup):
         "3_two_primary_ocns_dups": sets[1000000000],
         "4_two_primary_ocns": (sets[1] | sets[1000000000]),
         "5_ocns_with_primary_secondary_dups_invalid": (sets[1] | sets[17216714] | sets[1000000000]),
+        "6_valid_and_oversized": (sets[1] | sets[1000000000]),
     }
     
     for k, ocns in input_ocns_list.items():
@@ -166,6 +176,7 @@ def test_lookup_ocns_from_oclc(setup):
         "two_ocns": [1000000000, 6567842],
         "one_invalid": [1234567890],
         "two_invalid": [1234567890, 12345678901],
+        "valid_and_oversized": [1, 9223372036854775808],
     }
 
     expected = {
@@ -198,6 +209,11 @@ def test_lookup_ocns_from_oclc(setup):
             "inquiry_ocns": [1234567890, 12345678901],
             "matched_oclc_clusters": [],
             "num_of_matched_oclc_clusters": 0,
+            },
+        "valid_and_oversized": {
+            "inquiry_ocns": [1, 9223372036854775808],
+            "matched_oclc_clusters": [[1, 6567842, 9987701, 53095235, 433981287]],
+            "num_of_matched_oclc_clusters": 1,
             },
     }
 
