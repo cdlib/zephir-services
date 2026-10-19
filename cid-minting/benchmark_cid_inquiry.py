@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import random
+import pathlib
 import subprocess
 import sys
 import time
@@ -76,6 +77,10 @@ def make_workloads(args, queries):
 
 def main():
     args = arguments()
+    report_path = pathlib.Path(args.report).resolve()
+    if args.compare and report_path == pathlib.Path(args.compare).resolve():
+        print("benchmark failed: --report and --compare refer to the same file", file=sys.stderr)
+        return 2
     try:
         queries = load_queries(args)
         commands = make_workloads(args, queries)
