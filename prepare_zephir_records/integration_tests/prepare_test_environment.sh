@@ -6,12 +6,15 @@
 echo "## Create the Zephir tstdev database"
 ./prepare_zephir_db.sh
 
-echo "## Create levelDB for OCLC lookup"
+echo "## Create SQLite concordance database for OCLC lookup"
 
 PIPFILE="/apps/htmm/zephir-services/Pipfile"
-SCRIPT="prepare_leveldb.py"
+SCRIPT="prepare_sqlite_concordance.py"
 cmd="pipenv run python $SCRIPT"
 
 
 PIPENV_PIPFILE=$PIPFILE $cmd
-
+if [ $? -ne 0 ]; then
+    echo "Command failed: '${cmd}'"
+    exit 1
+fi

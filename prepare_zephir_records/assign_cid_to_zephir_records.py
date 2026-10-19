@@ -350,7 +350,7 @@ def main():
 
     cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
 
-    concordance_db_path = cid_minting_config["concordance_db_path"]
+    concordance_db_path = os.environ.get("OVERRIDE_CONCORDANCE_DB_PATH") or cid_minting_config["concordance_db_path"]
     logfile = cid_minting_config["logfile"]
     zephir_files_dir = cid_minting_config["zephir_files_dir"]
     zed_log_path = cid_minting_config["zed_log_path"]

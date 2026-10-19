@@ -52,7 +52,7 @@ def main():
     db_connect_str = str(db_connect_url(zephir_db_config[env]))
 
     cid_minting_config = get_configs_by_filename(CONFIG_PATH, "cid_minting")
-    concordance_db_path = cid_minting_config["concordance_db_path"]
+    concordance_db_path = os.environ.get("OVERRIDE_CONCORDANCE_DB_PATH") or cid_minting_config["concordance_db_path"]
     logfile = cid_minting_config['logpath']
 
     logging.basicConfig(

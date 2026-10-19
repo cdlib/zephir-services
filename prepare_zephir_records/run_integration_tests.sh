@@ -2,10 +2,13 @@
 # script: run_integration_tests.sh 
 #
 
-# TO-DO: review and update prepare_test_environment.sh
 echo "Prepare test environment..."
 cd integration_tests
 ./prepare_test_environment.sh
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+export OVERRIDE_CONCORDANCE_DB_PATH="$(pwd)/test_datasets/concordance.sqlite"
 cd ..
 
 echo "Perform integration tests..."
