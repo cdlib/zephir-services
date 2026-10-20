@@ -13,8 +13,7 @@ test:
     database: database/zephir_test.db
     drivername: sqlite
 
-primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
-cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
+concordance_db_path: /apps/htmm/concordance/concordance.sqlite
 
 logpath: /apps/htmm/log/cid_minting/cid_minting.log
 

@@ -2,6 +2,8 @@ import os
 import sys
 import environs
 import re
+import time
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine
 from sqlalchemy import text
@@ -33,7 +35,7 @@ def construct_select_zephir_cluster_by_cid(cids):
 
 class ZephirDatabase:
     def __init__(self, db_connect_str):
-        self.engine = create_engine(db_connect_str)
+        self.engine = create_engine(db_connect_str, pool_pre_ping=True)
 
     def findall(self, sql, params=None):
         with self.engine.connect() as connection:
@@ -44,7 +46,34 @@ class ZephirDatabase:
     def close(self):
         self.engine.dispose()
 
-def zephir_clusters_lookup(db_conn_str, ocns_list):
+@contextmanager
+def database_session(db_conn_str, db=None):
+    """Dispose only engines created for this call; worker engines stay pooled."""
+    owned = db is None
+    if owned:
+        db = ZephirDatabase(db_conn_str)
+    try:
+        yield db
+    finally:
+        if owned:
+            db.close()
+
+
+def _timed_find(db_conn_str, values, finder, db, timings, name):
+    started = time.perf_counter()
+    try:
+        return finder(db_conn_str, values, db=db)
+    finally:
+        if timings is not None:
+            timings[name] = time.perf_counter() - started
+
+
+def zephir_clusters_lookup(db_conn_str, ocns_list, db=None, timings=None):
+    with database_session(db_conn_str, db) as database:
+        return _zephir_clusters_lookup(db_conn_str, ocns_list, database, timings)
+
+
+def _zephir_clusters_lookup(db_conn_str, ocns_list, db, timings):
     """
     Finds Zephir clusters by OCNs and returns clusters' info including cluster IDs, number of clusters and all OCNs in each cluster. 
     Args:
@@ -65,14 +94,16 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
         "min_cid": None,
     }
 
-    cid_ocn_list_by_ocns = find_zephir_clusters_by_ocns(db_conn_str, ocns_list)
+    cid_ocn_list_by_ocns = _timed_find(db_conn_str, ocns_list, find_zephir_clusters_by_ocns,
+                                           db, timings, "zephir_ocns_seconds")
     if not cid_ocn_list_by_ocns:
         return zephir_cluster
 
     # find all OCNs in each cluster
     cids_list = [cid_ocn.get("cid") for cid_ocn in cid_ocn_list_by_ocns]
     unique_cids_list = list(set(cids_list))
-    cid_ocn_list = find_zephir_clusters_by_cids(db_conn_str, unique_cids_list)
+    cid_ocn_list = _timed_find(db_conn_str, unique_cids_list, find_zephir_clusters_by_cids,
+                                 db, timings, "zephir_cids_seconds")
     if not cid_ocn_list:
         return zephir_cluster
 
@@ -88,7 +119,7 @@ def zephir_clusters_lookup(db_conn_str, ocns_list):
     }
     return zephir_cluster
 
-def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
+def find_zephir_clusters_by_ocns(db_conn_str, ocns_list, db=None):
     """
     Args:
         db_conn_str: database connection string
@@ -101,15 +132,13 @@ def find_zephir_clusters_by_ocns(db_conn_str, ocns_list):
     select_zephir = construct_select_zephir_cluster_by_ocns(list_to_str(ocns_list))
     if select_zephir:
         try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
-            return results
+            with database_session(db_conn_str, db) as zephir:
+                return zephir.findall(text(select_zephir))
         except:
             return None
     return None
 
-def find_zephir_clusters_by_cids(db_conn_str, cid_list):
+def find_zephir_clusters_by_cids(db_conn_str, cid_list, db=None):
     """
     Args:
         db_conn_str: database connection string
@@ -120,10 +149,8 @@ def find_zephir_clusters_by_cids(db_conn_str, cid_list):
     select_zephir = construct_select_zephir_cluster_by_cid(list_to_str(cid_list))
     if select_zephir:
         try:
-            zephir = ZephirDatabase(db_conn_str)
-            results = zephir.findall(text(select_zephir))
-            zephir.close()
-            return results 
+            with database_session(db_conn_str, db) as zephir:
+                return zephir.findall(text(select_zephir))
         except:
             return None
     return None

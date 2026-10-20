@@ -4,7 +4,6 @@ import shutil
 import sys
 
 import pandas
-import plyvel
 import pytest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))

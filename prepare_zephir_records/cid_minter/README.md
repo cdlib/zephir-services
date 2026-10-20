@@ -12,22 +12,22 @@ CID Minting includes a set of modules and functions to retrieve Zephir clusters 
 ### OCLC Lookup (oclc_lookup)
 This module contains core functions to find the OCNs relationships in the OCLC Concordance table:
 
-* get_primary_ocn(ocn, db_path="primary-lookup"):
+* get_primary_ocn(ocn, db_path):
   Gets the primary oclc number for a given oclc number.
 
-* get_ocns_cluster_by_primary_ocn(primary_ocn, db_path="cluster-lookup"):
+* get_ocns_cluster_by_primary_ocn(primary_ocn, db_path):
   Gets all OCNs of an oclc cluster by a primary OCN.
 
-* get_ocns_cluster_by_ocn(ocn, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup"):
+* get_ocns_cluster_by_ocn(ocn, db_path):
   Gets all OCNs of an oclc cluster by an OCN.
 
-* get_clusters_by_ocns(ocns, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup"):
+* get_clusters_by_ocns(ocns, db_path):
   Finds the OCN clusters for a list of OCNs.
 
 #### Excute the script
-The `oclc_lookup.py` script can be executed from the command line. It takes a list of OCNs (space separated integers) and returns resolved OCNs clusters from the OCLC Concordance Table. 
+The `run_oclc_lookup.py` script can be executed from the command line. It takes a list of OCNs (space separated integers) and returns resolved OCNs clusters from the OCLC Concordance Table.
 ```
-pipenv run python oclc_lookup.py 1 123
+pipenv run python run_oclc_lookup.py 1 123
 ```
 
 ### Zephir Cluster Lookup (zephir_cluster_lookup)
@@ -40,7 +40,7 @@ This module contains core functions to retrieve Zephir clusters:
 
 ### CID Inquiry (cid_inquiry)
 The cid_inquiry module has one core function which is to find matched Zephir Clusters by a list of OCNs :
-* cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
+* cid_inquiry(ocns, db_conn_str, concordance_db_path):
 ** Returns: a dict combining both OCLC lookup and Zephir lookup results:
 <pre>
        "inquiry_ocns": input ocns, list of integers.
