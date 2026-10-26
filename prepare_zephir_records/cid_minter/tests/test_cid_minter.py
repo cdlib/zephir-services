@@ -1,9 +1,8 @@
 import os
 import sys
 
-import msgpack
 import pytest
-import plyvel
+from sqlite_concordance import create_concordance_db
 import json
 import logging
 
@@ -22,12 +21,11 @@ from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_li
    https://docs.google.com/document/d/1lkqjcN1axw8332kbby4dBg44gdYh5mnXMtlQ5a7_llw/edit#heading=h.gjdgxs
 """
 @pytest.fixture
-def setup_configs(setup_leveldb, setup_zephir_db, setup_local_minter, setup_zed_log):
+def setup_configs(setup_concordance, setup_zephir_db, setup_local_minter, setup_zed_log):
     config = {
         "zephirdb_conn_str": setup_zephir_db["zephirDb"],
         "minterdb_conn_str": setup_local_minter["local_minter"],
-        "leveldb_primary_path": setup_leveldb["primary_db_path"],
-        "leveldb_cluster_path": setup_leveldb["cluster_db_path"],
+        "concordance_db_path": setup_concordance["concordance_db_path"],
         "zed_log": setup_zed_log["zed_log"],
         "zed_msg_table": setup_zed_log["zed_msg_table"],
     }
@@ -100,8 +98,7 @@ def test_step_1_a_1(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"ocns": "8727632", "htid": "test.1234567890_1b1"}
 
@@ -127,8 +124,7 @@ def test_step_1_a_2(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"ocns": "8727632,87276322", "htid": "test.1234567890_1b1"}
 
@@ -162,8 +158,7 @@ def test_step_1_a_3(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"ocns": "1234567890", "htid": "test.1234567890_1b1"}
 
@@ -195,8 +190,7 @@ def test_step_1_b_1(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"ocns": "80274381,25231018", "contribsys_ids": "hvd000012735", "previous_sysids": "", "htid": "hvd.hw5jdo"}
 
@@ -222,9 +216,9 @@ def test_step_1_b_1(caplog, setup_configs):
     record = local_minter._find_record_by_identifier("sysid", sysid)
     assert record is None
 
-    # verify levelDB
+    # Verify concordance lookup
     for ocn in [80274381, 25231018]:
-        result = get_ocns_cluster_by_ocn(ocn, primary_db_path, cluster_db_path)
+        result = get_ocns_cluster_by_ocn(ocn, concordance_db_path)
         assert result is None
 
     # test the CidMinter class
@@ -268,8 +262,7 @@ def test_step_1_b_2(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"ocns": "100,300", "htid": "test.1234567890_1a2"}
 
@@ -294,9 +287,9 @@ def test_step_1_b_2(caplog, setup_configs):
         record = local_minter._find_record_by_identifier("ocn", ocn)
         assert record is None
 
-    # verify OCLC clusters in levelDB
+    # Verify OCLC clusters in the concordance database
     incoming_ocns = [100, 300]
-    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
     assert result["num_of_matched_oclc_clusters"] == 2
 
     # test the CidMinter class
@@ -340,8 +333,7 @@ def test_step_1_b_3(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"ocns": "80274381,25231018,30461866", "htid": "hvd.hw5jdo"}
 
@@ -389,8 +381,7 @@ def test_step_1_b_4(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"ocns": "1234567890123", "contribsys_ids": "test.1b4", "htid": "test.1b4"}
 
@@ -412,8 +403,7 @@ def test_step_2_a_1(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "pur215476", "htid": "test.2a1"}
 
@@ -452,8 +442,7 @@ def test_step_2_a_2(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "pur215476,pur1234567", "htid": "test.2a1"}
     sysids = input_ids.get("contribsys_ids")
@@ -494,8 +483,7 @@ def test_step_2_a_3(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "pur215476", "htid": "test.2a1"}
 
@@ -533,8 +521,7 @@ def test_step_2_b_1(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "hvd000012735", "htid": "hvd.hw5jdo"}
 
@@ -575,8 +562,7 @@ def test_step_2_b_2(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "hvd000012735,nrlf.b100608668", "htid": "hvd.hw5jdo"}
 
@@ -636,8 +622,7 @@ def test_step_2_b_3(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "acme.b2222222", "htid": "test.12345"}
     matched_cid = "102359219"
@@ -661,8 +646,7 @@ def test_step_2_b_4(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "test.2b41234", "previous_contribsys_ids": "prev.1234", "htid": "test.2b4"}
 
@@ -684,8 +668,7 @@ def test_step_3_a_1(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "pur215476", "htid": "hvd.hw5jdo"}
 
@@ -732,8 +715,7 @@ def test_step_3_a_2(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "pur215476,pur.215476", "htid": "hvd.hw5jdo"}
 
@@ -780,8 +762,7 @@ def test_step_3_a_3(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "pur215476", "htid": "hvd.hw5jdo"}
 
@@ -821,8 +802,7 @@ def test_step_3_b_1(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "hvd000012735", "htid": "hvd.hw5jdo"}
 
@@ -876,8 +856,7 @@ def test_step_3_b_2(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "acme.992222222", "htid": "hvd.hw5jdo"}
 
@@ -917,8 +896,7 @@ def test_step_3_b_3(caplog, setup_configs):
     zephirDb = ZephirDatabase(setup_configs["zephirdb_conn_str"])
     cid_minter = CidMinter(setup_configs)
     local_minter = CidStore(setup_configs["minterdb_conn_str"])
-    primary_db_path = setup_configs["leveldb_primary_path"]
-    cluster_db_path = setup_configs["leveldb_cluster_path"]
+    concordance_db_path = setup_configs["concordance_db_path"]
 
     input_ids= {"contribsys_ids": "test.12345", "previous_contribsys_ids": "acme.b2222222", "htid": "test.12345"}
 
@@ -1025,18 +1003,15 @@ def verify_sequenced_events(log, expected_events_sequence):
 
 # FIXTURES
 @pytest.fixture
-def setup_leveldb(tmpdatadir, csv_to_df_loader):
+def setup_concordance(tmpdatadir, csv_to_df_loader):
     dfs = csv_to_df_loader
-    primary_db_path = create_primary_db(tmpdatadir, dfs["primary.csv"])
-    cluster_db_path = create_cluster_db(tmpdatadir, dfs["primary.csv"])
-    os.environ["OVERRIDE_PRIMARY_DB_PATH"] = primary_db_path
-    os.environ["OVERRIDE_CLUSTER_DB_PATH"] = cluster_db_path
+    concordance_db_path = create_concordance_db(tmpdatadir, dfs["primary.csv"])
+    os.environ["OVERRIDE_CONCORDANCE_DB_PATH"] = concordance_db_path
 
     return {
         "tmpdatadir": tmpdatadir,
         "dfs": dfs,
-        "primary_db_path": primary_db_path,
-        "cluster_db_path": cluster_db_path
+        "concordance_db_path": concordance_db_path
     }
 
 @pytest.fixture
@@ -1079,79 +1054,3 @@ def setup_zed_log(data_dir, tmpdir, scope="session"):
         "zed_log": zed_log,
         "zed_msg_table": zed_msg_table
     }
-
-# HELPERS
-def int_to_bytes(inum):
-    return inum.to_bytes((inum.bit_length() + 7) // 8, "big")
-
-
-def int_from_bytes(bnum):
-    return int.from_bytes(bnum, "big")
-
-
-def create_primary_db(path, df):
-    """Create a primary ocn lookup LevelDB database based with test data
-
-    Note:
-        1) Expects a dataframe: [ocn, primary]
-
-    Args:
-        Path: Database path
-        df: Pandas dataframe of test data [ocn, primary]
-
-    Returns:
-        Path to the LevelDB database
-
-    """
-    db_path = os.path.join(path, "primary/")
-    db = plyvel.DB(db_path, create_if_missing=True)
-
-    df = df.sort_values(by=["ocn"])
-    ocn_pos = df.columns.get_loc("ocn") + 1
-    primary_pos = df.columns.get_loc("primary") + 1
-
-    for row in df.itertuples():
-        db.put(int_to_bytes(row[ocn_pos]), int_to_bytes(row[primary_pos]))
-    db.close()
-    return db_path
-
-def create_cluster_db(path, df):
-    """Create a cluster ocns lookup LevelDB database based with test data
-
-    Note:
-        1) Expects a dataframe: [ocn, primary]
-        2) Produces a LevelDB with key(primary) and value([ocns,...])
-        3) Primary-only clusters are excluded
-
-    Args:
-        Path: Database path
-        df: Pandas dataframe of test data [ocn, primary]
-
-    Returns:
-        Path to the LevelDB database
-
-    """
-    db_path = os.path.join(path, "cluster/")
-    db = plyvel.DB(db_path, create_if_missing=True)
-
-    packer = msgpack.Packer()
-
-    df = df.sort_values(by=["primary","ocn"])
-    ocn_pos = df.columns.get_loc("ocn") + 1
-    primary_pos = df.columns.get_loc("primary") + 1
-
-    current_primary = 0
-    cluster = []
-    for row in df.itertuples():
-        if row[primary_pos] != current_primary:
-            if current_primary != 0:
-                if len(cluster) > 0:
-                    db.put(int_to_bytes(current_primary), packer.pack(cluster))
-            current_primary = row[primary_pos]
-            cluster = []
-        if current_primary != row[ocn_pos]:
-            cluster.append(row[ocn_pos])
-    if len(cluster) > 0:
-        db.put(int_to_bytes(current_primary), packer.pack(cluster))
-    db.close()
-    return db_path

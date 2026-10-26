@@ -19,18 +19,22 @@ dev:
    - The configuration file: /apps/htmm/zephir-services/prepare_zephir_records/config/cid_minting.yml 
    - Configuration entries:
      - logpath
-     - LevelDB primary file path
-     - LevelDB cluster file path
+     - SQLite concordance file path
    - Sample configuraiton:
 ```
-primary_db_path: /apps/htmm/leveldb/leveldb_files/primary-lookup 
-cluster_db_path: /apps/htmm/leveldb/leveldb_files/cluster-lookup
+concordance_db_path: /apps/htmm/concordance/concordance.sqlite
 
 logpath: /apps/htmm/log/cid_minting/cid_minting.log
 ```
-4. Vefiry LevelDB files - make sure they exist and up-to-date
-   - /apps/htmm/leveldb/leveldb_files/primary-lookup
-   - /apps/htmm/leveldb/leveldb_files/cluster-lookup
+4. Verify that `/apps/htmm/concordance/concordance.sqlite` exists on HTPREP, is current,
+   and contains the `mapping` table and `idx_map_canonical_variant` index.
+   Copy a completed, closed SQLite database from `zephir-concordance`; switch the
+   configured path only after the copy is complete. The SQLite runtime must be at
+   least 3.37 to read the `STRICT` table created by that pipeline.
+   CID minters keep a read-only connection and bounded concordance caches for
+   their lifetime. Restart running minters after changing the concordance file.
+   Call `CidMinter.close()` when finished to release the concordance connection
+   and Zephir engine. Zephir CID results are not cached.
 
 5. Verify the log `/apps/htmm/log/cid_minting/cid_minting.log` exists. If not create a new one.
 

@@ -4,7 +4,7 @@ from enum import Enum
 
 import logging
 
-from cid_minter.oclc_lookup import lookup_ocns_from_oclc
+from cid_minter.oclc_lookup import ConcordanceLookup
 from cid_minter.zephir_cluster_lookup import ZephirDatabase
 from cid_minter.zephir_cluster_lookup import CidMinterTable 
 from cid_minter.cid_inquiry_by_ocns import cid_inquiry_by_ocns
@@ -27,11 +27,13 @@ class CidMinter:
         self.config = config
         self._zephir_db = ZephirDatabase(self.config.get("zephirdb_conn_str"))
         self._minter_db = CidStore(self.config.get("minterdb_conn_str"))
-        self._leveldb_primary_path = self.config.get("leveldb_primary_path")
-        self._leveldb_cluster_path = self.config.get("leveldb_cluster_path")
+        self._concordance_db_path = self.config.get("concordance_db_path")
+        self._concordance = ConcordanceLookup(self._concordance_db_path)
         self.cid_zed_event = CidZedEvent(self.config.get("zed_msg_table"), self.config.get("zed_log"))
      
     def close(self):
+        self._concordance.close()
+        self._zephir_db.close()
         self.cid_zed_event.close()
 
     def mint_cid(self, ids):
@@ -196,7 +198,7 @@ class CidMinter:
         """
         logging.info(f"Find CID in Zephir Database by OCNs: {ocns}")
         assigned_cid = None
-        results = cid_inquiry_by_ocns(ocns, self._zephir_db, self._leveldb_primary_path, self._leveldb_cluster_path)
+        results = cid_inquiry_by_ocns(ocns, self._zephir_db, self._concordance_db_path, self._concordance)
         logging.info(f"Minting results from Zephir by OCNs: {results}")
 
         if results:
@@ -359,4 +361,3 @@ class CidMinter:
             for sysid in previous_sysids.split(","):
                 self._minter_db.write_identifier("sysid", sysid, cid)
                 logging.info(f"Updated local minter: previous contribsys id: {sysid}")
-

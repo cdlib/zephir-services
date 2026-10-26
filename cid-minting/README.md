@@ -12,16 +12,16 @@ CID Minting includes a set of modules and functions to retrieve Zephir clusters 
 ### OCLC Lookup (oclc_lookup)
 This module contains core functions to find the OCNs relationships in the OCLC Concordance table:
 
-* get_primary_ocn(ocn, db_path="primary-lookup"):
+* get_primary_ocn(ocn, db_path):
   Gets the primary oclc number for a given oclc number.
 
-* get_ocns_cluster_by_primary_ocn(primary_ocn, db_path="cluster-lookup"):
+* get_ocns_cluster_by_primary_ocn(primary_ocn, db_path):
   Gets all OCNs of an oclc cluster by a primary OCN.
 
-* get_ocns_cluster_by_ocn(ocn, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup"):
+* get_ocns_cluster_by_ocn(ocn, db_path):
   Gets all OCNs of an oclc cluster by an OCN.
 
-* get_clusters_by_ocns(ocns, primarydb_path="primary-lookup", clusterdb_path="cluster-lookup"):
+* get_clusters_by_ocns(ocns, db_path):
   Finds the OCN clusters for a list of OCNs.
 
 #### Excute the script
@@ -40,7 +40,7 @@ This module contains core functions to retrieve Zephir clusters:
 
 ### CID Inquiry (cid_inquiry)
 The cid_inquiry module has one core function which is to find matched Zephir Clusters by a list of OCNs :
-* cid_inquiry(ocns, db_conn_str, primary_db_path, cluster_db_path):
+* cid_inquiry(ocns, db_conn_str, concordance_db_path):
 ** Returns: a dict combining both OCLC lookup and Zephir lookup results:
 <pre>
        "inquiry_ocns": input ocns, list of integers.
@@ -77,7 +77,7 @@ Command line arguments:
     1. find OCNs from the next input file;
     2. retrieve Zephir clusters by given OCNs;
     3. write Zephir clusters in JSON string to output file;
-    4. repeat 1-3 indefinitely or after 10 min when there is no input data file. 
+    4. repeat 1-3 indefinitely, pausing briefly when no request files exist.
 
 ```
 pipenv run python cid_inquiry.py dev 1,6567842,6758168,8727632
@@ -87,6 +87,33 @@ Or
 pipenv run python cid_inquiry.py dev 
 ```
 The script returns a dict combining both OCLC lookup and Zephir lookup results listed in the `cid_inquiry` function section. 
+
+#### Persistent inquiry and performance
+
+The file worker reuses one read-only concordance connection and one SQLAlchemy
+engine with a MySQL connection pool. Each distinct canonical cluster is expanded
+once per inquiry. Concordance lookups cache up to 8,192 OCN resolutions (including
+misses) and 1,024 clusters per worker. CID results are queried from Zephir on every
+inquiry, so updates to Zephir remain visible.
+
+Treat the concordance as a fixed snapshot for a worker's lifetime. Restart workers
+after replacing or updating it so both the open connection and caches are refreshed.
+Python callers can reuse `ConcordanceLookup` as a context manager and pass it as
+`lookup` to `cid_inquiry`; pass a worker-owned `ZephirDatabase` as `zephir_db` too.
+Close both resources when finished.
+
+Run the benchmark from this directory using a query file with one comma-separated
+OCN list per line. Prefer OCNs from the actual import to random numbers, which can
+mostly measure misses:
+
+```sh
+pipenv run python benchmark_cid_inquiry.py --env dev --queries queries.txt --report after.json
+```
+
+The benchmark starts Python for every inquiry and includes startup overhead. It
+does not measure the file worker or Perl processing. Set `--warmups 0` to include
+the first inquiry in the report. Pass `--compare before.json` to compare results
+and elapsed time with a previous report from the same workload.
 
 #### Shell Wrapper
 

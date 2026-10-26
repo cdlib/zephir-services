@@ -1,9 +1,8 @@
 import os
 import sys
 
-import msgpack
 import pytest
-import plyvel
+from sqlite_concordance import create_concordance_db
 import json
 
 from cid_minter.zephir_cluster_lookup import ZephirDatabase
@@ -37,7 +36,7 @@ from cid_minter.cid_inquiry_by_ocns import convert_comma_separated_str_to_int_li
 
 # Test case 1 & 2: Incoming record matches a single primary record in the Concordance Table.
 ## a. Record OCN + Concordance OCN(s) matches no CID
-def test_case_1_a_i_ii(setup_leveldb, setup_sqlite):
+def test_case_1_a_i_ii(setup_concordance, setup_sqlite):
     """1. Incoming record contains one OCN that matches a single Concordance Table primary record.
        a. Record OCN + Concordance OCN(s) matches no CID
        i. Concordance primary record has one OCN (equals to Record OCN)
@@ -51,8 +50,7 @@ def test_case_1_a_i_ii(setup_leveldb, setup_sqlite):
            for i: 1000000000
            for ii: 18329830
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns_list = {
@@ -72,7 +70,7 @@ def test_case_1_a_i_ii(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters[k]
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -82,7 +80,7 @@ def test_case_1_a_i_ii(setup_leveldb, setup_sqlite):
         assert result["num_of_matched_zephir_clusters"] == 0
 
 
-def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
+def test_case_2_a_i_ii(setup_concordance, setup_sqlite):
     """2. Incoming record contains 2+ OCNs that matches a single Concordance Table primary record.
        a. Record OCN + Concordance OCN(s) matches no CID
        i. Concordance primary record has one OCN (equals to Record OCN)
@@ -96,8 +94,7 @@ def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
            for i: [100000001, 123456789010] (1 primary ocn + 1 invalid ocn)
            for ii: [976940347, 123456789020, 123456789010] (1 other ocn + 2 invalid ocns)
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns_list = {
@@ -117,7 +114,7 @@ def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters[k]
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -128,7 +125,7 @@ def test_case_2_a_i_ii(setup_leveldb, setup_sqlite):
 
 
 ## b. Record OCN + Concordance OCN(s) matches one CID
-def test_case_1_b_i(setup_leveldb, setup_sqlite):
+def test_case_1_b_i(setup_concordance, setup_sqlite):
     """ Test case 1.b.i.1):
         1. Incoming record contains one OCN that matches a single Concordance Table primary record
         b. Record OCN + Concordance OCN(s) matches one CID
@@ -140,8 +137,7 @@ def test_case_1_b_i(setup_leveldb, setup_sqlite):
         OCLC primary OCN: 999531; other OCNs: None
         Incoming ocn: 999531
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns = [999531]
@@ -150,7 +146,7 @@ def test_case_1_b_i(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {
         "000249880": ['999531'],
     }
-    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
 
     print(result["matched_oclc_clusters"])
     print(result["cid_ocn_clusters"])
@@ -164,7 +160,7 @@ def test_case_1_b_i(setup_leveldb, setup_sqlite):
     assert result["cid_ocn_clusters"] == expected_zephir_clsuters
     assert result["num_of_matched_zephir_clusters"] == 1
 
-def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
+def test_case_1_b_ii_1_and_2(setup_concordance, setup_sqlite):
     """ Test case 1.b.i.1):
         1. Incoming record contains one OCN that matches a single Concordance Table primary record
         b. Record OCN + Concordance OCN(s) matches one CID
@@ -183,8 +179,7 @@ def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
           1) 33393343 - Zephir cluster contains the Record OCN
           2) 44192417 - Zephir cluster doesn't have the Record OCN
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns_list = {
@@ -200,7 +195,7 @@ def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
     }
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -209,7 +204,7 @@ def test_case_1_b_ii_1_and_2(setup_leveldb, setup_sqlite):
         assert result["cid_ocn_clusters"] == expected_zephir_clsuters
         assert result["num_of_matched_zephir_clusters"] == 1
 
-def test_case_2_b_i(setup_leveldb, setup_sqlite):
+def test_case_2_b_i(setup_concordance, setup_sqlite):
     """ Test case 2.b.i.1):
         1. Incoming record contains 2+ OCNs that matches a single Concordance Table primary record
         b. Record OCN + Concordance OCN(s) matches one CID
@@ -221,8 +216,7 @@ def test_case_2_b_i(setup_leveldb, setup_sqlite):
         OCLC primary OCN: 999531; other OCNs: None
         Incoming ocn: 999531, 123456789030
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns = [999531, 123456789030]
@@ -231,7 +225,7 @@ def test_case_2_b_i(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {
         "000249880": ['999531'],
     }
-    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
 
     assert result["inquiry_ocns"] == incoming_ocns
     assert result["matched_oclc_clusters"] == expected_oclc_clusters
@@ -241,7 +235,7 @@ def test_case_2_b_i(setup_leveldb, setup_sqlite):
     assert result["cid_ocn_clusters"] == expected_zephir_clsuters
     assert result["num_of_matched_zephir_clusters"] == 1
 
-def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
+def test_case_2_b_ii_1_and_2(setup_concordance, setup_sqlite):
     """ Test case 2.b.i.1):
         1. Incoming record contains 2+ OCNs that matches a single Concordance Table primary record
         b. Record OCN + Concordance OCN(s) matches one CID
@@ -260,8 +254,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
           1) 33393343, 28477569 - Zephir cluster contains the Record OCN
           2) 44192417, 123456789040 - Zephir cluster doesn't have the Record OCN
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns_list = {
@@ -281,7 +274,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
     expected_min_cid = "009547317"
 
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 1
@@ -293,7 +286,7 @@ def test_case_2_b_ii_1_and_2(setup_leveldb, setup_sqlite):
 
 
 ## Test case c: incoming record matches 2+ CID
-def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
+def test_case_1_and_2_c(setup_concordance, setup_sqlite):
     """ Test case 2.b.i.1):
         1. Incoming record matches a single Concordance Table primary record
         c. Record OCN + Concordance OCN(s) matches 2+ CID
@@ -310,8 +303,7 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
         Incoming OCN for test case:
           [217211158 (invalid), 8727632]
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns = [217211158, 8727632] 
@@ -329,7 +321,7 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
     }
     expected_min_cid = "000000280"
 
-    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -344,7 +336,7 @@ def test_case_1_and_2_c(setup_leveldb, setup_sqlite):
 # Test case 3 - "confused record"
 # Incoming record contains 2+ OCNs that resolve to two different master records in the Concordance Table
 ## a. Record OCNs + OCLC OCNs match no CID
-def test_case_3_a(setup_leveldb, setup_sqlite):
+def test_case_3_a(setup_concordance, setup_sqlite):
     """ Test case 3.a:
         3. Incoming record contains 2+ OCNs that resolve to two Concordance Table primary record
         a. Record OCNs + OCLC OCNs match no CID
@@ -359,8 +351,7 @@ def test_case_3_a(setup_leveldb, setup_sqlite):
         Incoming OCN for test case:
           [100, 300]
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns = [100, 300] 
@@ -372,7 +363,7 @@ def test_case_3_a(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {}
     expected_min_cid = None
 
-    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -385,7 +376,7 @@ def test_case_3_a(setup_leveldb, setup_sqlite):
     assert result["min_cid"] ==  expected_min_cid
 
 ## b. Record OCNs + OCLC OCNs match one CID
-def test_case_3_b(setup_leveldb, setup_sqlite):
+def test_case_3_b(setup_concordance, setup_sqlite):
     """ Test case 3.b:
         3. Incoming record contains 2+ OCNs that resolve to two Concordance Table primary record
         b. Record OCNs + OCLC OCNs match one CID
@@ -402,8 +393,7 @@ def test_case_3_b(setup_leveldb, setup_sqlite):
         Incoming OCN for test case:
           [200, 228676186]
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns = [200, 228676186]
@@ -418,7 +408,7 @@ def test_case_3_b(setup_leveldb, setup_sqlite):
     expected_zephir_clsuters = {"008648991": ['23012053', '4912741', '5066412']}
     expected_min_cid =  "008648991"
 
-    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -431,7 +421,7 @@ def test_case_3_b(setup_leveldb, setup_sqlite):
     assert result["min_cid"] ==  expected_min_cid
 
 
-def test_case_3_c(setup_leveldb, setup_sqlite):
+def test_case_3_c(setup_concordance, setup_sqlite):
     """ Test case 3.c:
         3. Incoming record contains 2+ OCNs that resolve to two Concordance Table primary record
         c. Record OCNs + OCLC OCNs match two CIDs
@@ -448,8 +438,7 @@ def test_case_3_c(setup_leveldb, setup_sqlite):
         Incoming OCN for test case:
         [140869, 2094039 (matches 2 CIDs)] 
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns = [140869, 2094039]
@@ -469,7 +458,7 @@ def test_case_3_c(setup_leveldb, setup_sqlite):
             }
     expected_min_cid =  "000002076"
 
-    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+    result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
     print(result)
 
     assert result["inquiry_ocns"] == incoming_ocns
@@ -482,7 +471,7 @@ def test_case_3_c(setup_leveldb, setup_sqlite):
     assert result["min_cid"] ==  expected_min_cid
 
 # Test case 4. Incoming record contains OCNs that resolve to nothing in the Concordance Table
-def test_case_4_abc(setup_leveldb, setup_sqlite):
+def test_case_4_abc(setup_concordance, setup_sqlite):
     """ Test case 4:
         4. Incoming record contains OCNs that resolve to nothing in the Concordance Table
         a. Record OCNs match no CID
@@ -502,8 +491,7 @@ def test_case_4_abc(setup_leveldb, setup_sqlite):
         matches 1 zephir CID: [1234567890101]
         mathces 2 Zephir CIDs: [1234567890102, 1234567890103]
     """
-    primary_db_path = setup_leveldb["primary_db_path"]
-    cluster_db_path = setup_leveldb["cluster_db_path"]
+    concordance_db_path = setup_concordance["concordance_db_path"]
     zephirDb = setup_sqlite["zephirDb"]
 
     incoming_ocns_list = {
@@ -542,7 +530,7 @@ def test_case_4_abc(setup_leveldb, setup_sqlite):
             "2_cids": '102337774',
     }
     for k, incoming_ocns in incoming_ocns_list.items():
-        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, primary_db_path, cluster_db_path)
+        result = cid_inquiry_by_ocns(incoming_ocns, zephirDb, concordance_db_path)
         assert result["inquiry_ocns"] == incoming_ocns
         assert result["matched_oclc_clusters"] == expected_oclc_clusters
         assert result["num_of_matched_oclc_clusters"] == 0 
@@ -608,18 +596,15 @@ def test_convert_comma_separated_str_to_int_list():
 
 # FIXTURES
 @pytest.fixture
-def setup_leveldb(tmpdatadir, csv_to_df_loader):
+def setup_concordance(tmpdatadir, csv_to_df_loader):
     dfs = csv_to_df_loader
-    primary_db_path = create_primary_db(tmpdatadir, dfs["primary.csv"])
-    cluster_db_path = create_cluster_db(tmpdatadir, dfs["primary.csv"])
-    os.environ["OVERRIDE_PRIMARY_DB_PATH"] = primary_db_path
-    os.environ["OVERRIDE_CLUSTER_DB_PATH"] = cluster_db_path
+    concordance_db_path = create_concordance_db(tmpdatadir, dfs["primary.csv"])
+    os.environ["OVERRIDE_CONCORDANCE_DB_PATH"] = concordance_db_path
 
     return {
         "tmpdatadir": tmpdatadir,
         "dfs": dfs,
-        "primary_db_path": primary_db_path,
-        "cluster_db_path": cluster_db_path
+        "concordance_db_path": concordance_db_path
     }
 
 @pytest.fixture
@@ -638,79 +623,3 @@ def setup_sqlite(data_dir, tmpdir, scope="session"):
     return {
         "zephirDb": ZephirDatabase(db_conn_str)
     }
-
-# HELPERS
-def int_to_bytes(inum):
-    return inum.to_bytes((inum.bit_length() + 7) // 8, "big")
-
-
-def int_from_bytes(bnum):
-    return int.from_bytes(bnum, "big")
-
-
-def create_primary_db(path, df):
-    """Create a primary ocn lookup LevelDB database based with test data
-
-    Note:
-        1) Expects a dataframe: [ocn, primary]
-
-    Args:
-        Path: Database path
-        df: Pandas dataframe of test data [ocn, primary]
-
-    Returns:
-        Path to the LevelDB database
-
-    """
-    db_path = os.path.join(path, "primary/")
-    db = plyvel.DB(db_path, create_if_missing=True)
-
-    df = df.sort_values(by=["ocn"])
-    ocn_pos = df.columns.get_loc("ocn") + 1
-    primary_pos = df.columns.get_loc("primary") + 1
-
-    for row in df.itertuples():
-        db.put(int_to_bytes(row[ocn_pos]), int_to_bytes(row[primary_pos]))
-    db.close()
-    return db_path
-
-def create_cluster_db(path, df):
-    """Create a cluster ocns lookup LevelDB database based with test data
-
-    Note:
-        1) Expects a dataframe: [ocn, primary]
-        2) Produces a LevelDB with key(primary) and value([ocns,...])
-        3) Primary-only clusters are excluded
-
-    Args:
-        Path: Database path
-        df: Pandas dataframe of test data [ocn, primary]
-
-    Returns:
-        Path to the LevelDB database
-
-    """
-    db_path = os.path.join(path, "cluster/")
-    db = plyvel.DB(db_path, create_if_missing=True)
-
-    packer = msgpack.Packer()
-
-    df = df.sort_values(by=["primary","ocn"])
-    ocn_pos = df.columns.get_loc("ocn") + 1
-    primary_pos = df.columns.get_loc("primary") + 1
-
-    current_primary = 0
-    cluster = []
-    for row in df.itertuples():
-        if row[primary_pos] != current_primary:
-            if current_primary != 0:
-                if len(cluster) > 0:
-                    db.put(int_to_bytes(current_primary), packer.pack(cluster))
-            current_primary = row[primary_pos]
-            cluster = []
-        if current_primary != row[ocn_pos]:
-            cluster.append(row[ocn_pos])
-    if len(cluster) > 0:
-        db.put(int_to_bytes(current_primary), packer.pack(cluster))
-    db.close()
-    return db_path
