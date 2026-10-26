@@ -78,8 +78,6 @@ def main():
         argv[2]: List of OCNs (Optional).
                  Comma separated strings without spaces in between any two values.
                  For example: 1,6567842,6758168,8727632
-                 With --stdin: read comma-separated OCNs per line and write a
-                 JSON response with result and timings per line until EOF.
                  When OCNs present: 
                    1. retrieves Zephir clusters by given OCNs;
                    2. return Zephir clusters in JSON string.
@@ -92,7 +90,7 @@ def main():
 
     if (len(sys.argv) != 2 and len(sys.argv) != 3):
         print("Parameter error.")
-        print("Usage: {} env[dev|stg|prd] [comma_separated_ocns|--stdin]".format(sys.argv[0]))
+        print("Usage: {} env[dev|stg|prd] optional_comma_separated_ocns".format(sys.argv[0]))
         print("{} dev".format(sys.argv[0]))
         print("{} dev 1,6567842,6758168,8727632".format(sys.argv[0]))
         exit(1)
@@ -134,21 +132,10 @@ def main():
                                    lookup, zephir_db, timings)
 
             if len(sys.argv) == 3:
-                if sys.argv[2] == "--stdin":
-                    # Blocking line protocol for persistent clients and benchmarks.
-                    # Each request is comma-separated OCNs; each response is JSON.
-                    for line in sys.stdin:
-                        timings = {}
-                        started = time.perf_counter()
-                        results = inquire(convert_comma_separated_str_to_int_list(line.strip()), timings)
-                        timings["total_seconds"] = time.perf_counter() - started
-                        print(json.dumps({"result": results, "timings": timings}), flush=True)
-                else:
-                    results = inquire(convert_comma_separated_str_to_int_list(sys.argv[2]))
-                    print(json.dumps(results))
+                results = inquire(convert_comma_separated_str_to_int_list(sys.argv[2]))
+                print(json.dumps(results))
                 return
 
-            # Preserve the prepare.pl file protocol until its caller is migrated.
             while True:
                 processed = False
                 for file in os.listdir(cid_inquiry_data_dir):

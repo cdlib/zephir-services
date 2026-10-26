@@ -102,20 +102,6 @@ Python callers can reuse `ConcordanceLookup` as a context manager and pass it as
 `lookup` to `cid_inquiry`; pass a worker-owned `ZephirDatabase` as `zephir_db` too.
 Close both resources when finished.
 
-A blocking stdin mode accepts one comma-separated OCN inquiry per line and emits
-one JSON object per line, flushing each response. Responses contain `result`
-(the usual inquiry object) and `timings` (seconds for concordance opening and
-validation, canonical resolution, cluster expansion, each executed Zephir query,
-and the total inquiry). EOF closes the worker. A failed request terminates the
-worker with a nonzero exit status; clients should treat EOF as failure.
-
-```sh
-pipenv run python cid_inquiry.py dev --stdin < queries.txt
-```
-
-The existing file protocol remains available for `htprep-prepare`; switching that
-caller to blocking communication requires a change in its repository.
-
 Run the benchmark from this directory using a query file with one comma-separated
 OCN list per line. Prefer OCNs from the actual import to random numbers, which can
 mostly measure misses:
@@ -124,18 +110,10 @@ mostly measure misses:
 pipenv run python benchmark_cid_inquiry.py --env dev --queries queries.txt --report after.json
 ```
 
-The default `--mode persistent` measures a single stdin worker, including pipe
-request/response latency and stage timings. It excludes startup through one warmup
-inquiry by default. Set `--warmups 0` to include startup in the first request.
-It does not measure the legacy file transport or Perl processing.
-
-Use `--mode cli` on both versions when comparing a branch without stdin support.
-This starts Python for every inquiry and includes startup overhead. Reports from
-different modes cannot be compared. Pass `--compare before.json` to compare
-results and elapsed time with a previous report from the same mode and workload.
-Stage totals overlap: the overall concordance and inquiry totals include their
-component stages. Cached stages can approach zero; an unexecuted CID query has no
-stage entry.
+The benchmark starts Python for every inquiry and includes startup overhead. It
+does not measure the file worker or Perl processing. Set `--warmups 0` to include
+the first inquiry in the report. Pass `--compare before.json` to compare results
+and elapsed time with a previous report from the same workload.
 
 #### Shell Wrapper
 
